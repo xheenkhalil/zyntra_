@@ -54,11 +54,11 @@ const ResultsPage: React.FC = () => {
       try {
         const data = await getExams();
         setExams(
-          data.filter(
-            (exam) => exam.status === "completed" || exam.status === "live"
+          (data as Exam[]).filter(
+            (exam: Exam) => exam.status === "completed" || exam.status === "live"
           )
         );
-      } catch (err) {
+      } catch {
         setError("Failed to load exams.");
       } finally {
         setLoadingExams(false);
@@ -76,7 +76,7 @@ const ResultsPage: React.FC = () => {
       try {
         const data = await getExamResults(examId);
         setResults(data);
-      } catch (err) {
+      } catch {
         setError("Failed to load results for this exam.");
         setResults([]);
       } finally {

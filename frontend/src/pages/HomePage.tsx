@@ -1,5 +1,3 @@
-// /frontend/src/pages/HomePage.tsx
-
 import React, { useState } from "react";
 import {
   AppBar,
@@ -8,7 +6,6 @@ import {
   Box,
   Button,
   Container,
-  Grid,
   Link,
   Menu,
   List,
@@ -25,7 +22,7 @@ import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import StarIcon from "@mui/icons-material/Star";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
-// ✅ 1. Import the new GuestQuizSection component
+// ✅ Import the new GuestQuizSection component
 import GuestQuizSection from "../components/GuestQuizSection";
 
 const HomePage: React.FC = () => {
@@ -125,8 +122,13 @@ const HomePage: React.FC = () => {
         transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
         <Box sx={{ width: 600, p: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
+          <Box
+            display="grid"
+            gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }}
+            gap={2}
+          >
+            {/* --- Left Column --- */}
+            <Box>
               <Typography
                 variant="subtitle2"
                 sx={{ fontWeight: 700, mb: 1, color: "text.secondary" }}
@@ -151,9 +153,10 @@ const HomePage: React.FC = () => {
                   </ListItemButton>
                 </ListItem>
               </List>
-            </Grid>
+            </Box>
 
-            <Grid item xs={6}>
+            {/* --- Right Column --- */}
+            <Box>
               <Typography
                 variant="subtitle2"
                 sx={{ fontWeight: 700, mb: 1, color: "text.secondary" }}
@@ -178,8 +181,8 @@ const HomePage: React.FC = () => {
                   </ListItemButton>
                 </ListItem>
               </List>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
       </Menu>
 
@@ -313,8 +316,12 @@ const HomePage: React.FC = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={4}>
+          <Box
+            display="grid"
+            gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", md: "2fr 1fr 1fr" }}
+            gap={4}
+          >
+            <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                 Zyntra
               </Typography>
@@ -322,8 +329,9 @@ const HomePage: React.FC = () => {
                 The Intelligent Assessment Platform for institutions and
                 individuals.
               </Typography>
-            </Grid>
-            <Grid item xs={6} sm={3} md={2}>
+            </Box>
+
+            <Box>
               <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 Solutions
               </Typography>
@@ -339,8 +347,9 @@ const HomePage: React.FC = () => {
                   </Link>
                 </ListItem>
               </List>
-            </Grid>
-            <Grid item xs={6} sm={3} md={2}>
+            </Box>
+
+            <Box>
               <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 Company
               </Typography>
@@ -356,8 +365,8 @@ const HomePage: React.FC = () => {
                   </Link>
                 </ListItem>
               </List>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Divider sx={{ my: 4, bgcolor: "grey.800" }} />
           <Typography

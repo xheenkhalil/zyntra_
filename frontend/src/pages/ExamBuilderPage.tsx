@@ -17,10 +17,16 @@ import {
 // Interfaces
 interface Option { text: string; isCorrect: boolean; }
 interface Question { id: string; question_text: string; options: Option[]; }
-interface Exam { id: string; title: string; status: 'draft' | 'live' | 'completed'; questions: Question[]; grading_scale?: any; duration_minutes?: number; }
+interface Exam { id: string; title: string; status: 'draft' | 'live' | 'completed'; questions: Question[]; grading_scale?: Record<string, number>; duration_minutes?: number; }
 
 // --- Reusable Question Form (for Create & Edit) ---
-const QuestionForm = ({ examId, onSave, initialQuestion = null, closeDialog }) => {
+interface QuestionFormProps {
+    examId: string;
+    onSave: () => void;
+    initialQuestion?: Question | null;
+    closeDialog: () => void;
+}
+const QuestionForm: React.FC<QuestionFormProps> = ({ examId, onSave, initialQuestion = null, closeDialog }) => {
     const [questionText, setQuestionText] = useState(initialQuestion?.question_text || '');
     const [options, setOptions] = useState(initialQuestion?.options.map(o => ({text: o.text})) || [{ text: '' }, { text: '' }]);
     const [correctOptionIndex, setCorrectOptionIndex] = useState<number | null>(() => {
@@ -46,7 +52,7 @@ const QuestionForm = ({ examId, onSave, initialQuestion = null, closeDialog }) =
             return setError('Please fill out the question, all options, and select a correct answer.');
         }
         setLoading(true);
-        const formattedOptions = options.map((opt, index) => ({ text: opt.text, isCorrect: index === correctOptionIndex }));
+        const formattedOptions = options.map((opt: { text: string }, index: number) => ({ text: opt.text, isCorrect: index === correctOptionIndex }));
         const questionData = { questionText, options: formattedOptions };
         try {
             if (initialQuestion) {
@@ -56,8 +62,16 @@ const QuestionForm = ({ examId, onSave, initialQuestion = null, closeDialog }) =
             }
             onSave();
             closeDialog();
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to save question.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                if (typeof err === 'object' && err !== null && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
+                    setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || (err as Error).message || 'Failed to save question.');
+                } else {
+                    setError((err as Error).message || 'Failed to save question.');
+                }
+            } else {
+                setError('Failed to save question.');
+            }
         } finally { setLoading(false); }
     };
 
@@ -66,7 +80,7 @@ const QuestionForm = ({ examId, onSave, initialQuestion = null, closeDialog }) =
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <TextField autoFocus label="Question Text" fullWidth multiline rows={3} defaultValue={questionText} onChange={e => setQuestionText(e.target.value)} sx={{ mb: 2 }} />
             <Typography variant="body1" gutterBottom>Options (select the correct answer):</Typography>
-            {options.map((opt, index) => (
+            {options.map((opt: { text: string }, index: number) => (
                 <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <FormControlLabel value={index} control={<Radio checked={correctOptionIndex === index} onChange={() => setCorrectOptionIndex(index)} />} label="" />
                     <TextField size="small" fullWidth label={`Option ${index + 1}`} defaultValue={opt.text} onChange={e => handleOptionTextChange(index, e.target.value)} />
@@ -83,11 +97,15 @@ const QuestionForm = ({ examId, onSave, initialQuestion = null, closeDialog }) =
 };
 
 // --- Reusable sub-component for topic-based AI generation ---
-const AiTopicGenerator = ({ examId, onQuestionsAdded }) => {
+interface AiTopicGeneratorProps {
+    examId: string;
+    onQuestionsAdded: () => void;
+}
+const AiTopicGenerator: React.FC<AiTopicGeneratorProps> = ({ examId, onQuestionsAdded }) => {
     const [aiForm, setAiForm] = useState({ topic: '', difficulty: 'Intermediate', numQuestions: 5 });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+    const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
     const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
 
     const handleGenerate = async () => {
@@ -95,7 +113,13 @@ const AiTopicGenerator = ({ examId, onQuestionsAdded }) => {
         try {
             const questions = await generateAiQuestions({ ...aiForm, numOptions: 4 });
             setGeneratedQuestions(questions);
-        } catch (err: any) { setError(err.message || 'Failed to generate questions.'); }
+        } catch (err: unknown) { 
+            if (err instanceof Error) {
+                setError(err.message || 'Failed to generate questions.');
+            } else {
+                setError('Failed to generate questions.');
+            }
+        }
         finally { setLoading(false); }
     };
 
@@ -105,11 +129,17 @@ const AiTopicGenerator = ({ examId, onQuestionsAdded }) => {
         setLoading(true); setError('');
         const questionsToAdd = generatedQuestions.filter((_, index) => selectedQuestions.includes(index));
         try {
-            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.questionText, options: q.options })));
+            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.question_text, options: q.options })));
             onQuestionsAdded();
             setGeneratedQuestions([]);
             setSelectedQuestions([]);
-        } catch (err: any) { setError(err.message || 'Failed to add selected questions.'); }
+        } catch (err: unknown) { 
+            if (err instanceof Error) {
+                setError(err.message || 'Failed to add selected questions.');
+            } else {
+                setError('Failed to add selected questions.');
+            }
+        }
         finally { setLoading(false); }
     };
 
@@ -123,17 +153,21 @@ const AiTopicGenerator = ({ examId, onQuestionsAdded }) => {
                 <Button variant="contained" onClick={handleGenerate} disabled={loading || !aiForm.topic}>{loading && generatedQuestions.length === 0 ? <CircularProgress size={24} /> : 'Generate'}</Button>
             </Box>
             {error && <Alert severity="error">{error}</Alert>}
-            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.questionText} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
+            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.question_text} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
         </Paper>
     );
 };
 
 // --- Reusable sub-component for document-based AI generation ---
-const AiDocumentGenerator = ({ examId, onQuestionsAdded }) => {
+interface AiDocumentGeneratorProps {
+    examId: string;
+    onQuestionsAdded: () => void;
+}
+const AiDocumentGenerator: React.FC<AiDocumentGeneratorProps> = ({ examId, onQuestionsAdded }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+    const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
     const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => { if (event.target.files && event.target.files[0]) setSelectedFile(event.target.files[0]); };
@@ -143,7 +177,15 @@ const AiDocumentGenerator = ({ examId, onQuestionsAdded }) => {
         try {
             const questions = await generateFromDocument(selectedFile);
             setGeneratedQuestions(questions);
-        } catch (err: any) { setError(err.response?.data?.message || 'Failed to generate questions from document.'); }
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
+                setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to generate questions from document.');
+            } else if (err instanceof Error) {
+                setError(err.message || 'Failed to generate questions from document.');
+            } else {
+                setError('Failed to generate questions from document.');
+            }
+        }
         finally { setLoading(false); }
     };
     const handleToggleSelect = (index: number) => { setSelectedQuestions(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]); };
@@ -151,10 +193,16 @@ const AiDocumentGenerator = ({ examId, onQuestionsAdded }) => {
         setLoading(true); setError('');
         const questionsToAdd = generatedQuestions.filter((_, index) => selectedQuestions.includes(index));
         try {
-            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.questionText, options: q.options })));
+            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.question_text, options: q.options })));
             onQuestionsAdded();
             setGeneratedQuestions([]); setSelectedQuestions([]); setSelectedFile(null);
-        } catch (err: any) { setError(err.message || 'Failed to add selected questions.'); }
+        } catch (err: unknown) { 
+            if (err instanceof Error) {
+                setError(err.message || 'Failed to add selected questions.');
+            } else {
+                setError('Failed to add selected questions.');
+            }
+        }
         finally { setLoading(false); }
     };
 
@@ -168,7 +216,7 @@ const AiDocumentGenerator = ({ examId, onQuestionsAdded }) => {
                 <Button variant="contained" onClick={handleGenerate} disabled={loading || !selectedFile}>{loading && generatedQuestions.length === 0 ? <CircularProgress size={24} /> : 'Generate Questions'}</Button>
             </Box>
             {error && <Alert severity="error">{error}</Alert>}
-            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.questionText} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
+            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.question_text} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
         </Paper>
     );
 };
@@ -187,7 +235,7 @@ const ExamBuilderPage: React.FC = () => {
     const [gradingScale, setGradingScale] = useState({ A: '90', B: '80', C: '70', D: '60', E: '50', F: '40' });
     const [duration, setDuration] = useState('30');
 
-    const fetchExam = async () => {
+    const fetchExam = React.useCallback(async () => {
         if (!examId) return;
         try {
             if (!exam) setLoading(true);
@@ -200,11 +248,17 @@ const ExamBuilderPage: React.FC = () => {
             if (data.duration_minutes) {
                 setDuration(String(data.duration_minutes));
             }
-        } catch (err: any) { setError(err.response?.data?.message || 'Failed to load exam details.'); }
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
+                setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load exam details.');
+            } else {
+                setError('Failed to load exam details.');
+            }
+        }
         finally { setLoading(false); }
-    };
+    }, [examId, exam]);
 
-    useEffect(() => { fetchExam(); }, [examId]);
+    useEffect(() => { fetchExam(); }, [examId, fetchExam]);
 
     const handleDelete = async () => {
         if (!questionToDelete) return;
@@ -286,7 +340,7 @@ const ExamBuilderPage: React.FC = () => {
             
             {exam.status !== 'completed' && (
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={creationMode} onChange={(e, newValue) => setCreationMode(newValue)}>
+                  <Tabs value={creationMode} onChange={(_, newValue) => setCreationMode(newValue)}>
                       <Tab label="Add Manually" value="manual" />
                       <Tab label="AI Generate (Topic)" value="ai_topic" />
                       <Tab label="AI Generate (Document)" value="ai_doc" />

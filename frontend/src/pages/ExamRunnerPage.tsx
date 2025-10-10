@@ -38,8 +38,13 @@ const ExamRunnerPage: React.FC = () => {
                 setSubmission(data.submission);
                 setAnswers(data.submission.answers || {});
                 setTimeLeft(data.submission.time_remaining_seconds);
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'Failed to start or resume exam.');
+            } catch (err: unknown) {
+                type ErrorWithResponse = { response?: { data?: { message?: string } } };
+                if (err && typeof err === 'object' && 'response' in err && (err as ErrorWithResponse).response?.data?.message) {
+                    setError((err as ErrorWithResponse).response!.data!.message!);
+                } else {
+                    setError('Failed to start or resume exam.');
+                }
             } finally {
                 setLoading(false);
             }
@@ -58,12 +63,12 @@ const ExamRunnerPage: React.FC = () => {
 
     // --- Autosave Logic ---
     const useInterval = (callback: () => void, delay: number | null) => {
-        const savedCallback = useRef<() => void>();
+        const savedCallback = useRef<() => void>(undefined);
         useEffect(() => { savedCallback.current = callback; }, [callback]);
         useEffect(() => {
             function tick() { if (savedCallback.current) savedCallback.current(); }
             if (delay !== null) {
-                let id = setInterval(tick, delay);
+                const id = setInterval(tick, delay);
                 return () => clearInterval(id);
             }
         }, [delay]);
@@ -86,8 +91,13 @@ const ExamRunnerPage: React.FC = () => {
         try {
             await submitExam(submission.id, answers);
             navigate('/student/submission-complete');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to submit exam.');
+        } catch (err: unknown) {
+            type ErrorWithResponse = { response?: { data?: { message?: string } } };
+            if (err && typeof err === 'object' && 'response' in err && (err as ErrorWithResponse).response?.data?.message) {
+                setError((err as ErrorWithResponse).response!.data!.message!);
+            } else {
+                setError('Failed to submit exam.');
+            }
         }
     }, [submission, answers, navigate]);
 

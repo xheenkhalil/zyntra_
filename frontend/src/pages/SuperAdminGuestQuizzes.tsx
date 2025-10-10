@@ -11,18 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { getAllGuestQuizzes, deleteGuestQuiz } from '../services/superAdminGuestQuizService'; 
 // --- END CORRECTED IMPORT STATEMENT ---
 
-// Interface for quiz data structure expected from backend
-interface GuestQuiz {
-    id: string;
-    title: string;
-    category: string;
-    status: 'draft' | 'published';
-    participant_count: number;
-    // average_rating can be a number or null if no ratings exist
-    average_rating: number | null; 
-    created_at: string;
-    updated_at: string;
-}
+// Use GuestQuiz type from the service to avoid type mismatch
+import type { GuestQuiz } from '../services/superAdminGuestQuizService';
 
 const SuperAdminGuestQuizzes: React.FC = () => {
     const navigate = useNavigate();
@@ -41,8 +31,12 @@ const SuperAdminGuestQuizzes: React.FC = () => {
         try {
             const data = await getAllGuestQuizzes();
             setQuizzes(data);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to fetch guest quizzes.');
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                setError((err.response as { data: { message: string } }).data.message || 'Failed to fetch guest quizzes.');
+            } else {
+                setError('Failed to fetch guest quizzes.');
+            }
             console.error(err);
         } finally {
             setLoading(false);
@@ -67,8 +61,12 @@ const SuperAdminGuestQuizzes: React.FC = () => {
             try {
                 await deleteGuestQuiz(quizId);
                 await fetchQuizzes(); // Refetch quizzes to update the list
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'Failed to delete quiz.');
+            } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                    setError((err.response as { data: { message: string } }).data.message || 'Failed to delete quiz.');
+                } else {
+                    setError('Failed to delete quiz.');
+                }
                 console.error(err);
             } finally {
                 setDeleteLoading(null); // Reset loading state

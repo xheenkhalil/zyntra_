@@ -1,7 +1,6 @@
 // /frontend/src/components/ProtectedRoute.tsx
-import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 // Define the props to accept an array of allowed roles

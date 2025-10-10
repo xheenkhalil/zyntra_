@@ -29,8 +29,25 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
             setSuccess(`Quiz "${newQuiz.title}" created successfully! You can now add questions.`);
             // Optionally navigate to the edit/questions page for the new quiz
             navigate(`/superadmin/guest-quizzes/${newQuiz.id}/questions`); 
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to create guest quiz.');
+        } catch (err: unknown) {
+            interface ErrorWithResponse {
+                response?: {
+                    data?: {
+                        message?: string;
+                    };
+                };
+            }
+
+            if (
+                err &&
+                typeof err === 'object' &&
+                'response' in err &&
+                (err as ErrorWithResponse).response?.data?.message
+            ) {
+                setError((err as ErrorWithResponse).response!.data!.message!);
+            } else {
+                setError('Failed to create guest quiz.');
+            }
             console.error('Error creating guest quiz:', err);
         } finally {
             setLoading(false);

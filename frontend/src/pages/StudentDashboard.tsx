@@ -28,9 +28,21 @@ const StudentDashboard: React.FC = () => {
                 const data = await getAvailableExams();
                 console.log('%cFetch successful! Data received:', 'color: green;', data); // Checkpoint 3
                 setExams(data);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('%cFetch failed!', 'color: red;', err); // Checkpoint 4
-                setError(err.response?.data?.message || "Failed to load exams.");
+                type ErrorWithResponse = {
+                    response?: {
+                        data?: {
+                            message?: string;
+                        };
+                    };
+                };
+                if (typeof err === 'object' && err !== null && 'response' in err) {
+                    const errorObj = err as ErrorWithResponse;
+                    setError(errorObj.response?.data?.message || "Failed to load exams.");
+                } else {
+                    setError("Failed to load exams.");
+                }
             } finally {
                 console.log('%cSetting loading to false.', 'color: purple;'); // Checkpoint 5
                 setLoading(false);

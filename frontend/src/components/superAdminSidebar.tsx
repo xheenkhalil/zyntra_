@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     List,
-    ListItem,
+    ListItemButton,
     ListItemIcon,
     ListItemText,
     Divider,
@@ -79,8 +79,7 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                             placement="right"
                             arrow
                         >
-                            <ListItem
-                                button
+                            <ListItemButton
                                 component={Link}
                                 to={item.path}
                                 selected={isActive}
@@ -116,7 +115,7 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                                         }}
                                     />
                                 )}
-                            </ListItem>
+                            </ListItemButton>
                         </Tooltip>
                     );
                 })}

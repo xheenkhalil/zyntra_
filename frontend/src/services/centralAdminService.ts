@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://zyntraexams.onrender.com/api',
   withCredentials: true,
 });
 
@@ -13,7 +13,7 @@ export interface CourseAdminData {
 }
 
 // Helper for consistent error messaging
-const handleError = (error: any, defaultMsg: string) => {
+const handleError = (error: unknown, defaultMsg: string) => {
   if (axios.isAxiosError(error)) {
     const message =
       error.response?.data?.message ||

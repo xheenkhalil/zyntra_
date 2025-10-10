@@ -72,7 +72,7 @@ export const addGuestQuizQuestion = async (quizId: string, questionData: AddQues
     const response = await axios.post(`${GUEST_QUIZ_API_URL}/${quizId}/questions`, questionData, { withCredentials: true });
     return response.data;
 };
-
+// Update question text and options
 interface UpdateQuestionPayload {
     quiz_id: string;
     question_text: string;

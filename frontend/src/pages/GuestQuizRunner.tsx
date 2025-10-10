@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     Box, Typography, CircularProgress, Alert, Paper, Button, 
@@ -61,8 +61,20 @@ const GuestQuizRunner: React.FC = () => {
             const data = await submitPublicQuiz(quizId, answers, rating || undefined);
             setResult(data);
             localStorage.setItem('guestQuizRatingSubmitted', 'false'); // reset flag until user actually rates
-        } catch (err: any) { 
-            setError(err.response?.data?.message || 'Failed to submit quiz.'); 
+        } catch (err: unknown) { 
+            if (
+                err &&
+                typeof err === 'object' &&
+                'response' in err &&
+                typeof (err as { response?: unknown }).response === 'object' &&
+                (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            ) {
+                setError(
+                    ((err as { response: { data: { message: string } } }).response.data.message)
+                );
+            } else {
+                setError('Failed to submit quiz.');
+            }
         } finally {
             setIsSubmitting(false); 
         }
@@ -85,7 +97,7 @@ const GuestQuizRunner: React.FC = () => {
     // HANDLE RATING CHANGE (NEW)
     // ===============================================================
     const handleRatingChange = async (
-        event: React.SyntheticEvent<Element, Event>, 
+        _newEvent: unknown,
         newValue: number | null
     ) => {
         setRating(newValue);
@@ -98,7 +110,7 @@ const GuestQuizRunner: React.FC = () => {
                 setSnackbarMessage('Thank you for rating!');
                 setSnackbarOpen(true);
                 localStorage.setItem('guestQuizRatingSubmitted', 'true');
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Error updating rating:", error);
                 setSnackbarMessage('Failed to update rating. Please try again.');
                 setSnackbarOpen(true);
@@ -109,7 +121,7 @@ const GuestQuizRunner: React.FC = () => {
     // ===============================================================
     // SNACKBAR HANDLER
     // ===============================================================
-    const handleSnackbarClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    const handleSnackbarClose = (_?: unknown, reason?: string) => {
         if (reason === 'clickaway') return;
         setSnackbarOpen(false);
     };

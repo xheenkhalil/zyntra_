@@ -60,13 +60,17 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
                 const data = await getGuestQuizById(quizId);
                 setQuiz(data);
                 setQuestions(
-                    (data.questions || []).map((q: any) => ({
+                    (data.questions || []).map((q: GuestQuestion) => ({
                         ...q,
                         quiz_id: q.quiz_id ?? data.id,
                     }))
                 );
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'Failed to fetch quiz and questions.');
+            } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                    setError((err as { response: { data: { message: string } } }).response.data.message);
+                } else {
+                    setError('Failed to fetch quiz and questions.');
+                }
                 console.error('Error fetching quiz and questions:', err);
             } finally {
                 setLoading(false);
@@ -157,9 +161,23 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
             setNewQuestionText('');
             setNewOptions([{ text: '', isCorrect: false }]);
             setEditingQuestion(null);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error saving question:', err);
-            setError(err.response?.data?.message || 'Failed to save question.');
+            if (
+                err &&
+                typeof err === 'object' &&
+                'response' in err &&
+                err.response &&
+                typeof err.response === 'object' &&
+                'data' in err.response &&
+                err.response.data &&
+                typeof err.response.data === 'object' &&
+                'message' in err.response.data
+            ) {
+                setError((err as { response: { data: { message: string } } }).response.data.message);
+            } else {
+                setError('Failed to save question.');
+            }
         } finally {
             setSaving(false);
         }
@@ -181,8 +199,23 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
             await deleteGuestQuizQuestion(questionId);
             setQuestions(questions.filter(q => q.id !== questionId));
             setSuccess('Question deleted successfully!');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to delete question.');
+        } catch (err: unknown) {
+            if (
+                err &&
+                typeof err === 'object' &&
+                'response' in err &&
+                (err as { response?: { data?: { message?: string } } }).response !== undefined &&
+                typeof (err as { response?: { data?: { message?: string } } }).response === 'object' &&
+                (err as { response?: { data?: { message?: string } } }).response &&
+                'data' in ((err as { response?: { data?: { message?: string } } }).response ?? {}) &&
+                (err as { response: { data?: { message?: string } } }).response.data !== undefined &&
+                typeof (err as { response: { data?: { message?: string } } }).response.data === 'object' &&
+                'message' in ((err as { response: { data?: { message?: string } } }).response.data ?? {})
+            ) {
+                setError((err as { response: { data: { message: string } } }).response.data.message);
+            } else {
+                setError('Failed to delete question.');
+            }
             console.error('Error deleting question:', err);
         } finally {
             setSaving(false);

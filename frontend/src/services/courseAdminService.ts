@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://zyntraexams.onrender.com/api',
     withCredentials: true,
 });
 
@@ -21,5 +21,3 @@ export const createStudent = async (data: CreateStudentData) => {
     const response = await apiClient.post('/courseadmin/students', data);
     return response.data;
 };
-
-// We will add functions for update, archive, delete later as we complete the module.

@@ -8,7 +8,12 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { setupAccount } from '../services/authService';
 
-const PasswordRequirement = ({ label, met }) => (
+type PasswordRequirementProps = {
+    label: string;
+    met: boolean;
+};
+
+const PasswordRequirement = ({ label, met }: PasswordRequirementProps) => (
     <ListItem dense sx={{ py: 0 }}>
         <ListItemIcon sx={{ minWidth: 32 }}>
             {met ? <CheckCircleIcon color="success" fontSize="small" /> : <CancelIcon color="error" fontSize="small" />}
@@ -68,8 +73,12 @@ const SetupAccountPage = () => {
             const data = await setupAccount(token, password);
             setSuccess(data.message + ' Redirecting to login...');
             setTimeout(() => navigate('/login'), 3000);
-        } catch (err: any) {
-            setError(err.message || 'Failed to set up account.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || 'Failed to set up account.');
+            } else {
+                setError('Failed to set up account.');
+            }
         } finally {
             setLoading(false);
         }

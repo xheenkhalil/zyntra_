@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import SuperAdminSidebar from './superAdminSidebar';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const SuperAdminLayout: React.FC = () => {
     const { user } = useAuth();

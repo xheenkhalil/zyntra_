@@ -4,7 +4,7 @@ import axios from 'axios';
 //  CONFIGURE API CLIENT
 // ================================================================
 const apiClient = axios.create({
-    baseURL: 'http://localhost:5000/api/public', // Using the /api/public prefix for guest routes
+    baseURL: 'https://zyntraexams.onrender.com/api/public', // Using the /api/public prefix for guest routes
 });
 
 // ================================================================

@@ -1,6 +1,4 @@
 // /frontend/src/App.tsx
-
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { zyntraTheme } from './theme';
@@ -34,7 +32,7 @@ import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions
 
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 
 function App() {
     return (

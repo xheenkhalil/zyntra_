@@ -68,8 +68,12 @@ const ExamBankPage: React.FC = () => {
     try {
       const data = await getExams();
       setExams(data || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load exams.');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+        setError((err as { response: { data: { message: string } } }).response.data.message);
+      } else {
+        setError('Failed to load exams.');
+      }
     } finally {
       setLoading(false);
     }
@@ -113,10 +117,24 @@ const ExamBankPage: React.FC = () => {
       });
 
       await fetchExams();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let message = 'Action failed.';
+      if (
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+      ) {
+        message = (err as { response: { data: { message: string } } }).response.data.message;
+      }
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || 'Action failed.',
+        message,
       });
     } finally {
       setConfirmOpen(false);
@@ -139,8 +157,22 @@ const ExamBankPage: React.FC = () => {
       const newExam = await createExam(newExamTitle.trim());
       handleCloseCreate();
       navigate(`/courseadmin/exams/${newExam.id}`);
-    } catch (err: any) {
-      setDialogError(err.response?.data?.message || 'Failed to create exam.');
+    } catch (err: unknown) {
+      let message = 'Failed to create exam.';
+      if (
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+      ) {
+        message = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+      setDialogError(message);
     }
   };
 

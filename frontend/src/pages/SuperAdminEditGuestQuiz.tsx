@@ -10,7 +10,7 @@ interface GuestQuizDetails {
     title: string;
     category: string;
     status: 'draft' | 'published';
-    average_rating: number; // Include average_rating if you want to display it
+    average_rating: number | null; // Allow null for average_rating
     // ... other fields if needed for display
 }
 
@@ -43,8 +43,12 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
                 setTitle(data.title);
                 setCategory(data.category);
                 setStatus(data.status);
-            } catch (err: any) {
-                setError(err.response?.data?.message || 'Failed to fetch quiz details.');
+            } catch (err: unknown) {
+                if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                    setError((err as { response: { data: { message: string } } }).response.data.message);
+                } else {
+                    setError('Failed to fetch quiz details.');
+                }
                 console.error('Error fetching quiz details:', err);
             } finally {
                 setLoading(false);
@@ -67,15 +71,18 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
             setError('Quiz title and category cannot be empty.');
             return;
         }
-
         setSaving(true);
         try {
             const updatedQuiz = await updateGuestQuiz(quizId, { title, category, status });
             setSuccess(`Quiz "${updatedQuiz.title}" updated successfully!`);
             // Optionally, refresh quiz state or navigate back
             setQuiz(updatedQuiz); // Update local state with fresh data
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to update guest quiz.');
+        } catch (err: unknown) {
+            if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
+                setError((err as { response: { data: { message: string } } }).response.data.message);
+            } else {
+                setError('Failed to update guest quiz.');
+            }
             console.error('Error updating guest quiz:', err);
         } finally {
             setSaving(false);

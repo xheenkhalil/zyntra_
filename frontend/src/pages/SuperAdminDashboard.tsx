@@ -1,3 +1,5 @@
+// /frontend/src/pages/SuperAdminDashboard.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   Container, Box, Typography, TextField, Button, Alert,
@@ -18,9 +20,10 @@ import {
   unarchiveOrganization,
   deleteOrganization,
   createCentralAdmin,
-  sendInviteEmail 
+  sendInviteEmail
 } from '../services/superAdminService';
-import { useAuth } from '../context/AuthContext';
+// ✅ Use the new auth hook path
+import { useAuth } from '../context/useAuth';
 
 // ========================
 // INTERFACES
@@ -75,8 +78,20 @@ const SuperAdminDashboard: React.FC = () => {
     try {
       const data = await getOrganizations();
       setOrganizations(data || []);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to load organizations.';
+    } catch (err: unknown) {
+      interface AxiosError {
+        response?: { data?: { message?: string } };
+        message?: string;
+      }
+      let msg = 'Failed to load organizations.';
+      if (typeof err === 'object' && err !== null) {
+        const errorObj = err as AxiosError;
+        if (typeof errorObj.response?.data?.message === 'string') {
+          msg = errorObj.response.data.message;
+        } else if (typeof errorObj.message === 'string') {
+          msg = errorObj.message;
+        }
+      }
       setError(msg);
     } finally {
       setLoading(false);
@@ -133,8 +148,20 @@ const SuperAdminDashboard: React.FC = () => {
       const data = await createOrganization(newOrgName.trim());
       setNewlyCreatedOrg(data.organization);
       setModalStep(2);
-    } catch (err: any) {
-      setDialogError(err.response?.data?.message || 'Failed to create organization.');
+    } catch (err: unknown) {
+      interface AxiosError {
+        response?: { data?: { message?: string } };
+      }
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as AxiosError).response?.data?.message === 'string'
+      ) {
+        setDialogError((err as AxiosError).response!.data!.message!);
+      } else {
+        setDialogError('Failed to create organization.');
+      }
     }
   };
 
@@ -151,8 +178,17 @@ const SuperAdminDashboard: React.FC = () => {
       setNewlyCreatedAdminId(data.user.id);
       setModalStep(3);
       await fetchOrgs();
-    } catch (err: any) {
-      setDialogError(err.response?.data?.message || 'Failed to create central admin.');
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+      ) {
+        setDialogError((err as { response: { data: { message: string } } }).response.data.message);
+      } else {
+        setDialogError('Failed to create central admin.');
+      }
     }
   };
 
@@ -162,8 +198,12 @@ const SuperAdminDashboard: React.FC = () => {
     try {
       const data = await sendInviteEmail(newlyCreatedAdminId);
       setSnackbar({ open: true, message: data.message });
-    } catch (err: any) {
-      setSnackbar({ open: true, message: err.message || 'Failed to send email.' });
+    } catch (err: unknown) {
+      let message = 'Failed to send email.';
+      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: string }).message === 'string') {
+        message = (err as { message: string }).message;
+      }
+      setSnackbar({ open: true, message });
     } finally {
       setIsSendingEmail(false);
     }
@@ -185,8 +225,17 @@ const SuperAdminDashboard: React.FC = () => {
       setEditOpen(false);
       setSnackbar({ open: true, message: 'Organization updated successfully!' });
       await fetchOrgs();
-    } catch (err: any) {
-      setDialogError(err.response?.data?.message || 'Failed to update organization.');
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+      ) {
+        setDialogError((err as { response: { data: { message: string } } }).response.data.message);
+      } else {
+        setDialogError('Failed to update organization.');
+      }
     }
   };
 
@@ -205,8 +254,17 @@ const SuperAdminDashboard: React.FC = () => {
       setSnackbar({ open: true, message: res?.message || 'Action successful!' });
       setConfirmOpen(false);
       await fetchOrgs();
-    } catch (err: any) {
-      setDialogError(err.response?.data?.message || `Failed to ${actionToConfirm} organization.`);
+    } catch (err: unknown) {
+      let message = `Failed to ${actionToConfirm} organization.`;
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+      ) {
+        message = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+      setDialogError(message);
     }
   };
 
