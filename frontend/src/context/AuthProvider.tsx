@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext, type IAuthContext, type User } from "./AuthContext";
 
+// frontend/src/context/AuthProvider.tsx
 const apiClient = axios.create({
-  baseURL: "https://zyntraexams.onrender.com/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL, // Use the env var
   withCredentials: true,
 });
 

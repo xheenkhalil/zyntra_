@@ -4,14 +4,15 @@ import axios from 'axios';
 //  CONFIGURE API CLIENT
 // ================================================================
 const apiClient = axios.create({
-    baseURL: 'https://zyntraexams.onrender.com/api/public', // Using the /api/public prefix for guest routes
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+  withCredentials: false,
 });
 
 // ================================================================
 //  FETCH ALL PUBLIC QUIZZES
 // ================================================================
 export const getPublicQuizzes = async () => {
-    const response = await apiClient.get('/quizzes');
+    const response = await apiClient.get('public/quizzes');
     return response.data;
 };
 
@@ -19,7 +20,7 @@ export const getPublicQuizzes = async () => {
 //  FETCH SINGLE QUIZ BY ID
 // ================================================================
 export const getPublicQuizById = async (quizId: string) => {
-    const response = await apiClient.get(`/quizzes/${quizId}`);
+    const response = await apiClient.get(`public/quizzes/${quizId}`);
     return response.data;
 };
 
@@ -27,7 +28,7 @@ export const getPublicQuizById = async (quizId: string) => {
 //  SUBMIT QUIZ ANSWERS (and optional rating on submission)
 // ================================================================
 export const submitPublicQuiz = async (quizId: string, answers: object, rating?: number) => {
-    const response = await apiClient.post(`/quizzes/${quizId}/submit`, { answers, rating });
+    const response = await apiClient.post(`public/quizzes/${quizId}/submit`, { answers, rating });
     return response.data;
 };
 
@@ -35,6 +36,6 @@ export const submitPublicQuiz = async (quizId: string, answers: object, rating?:
 //  🆕 STEP 3: UPDATE QUIZ RATING (After submission)
 // ================================================================
 export const updateQuizRating = async (quizId: string, rating: number) => {
-    const response = await apiClient.put(`/quizzes/${quizId}/rating`, { rating });
+    const response = await apiClient.put(`public/quizzes/${quizId}/rating`, { rating });
     return response.data;
 };

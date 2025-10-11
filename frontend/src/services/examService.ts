@@ -4,7 +4,7 @@ import axios from 'axios';
 // API Client Setup
 // ---------------------------------------------------------
 const apiClient = axios.create({
-  baseURL: 'https://zyntraexams.onrender.com/api',
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true,
 });
 
@@ -69,7 +69,7 @@ export const updateExamSettings = async (
   settings: {
     status?: string;
     grading_scale?: object;
-    duration_minutes?: number; // ✅ added optional duration
+    duration_minutes?: number;
   }
 ) => {
   const response = await apiClient.put(`/exams/${examId}`, settings);

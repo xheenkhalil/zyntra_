@@ -14,20 +14,24 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  IconButton,
+  Drawer,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 
 import SchoolIcon from "@mui/icons-material/School";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import StarIcon from "@mui/icons-material/Star";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
-// ✅ Import the new GuestQuizSection component
 import GuestQuizSection from "../components/GuestQuizSection";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -35,6 +39,7 @@ const HomePage: React.FC = () => {
   };
 
   const handleMenuClose = () => setAnchorEl(null);
+  const toggleMobileMenu = () => setMobileOpen((prev) => !prev);
 
   const open = Boolean(anchorEl);
 
@@ -50,7 +55,7 @@ const HomePage: React.FC = () => {
           zIndex: 10,
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
             <Typography
               variant="h6"
@@ -60,6 +65,7 @@ const HomePage: React.FC = () => {
               Zyntra
             </Typography>
 
+            {/* Desktop Navigation */}
             <Box
               sx={{
                 display: { xs: "none", md: "flex" },
@@ -108,9 +114,50 @@ const HomePage: React.FC = () => {
                 Student Login
               </Button>
             </Box>
+
+            {/* Mobile Menu Icon */}
+            <IconButton
+              color="inherit"
+              sx={{ display: { xs: "block", md: "none" } }}
+              onClick={toggleMobileMenu}
+            >
+              {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+            </IconButton>
           </Toolbar>
         </Container>
       </AppBar>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={toggleMobileMenu}
+        PaperProps={{ sx: { width: "70%", bgcolor: "background.default" } }}
+      >
+        <List sx={{ mt: 2 }}>
+          <ListItem>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Menu
+            </Typography>
+          </ListItem>
+          <Divider />
+          <ListItemButton onClick={handleMenuOpen}>
+            <ListItemText primary="Solutions" />
+          </ListItemButton>
+          <ListItemButton href="#features">
+            <ListItemText primary="Features" />
+          </ListItemButton>
+          <ListItemButton href="#pricing">
+            <ListItemText primary="Pricing" />
+          </ListItemButton>
+          <ListItemButton onClick={() => navigate("/login")}>
+            <ListItemText primary="Admin Login" />
+          </ListItemButton>
+          <ListItemButton onClick={() => navigate("/login")}>
+            <ListItemText primary="Student Login" />
+          </ListItemButton>
+        </List>
+      </Drawer>
 
       {/* ================= MEGA MENU ================= */}
       <Menu
@@ -121,13 +168,12 @@ const HomePage: React.FC = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         transformOrigin={{ vertical: "top", horizontal: "left" }}
       >
-        <Box sx={{ width: 600, p: 2 }}>
+        <Box sx={{ width: { xs: "100%", sm: 400, md: 600 }, p: 2 }}>
           <Box
             display="grid"
             gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }}
             gap={2}
           >
-            {/* --- Left Column --- */}
             <Box>
               <Typography
                 variant="subtitle2"
@@ -155,7 +201,6 @@ const HomePage: React.FC = () => {
               </List>
             </Box>
 
-            {/* --- Right Column --- */}
             <Box>
               <Typography
                 variant="subtitle2"
@@ -190,7 +235,7 @@ const HomePage: React.FC = () => {
       <Box
         sx={{
           position: "relative",
-          py: { xs: 10, md: 14 },
+          py: { xs: 8, sm: 10, md: 14 },
           textAlign: "center",
           overflow: "hidden",
           background:
@@ -198,43 +243,20 @@ const HomePage: React.FC = () => {
           color: "white",
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            width: "500px",
-            height: "500px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(93,105,255,0.4) 0%, transparent 70%)",
-            top: "-150px",
-            left: "-150px",
-            filter: "blur(80px)",
-            animation: "pulse 8s ease-in-out infinite alternate",
-            "@keyframes pulse": {
-              from: { transform: "scale(1)" },
-              to: { transform: "scale(1.25)" },
-            },
-          }}
-        />
-
         <Container
           maxWidth="md"
           sx={{
             position: "relative",
             zIndex: 2,
-            animation: "fadeUp 1.2s ease-out forwards",
-            "@keyframes fadeUp": {
-              from: { opacity: 0, transform: "translateY(40px)" },
-              to: { opacity: 1, transform: "translateY(0)" },
-            },
+            px: { xs: 3, sm: 4, md: 6 },
           }}
         >
           <Typography
             component="h1"
-            variant="h2"
             sx={{
               fontWeight: 800,
               mb: 3,
+              fontSize: { xs: "2rem", sm: "2.5rem", md: "3.5rem" },
               background: "linear-gradient(to right, #ffffff, #b3baff)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -243,11 +265,12 @@ const HomePage: React.FC = () => {
             The Intelligent Assessment Platform
           </Typography>
           <Typography
-            variant="h6"
+            variant="body1"
             sx={{
               color: "rgba(255,255,255,0.85)",
-              mb: 5,
-              maxWidth: "750px",
+              mb: 4,
+              fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" },
+              maxWidth: 750,
               margin: "auto",
             }}
           >
@@ -262,8 +285,6 @@ const HomePage: React.FC = () => {
               justifyContent: "center",
               gap: 2,
               flexWrap: "wrap",
-              mt: 6,
-              animation: "fadeUp 1.8s ease-out forwards",
             }}
           >
             <Button
@@ -301,7 +322,7 @@ const HomePage: React.FC = () => {
       </Box>
 
       {/* ================= QUIZ SECTION ================= */}
-      <Container maxWidth="lg" sx={{ py: 10 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <GuestQuizSection />
       </Container>
 
@@ -311,14 +332,18 @@ const HomePage: React.FC = () => {
         sx={{
           bgcolor: "text.primary",
           color: "background.paper",
-          py: 6,
+          py: { xs: 6, md: 8 },
           mt: 8,
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Box
             display="grid"
-            gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr", md: "2fr 1fr 1fr" }}
+            gridTemplateColumns={{
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "2fr 1fr 1fr",
+            }}
             gap={4}
           >
             <Box>
@@ -372,7 +397,7 @@ const HomePage: React.FC = () => {
           <Typography
             variant="body2"
             align="center"
-            sx={{ color: "grey.500" }}
+            sx={{ color: "grey.500", fontSize: { xs: "0.8rem", md: "0.9rem" } }}
           >
             © {new Date().getFullYear()} Zyntra. All Rights Reserved. Jos,
             Nigeria.

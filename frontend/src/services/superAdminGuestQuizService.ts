@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
-const GUEST_QUIZ_API_URL = `${API_BASE_URL}/api/superadmin/guest-quizzes`;
+const GUEST_QUIZ_API_URL = `${API_BASE_URL}/superadmin/guest-quizzes`;
 
 // Helper interface for quiz data structure expected from backend
 export interface GuestQuiz {

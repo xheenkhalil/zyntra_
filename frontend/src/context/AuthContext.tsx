@@ -25,5 +25,4 @@ export interface IAuthContext {
   logout: () => Promise<void>;
 }
 
-// ✅ Only define the context here — no component export
 export const AuthContext = createContext<IAuthContext | undefined>(undefined);

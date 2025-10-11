@@ -6,7 +6,7 @@ import { zyntraTheme } from './theme';
 // Import Layouts
 import CourseAdminLayout from './layouts/CourseAdminLayout';
 import StudentLayout from './layouts/StudentLayout';
-import SuperAdminLayout from './components/SuperAdminLayout'; // Directly in components/
+import SuperAdminLayout from './components/SuperAdminLayout'; 
 
 // Import Pages (ALL DIRECTLY FROM ./pages/)
 import HomePage from './pages/HomePage';

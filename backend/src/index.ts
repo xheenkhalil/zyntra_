@@ -11,17 +11,39 @@ import questionRoutes from './routes/questionRoutes';
 import studentRoutes from './routes/studentRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import guestRoutes from './routes/guestRoutes';
-import superAdminGuestQuizRoutes from './routes/superAdminGuestQuizRoutes'; 
+import superAdminGuestQuizRoutes from './routes/superAdminGuestQuizRoutes';
 
 const app = express();
 const PORT = config.PORT;
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+// --- DYNAMIC CORS CONFIGURATION FOR PRODUCTION ---
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []; 
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // In production, we strictly check origins.
+        if (!origin) {
+            console.warn('CORS: Request with no origin received. Potentially direct API call or non-browser client.');
+            return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            const msg = `CORS Policy: Access denied for Origin: ${origin}. Not in allowed list: [${allowedOrigins.join(', ')}]`;
+            console.error(msg);
+            return callback(new Error(msg), false);
+        }
+    },
+    credentials: true,
+}));
+// --- END DYNAMIC CORS CONFIGURATION ---
+
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.urlencoded({ extended: true }));
 
-// API Routes
+// API Routes - All prefixed with '/api'
 app.use('/api/auth', authRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/centraladmin', centralAdminRoutes);
@@ -31,11 +53,11 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/public', guestRoutes);
-app.use('/api/superadmin/guest-quizzes', superAdminGuestQuizRoutes); 
+app.use('/api/superadmin/guest-quizzes', superAdminGuestQuizRoutes);
 
-
+// Server listening
 app.listen(PORT, () => {
-    console.log(`Backend server is running on http://localhost:${PORT}`);
+    console.log(`Backend server is running on port ${PORT}.`);
+    console.log(`Configured Allowed CORS origins: ${allowedOrigins.join(', ')}`);
+    console.log(`API base URL: https://zyntraexams.onrender.com/api`);
 });
-
-

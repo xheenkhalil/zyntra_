@@ -3,10 +3,12 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://zyntraexams.onrender.com/api',
-    withCredentials: true,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+  withCredentials: true,
 });
-
+// ---------------------------------------------------------
+// Student Exam Operations
+// ---------------------------------------------------------
 export const getAvailableExams = async () => {
     const response = await apiClient.get('/student/exams');
     return response.data;

@@ -4,9 +4,8 @@ import axios from 'axios';
 
 // === Axios Client ===
 const apiClient = axios.create({
-  baseURL: 'https://zyntraexams.onrender.com/api',
-  withCredentials: true, // Ensures cookies are sent for session auth
-  timeout: 10000, // 10 seconds to fail gracefully
+  baseURL: import.meta.env.VITE_BACKEND_URL, // <--- USE ENVIRONMENT VARIABLE
+  withCredentials: true,
 });
 
 // === Utility: Safe error extraction ===
