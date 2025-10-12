@@ -1,63 +1,95 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import config from './config';
-import authRoutes from './routes/authRoutes';
-import superAdminRoutes from './routes/superAdminRoutes';
-import centralAdminRoutes from './routes/centralAdminRoutes';
-import courseAdminRoutes from './routes/courseAdminRoutes';
-import examRoutes from './routes/examRoutes';
-import questionRoutes from './routes/questionRoutes';
-import studentRoutes from './routes/studentRoutes';
-import analyticsRoutes from './routes/analyticsRoutes';
-import guestRoutes from './routes/guestRoutes';
-import superAdminGuestQuizRoutes from './routes/superAdminGuestQuizRoutes';
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import config from "./config";
+
+// === Route Imports ===
+import authRoutes from "./routes/authRoutes";
+import superAdminRoutes from "./routes/superAdminRoutes";
+import centralAdminRoutes from "./routes/centralAdminRoutes";
+import courseAdminRoutes from "./routes/courseAdminRoutes";
+import examRoutes from "./routes/examRoutes";
+import questionRoutes from "./routes/questionRoutes";
+import studentRoutes from "./routes/studentRoutes";
+import analyticsRoutes from "./routes/analyticsRoutes";
+import guestRoutes from "./routes/guestRoutes";
+import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes";
 
 const app = express();
 const PORT = config.PORT;
 
-// --- DYNAMIC CORS CONFIGURATION FOR PRODUCTION ---
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []; 
+// =====================================================
+// ✅ CORS CONFIGURATION (Render + Vercel Compatible)
+// =====================================================
+const allowedOrigins: string[] = [
+  "https://zyntraexams.vercel.app",
+  "http://localhost:5173",
+];
 
-app.use(cors({
-    origin: (origin, callback) => {
-        // In production, we strictly check origins.
-        if (!origin) {
-            console.warn('CORS: Request with no origin received. Potentially direct API call or non-browser client.');
-            return callback(null, true);
-        }
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        } else {
-            const msg = `CORS Policy: Access denied for Origin: ${origin}. Not in allowed list: [${allowedOrigins.join(', ')}]`;
-            console.error(msg);
-            return callback(new Error(msg), false);
-        }
+app.use(
+  cors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) {
+        console.warn("CORS: No origin detected — possible server-to-server call.");
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        const msg = `CORS Policy: Access denied for origin ${origin}`;
+        console.error(msg);
+        return callback(new Error(msg), false);
+      }
     },
-    credentials: true,
-}));
-// --- END DYNAMIC CORS CONFIGURATION ---
+    credentials: true, // ✅ allow cookies & auth headers
+  })
+);
 
+// =====================================================
+// ✅ MIDDLEWARE SETUP
+// =====================================================
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes - All prefixed with '/api'
-app.use('/api/auth', authRoutes);
-app.use('/api/superadmin', superAdminRoutes);
-app.use('/api/centraladmin', centralAdminRoutes);
-app.use('/api/courseadmin', courseAdminRoutes);
-app.use('/api/exams', examRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/public', guestRoutes);
-app.use('/api/superadmin/guest-quizzes', superAdminGuestQuizRoutes);
+// =====================================================
+// ✅ ROUTES
+// =====================================================
+app.use("/api/auth", authRoutes);
+app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/centraladmin", centralAdminRoutes);
+app.use("/api/courseadmin", courseAdminRoutes);
+app.use("/api/exams", examRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/public", guestRoutes);
+app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes);
 
-// Server listening
+// =====================================================
+// ✅ HEALTH CHECK ENDPOINT
+// =====================================================
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: "success",
+    message: "ZyntraExams Backend Running Successfully 🚀",
+    allowedOrigins,
+  });
+});
+
+// =====================================================
+// ✅ ERROR HANDLER (Optional for better debugging)
+// =====================================================
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Server Error:", err.message);
+  res.status(500).json({ message: "Internal Server Error", error: err.message });
+});
+
+// =====================================================
+// ✅ SERVER START
+// =====================================================
 app.listen(PORT, () => {
-    console.log(`Backend server is running on port ${PORT}.`);
-    console.log(`Configured Allowed CORS origins: ${allowedOrigins.join(', ')}`);
-    console.log(`API base URL: https://zyntraexams.onrender.com/api`);
+  console.log(`✅ Backend server is running on port ${PORT}`);
+  console.log(`🌐 Allowed Origins: ${allowedOrigins.join(", ")}`);
+  console.log(`🔗 API base URL: https://zyntraexams.onrender.com/api`);
 });
