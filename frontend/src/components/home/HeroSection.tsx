@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+
 // Import icons used in this section
 import {
   FaRocket,
@@ -87,15 +89,20 @@ const HeroSection: React.FC = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 lg:space-x-6 mb-8 sm:mb-12">
-          <button className="flex items-center space-x-2 bg-white text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 w-full sm:w-auto no-underline border-none">
+          {/* Replaced <button> with <Link> and added the 'to' prop */}
+          <Link to="/login" className="flex items-center space-x-2 bg-white text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 w-full sm:w-auto no-underline border-none">
             <FaPlay className="text-sm" />
             <span>Start Free Trial</span>
-          </button>
-          <button className="flex items-center space-x-2 glass-effect text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 transform hover:-translate-y-1 w-full sm:w-auto no-underline border-none">
+          </Link>
+  
+              {/* Also replaced this <button> with <Link> */}
+          <Link
+            to="/#demo" // You can change this path (e.g., to /pricing or /contact)
+            className="flex items-center space-x-2 glass-effect text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 transform hover:-translate-y-1 w-full sm:w-auto no-underline border-none">
             <FaVideo className="text-sm" />
             <span>Watch Demo</span>
-          </button>
-        </div>
+          </Link>
+</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
           <div className="glass-effect rounded-xl p-4 sm:p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
