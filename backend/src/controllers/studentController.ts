@@ -1,10 +1,8 @@
-// /backend/src/controllers/studentController.ts
-
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
 
-// --- NEW: Define the shape of our data for TypeScript ---
+// --- Define the shape of our data for TypeScript ---
 interface Option {
     text: string;
     isCorrect: boolean;
@@ -45,71 +43,80 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
 
 
 // Starts an exam if not started, or resumes it if 'in_progress'
-// CORRECTED: Added an explicit return type 'Promise<any>' to satisfy TypeScript for the recursive call
-export const startOrResumeExam = async (req: AuthRequest, res: Response): Promise<any> => {
+// REFACTORED: Removed recursion to prevent race conditions.
+export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
     const { examId } = req.params;
     const studentId = req.user?.userId;
 
     const client = await pool.connect();
     try {
-        // Check for an existing 'in_progress' submission first
-        const existingSubmissionQuery = 'SELECT * FROM exam_submissions WHERE exam_id = $1 AND student_id = $2';
-        const submissionResult = await client.query(existingSubmissionQuery, [examId, studentId]);
-
-        if (submissionResult.rows[0] && submissionResult.rows[0].status === 'completed') {
-            return res.status(409).json({ message: 'You have already completed this exam.' });
-        }
-
+        // --- 1. Get Exam and Check Status (Fail Fast) ---
         const examQuery = 'SELECT * FROM exams WHERE id = $1 AND status = \'live\'';
         const examResult = await client.query(examQuery, [examId]);
+
         if (examResult.rows.length === 0) {
+            // No finally block needed, error will bubble to catch
             return res.status(404).json({ message: 'Exam not found or is not live.' });
         }
         const exam = examResult.rows[0];
 
-        // If a submission exists and is in_progress, resume it
+        // --- 2. Find or Create Submission ---
+        let submission;
+        const existingSubmissionQuery = 'SELECT * FROM exam_submissions WHERE exam_id = $1 AND student_id = $2';
+        const submissionResult = await client.query(existingSubmissionQuery, [examId, studentId]);
+
         if (submissionResult.rows.length > 0) {
-            const inProgressSubmission = submissionResult.rows[0];
-            // Fetch questions but remove the isCorrect flag
-            const questionsQuery = 'SELECT id, question_text, options FROM questions WHERE exam_id = $1 ORDER BY created_at ASC';
-            const questionsResult = await client.query(questionsQuery, [examId]);
-
-            const sanitizedQuestions = questionsResult.rows.map(q => ({
-                id: q.id,
-                question_text: q.question_text,
-                options: q.options.map((opt: { text: string }) => ({ text: opt.text })) // Type safety for opt
-            }));
-
-            return res.status(200).json({
-                message: "Resuming exam.",
-                exam: {
-                    id: exam.id,
-                    title: exam.title,
-                    questions: sanitizedQuestions,
-                },
-                submission: {
-                    id: inProgressSubmission.id,
-                    answers: inProgressSubmission.answers || {},
-                    time_remaining_seconds: inProgressSubmission.time_remaining_seconds,
-                }
-            });
+            // --- RESUME PATH ---
+            if (submissionResult.rows[0].status === 'completed') {
+                return res.status(409).json({ message: 'You have already completed this exam.' });
+            }
+            // Submission exists and is 'in_progress', so we'll use it
+            submission = submissionResult.rows[0];
+        
+        } else {
+            // --- START PATH ---
+            // No submission exists, so create a new one
+            const startTime = exam.duration_minutes * 60; // Convert duration to seconds
+            const startQuery = `
+                INSERT INTO exam_submissions (exam_id, student_id, status, time_remaining_seconds, answers)
+                VALUES ($1, $2, 'in_progress', $3, '{}') 
+                RETURNING *;
+            `;
+            const newSubmissionResult = await client.query(startQuery, [examId, studentId, startTime]);
+            submission = newSubmissionResult.rows[0];
         }
 
-        // If no submission exists, create a new one to start the exam
-        const startTime = exam.duration_minutes * 60; // Convert duration to seconds
-        const startQuery = `
-            INSERT INTO exam_submissions (exam_id, student_id, status, time_remaining_seconds, answers)
-            VALUES ($1, $2, 'in_progress', $3, '{}') RETURNING id;
-        `;
-        await client.query(startQuery, [examId, studentId, startTime]);
-        
-        // Now fetch and return the exam data just like in the resume flow
-        return startOrResumeExam(req, res);
+        // --- 3. Fetch & Send Exam (Common to both paths) ---
+        // By this point, we are guaranteed to have a valid 'submission' object
+        const questionsQuery = 'SELECT id, question_text, options FROM questions WHERE exam_id = $1 ORDER BY created_at ASC';
+        const questionsResult = await client.query(questionsQuery, [examId]);
+
+        const sanitizedQuestions = questionsResult.rows.map(q => ({
+            id: q.id,
+            question_text: q.question_text,
+            options: q.options.map((opt: { text: string }) => ({ text: opt.text })) 
+        }));
+
+        return res.status(200).json({
+            message: submissionResult.rows.length > 0 ? "Resuming exam." : "Starting new exam.",
+            exam: {
+                id: exam.id,
+                title: exam.title,
+                questions: sanitizedQuestions,
+            },
+            submission: {
+                id: submission.id,
+                answers: submission.answers || {},
+                time_remaining_seconds: submission.time_remaining_seconds,
+            }
+        });
 
     } catch (error) {
+        // This will now catch the Unique Constraint Violation if it happens
         console.error("Error starting or resuming exam:", error);
         res.status(500).json({ message: 'Internal server error' });
     } finally {
+        // This will always run, releasing the *single* client
         client.release();
     }
 };

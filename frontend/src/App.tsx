@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { zyntraTheme } from './theme';
+import './index.css';
 
 // Import Layouts
 import CourseAdminLayout from './layouts/CourseAdminLayout';
@@ -23,6 +24,9 @@ import ResultsPage from './pages/ResultsPage';
 import SubmissionCompletePage from './pages/SubmissionCompletePage';
 import CourseAdminOverview from './pages/CourseAdminOverview';
 import GuestQuizRunner from './pages/GuestQuizRunner';
+import AboutPage from './pages/AboutPage';
+import PricingPage from './pages/PricingPage';
+import ContactPage from './pages/ContactPage';
 
 // --- Super Admin Guest Quiz Management Pages ---
 import SuperAdminGuestQuizzes from './pages/SuperAdminGuestQuizzes';
@@ -46,7 +50,10 @@ function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/setup-account" element={<SetupAccountPage />} />
                         <Route path="/quiz/:quizId" element={<GuestQuizRunner />} />
-                        
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+
                         {/* --- Protected Super Admin Routes --- */}
                         <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
                             <Route path="/superadmin" element={<SuperAdminLayout />}>

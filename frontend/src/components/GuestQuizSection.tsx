@@ -1,19 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Alert,
-  CircularProgress,
-  Card,
-  CardContent,
-  CardActions,
-} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import StarIcon from "@mui/icons-material/Star";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import { getPublicQuizzes } from "../services/guestService";
+// Import react-icons, which are used in your HTML/Tailwind code
+import { FaStar, FaUsers } from "react-icons/fa";
+import { getPublicQuizzes } from "../services/guestService"; // Your service remains the same
 
+// Your interface remains the same
 interface Quiz {
   id: string;
   title: string;
@@ -24,6 +15,7 @@ interface Quiz {
 
 const GuestQuizSection: React.FC = () => {
   const navigate = useNavigate();
+  // All your state and data-fetching logic is preserved
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,114 +49,95 @@ const GuestQuizSection: React.FC = () => {
     };
   }, [fetchQuizzes]);
 
-  if (loading)
+  // --- Converted Loading Spinner ---
+  if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center mt-4">
+        {/* Tailwind CSS spinner */}
+        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      </div>
     );
+  }
 
-  if (error) return <Alert severity="error">{error}</Alert>;
+  // --- Converted Error Alert ---
+  if (error) {
+    return (
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg"
+        role="alert"
+      >
+        {error}
+      </div>
+    );
+  }
 
+  // --- Converted Tailwind JSX ---
   return (
-    <Box>
-      <Typography
-        variant="h4"
-        align="center"
-        sx={{ fontWeight: 700, mb: 4 }}
-      >
+    <div className="w-full">
+      {/* Converted Typography to h2 with Tailwind classes */}
+      <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 md:mb-12 text-center">
         Sharpen Your Skills
-      </Typography>
+      </h2>
 
-      {/* Responsive grid layout using Box */}
-      <Box
-        display="grid"
-        gridTemplateColumns={{
-          xs: "1fr",
-          sm: "1fr 1fr",
-          md: "1fr 1fr 1fr 1fr",
-        }}
-        gap={3}
-        justifyContent="center"
-      >
+      {/* Converted Box grid to Tailwind grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
         {quizzes.length > 0 ? (
           quizzes.map((quiz) => (
-            <Box key={quiz.id}>
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-6px)",
-                    boxShadow: 6,
-                  },
-                  display: "flex",
-                  flexDirection: "column",
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography
-                    sx={{ fontSize: 14 }}
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    {quiz.category}
-                  </Typography>
-                  <Typography variant="h5" component="div">
-                    {quiz.title}
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      color: "text.secondary",
-                      mt: 2,
-                    }}
-                  >
-                    <PeopleAltIcon fontSize="small" sx={{ mr: 1 }} />
-                    <Typography variant="body2">
-                      {parseInt(quiz.participant_count).toLocaleString()} took
-                      this
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      color: "text.secondary",
-                      mt: 1,
-                    }}
-                  >
-                    <StarIcon
-                      fontSize="small"
-                      sx={{ mr: 1, color: "#ffb400" }}
-                    />
-                    <Typography variant="body2">
-                      {quiz.average_rating
-                        ? `${quiz.average_rating} Stars`
-                        : "Not Rated Yet"}
-                    </Typography>
-                  </Box>
-                </CardContent>
-                <CardActions>
-                  <Button
-                    size="small"
-                    onClick={() => navigate(`/quiz/${quiz.id}`)}
-                  >
-                    Start Quiz
-                  </Button>
-                </CardActions>
-              </Card>
-            </Box>
+            // --- Converted Card to a div with "glass-card" styles ---
+            // We apply the glass effect directly using Tailwind's arbitrary values
+            // and add utility classes from your HTML for hover effects.
+            <div
+              key={quiz.id}
+              className="quiz-card flex flex-col h-full rounded-2xl shadow-lg p-6 
+                         transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 
+                         bg-[rgba(255,255,255,0.95)] backdrop-blur-[20px] 
+                         border border-[rgba(255,255,255,0.3)]"
+            >
+              {/* Converted CardContent to div */}
+              <div className="flex-grow">
+                <p className="text-sm text-blue-600 font-semibold mb-1">
+                  {quiz.category}
+                </p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {quiz.title}
+                </h3>
+
+                <div className="flex items-center text-gray-600 mt-2">
+                  <FaUsers className="mr-2" />
+                  <p className="text-sm">
+                    {parseInt(quiz.participant_count).toLocaleString()} took
+                    this
+                  </p>
+                </div>
+
+                <div className="flex items-center text-gray-600 mt-1">
+                  <FaStar className="mr-2 text-yellow-400" />
+                  <p className="text-sm">
+                    {quiz.average_rating
+                      ? `${quiz.average_rating} Stars`
+                      : "Not Rated Yet"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Converted CardActions to div */}
+              <div className="mt-6 pt-4 border-t border-gray-200/60">
+                <button
+                  onClick={() => navigate(`/quiz/${quiz.id}`)}
+                  className="text-blue-600 font-semibold text-sm hover:text-blue-800 transition-colors border-none"
+                >
+                  Start Quiz
+                </button>
+              </div>
+            </div>
           ))
         ) : (
-          <Typography>
+          <p className="col-span-1 md:col-span-4 text-center text-gray-600">
             No public quizzes available at the moment. Check back soon!
-          </Typography>
+          </p>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

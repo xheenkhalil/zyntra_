@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let response;
 
       if ("studentId" in credentials) {
-        response = await apiClient.post("/auth/student-login", {
+        response = await apiClient.post("/auth/login", {
           studentId: credentials.studentId,
         });
       } else {
