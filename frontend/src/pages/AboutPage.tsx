@@ -25,9 +25,11 @@ const FeatureCard: React.FC<{
 }> = ({ icon, title, children }) => (
   <Box className="bg-white rounded-xl shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow duration-300">
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-      {React.cloneElement(icon, {
-        className: "text-blue-600 text-lg sm:text-xl",
-      })}
+      {React.isValidElement(icon)
+        ? React.cloneElement(icon as React.ReactElement<any, any>, {
+            className: "text-blue-600 text-lg sm:text-xl",
+          })
+        : icon}
     </Box>
     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
       {title}

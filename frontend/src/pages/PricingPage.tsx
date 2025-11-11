@@ -133,7 +133,7 @@ const PricingPage: React.FC = () => {
   );
 
   const handleCycleChange = (
-    event: React.MouseEvent<HTMLElement>,
+    _event: React.MouseEvent<HTMLElement>,
     newCycle: "monthly" | "annually" | null
   ) => {
     if (newCycle !== null) {

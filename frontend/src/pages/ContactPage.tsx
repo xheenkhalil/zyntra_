@@ -16,7 +16,6 @@ import {
   ListItemText,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import { useNavigate } from "react-router-dom";
 
 // --- FIX: Corrected import paths ---
 import Navbar from "../layouts/Navbar";
@@ -43,7 +42,6 @@ interface FormData {
 
 // --- Main Contact Page Component ---
 const ContactPage: React.FC = () => {
-  const navigate = useNavigate();
 
   // --- State for the form ---
   const [formData, setFormData] = useState<FormData>({
@@ -78,22 +76,23 @@ const ContactPage: React.FC = () => {
     setSubmitStatus(null);
 
     // --- Simulate API Call ---
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSubmitStatus("success");
-      setFormData({
-        inquiry: "sales",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        message: "",
-      });
-    } catch (error) {
-      setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
-    }
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          setSubmitStatus("success");
+          setFormData({
+            inquiry: "sales",
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            message: "",
+          });
+        } catch (error) {
+          console.error(error);
+          setSubmitStatus("error");
+        } finally {
+          setIsSubmitting(false);
+        }
   };
 
   return (

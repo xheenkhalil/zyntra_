@@ -9,8 +9,14 @@ import GuestRegistrationModal from "../components/modals/GuestRegistrationModal"
 import LoadingSpinner from "../components/common/LoadingSpinner"; // A simple fallback
 
 // --- Lazy-Loaded Component Imports ---
-const GuestQuizSection = lazy(
-  () => import("../components/GuestQuizSection")
+type GuestQuizProps = {
+  onQuizClick: (category: string, score: number) => void;
+};
+
+const GuestQuizSection = lazy(() =>
+  import("../components/GuestQuizSection") as Promise<{
+    default: React.ComponentType<GuestQuizProps>;
+  }>
 );
 const Chatbot = lazy(() => import("../components/chatbot/Chatbot"));
 
