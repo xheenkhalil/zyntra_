@@ -15,6 +15,7 @@ const zyntraPalette = {
     borderLight: '#D3D3E9',
 };
 
+// Create a custom MUI theme using Zyntra colors
 export const zyntraTheme = createTheme({
     palette: {
         primary: {
