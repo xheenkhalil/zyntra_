@@ -135,7 +135,7 @@ const SuperAdminUsers: React.FC = () => {
   // Effect to fetch data when page, filters, or debounced search changes
   useEffect(() => {
     fetchUsers(pagination.currentPage, filters, debouncedSearch);
-  }, [pagination.currentPage, filters.role, debouncedSearch, fetchUsers]);
+  }, [pagination.currentPage, filters, debouncedSearch, fetchUsers]);
 
   // ========================
   // EVENT HANDLERS
@@ -149,7 +149,7 @@ const SuperAdminUsers: React.FC = () => {
     setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset to page 1
   };
 
-  const handlePageChange = (event: unknown, newPage: number) => {
+  const handlePageChange = (_event: unknown, newPage: number) => {
     setPagination((prev) => ({ ...prev, currentPage: newPage + 1 })); // MUI is 0-indexed
   };
 
