@@ -10,9 +10,9 @@ dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
 const config = {
     PORT: process.env.PORT || 5000,
     DATABASE_URL: process.env.DATABASE_URL,
-    JWT_SECRET: process.env.JWT_SECRET, // Add this line
-    RESEND_API_KEY: process.env.RESEND_API_KEY, // Add this line
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY, // Add this line
+    JWT_SECRET: process.env.JWT_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 };
 // Update the check
 if (!config.DATABASE_URL || !config.JWT_SECRET || !config.OPENAI_API_KEY) {

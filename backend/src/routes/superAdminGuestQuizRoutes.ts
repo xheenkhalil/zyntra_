@@ -14,18 +14,31 @@ import {
 } from '../controllers/superAdminGuestQuizController';
 
 const router = Router();
-const superAdminAccess = [protect, authorize('superadmin')];
 
-// --- Guest Quiz Management ---
-router.post('/', superAdminAccess, createGuestQuiz);
-router.get('/', superAdminAccess, getAllGuestQuizzes);
-router.get('/:quizId', superAdminAccess, getGuestQuizById);
-router.put('/:quizId', superAdminAccess, updateGuestQuiz);
-router.delete('/:quizId', superAdminAccess, deleteGuestQuiz);
+// --- UPGRADE ---
+// This middleware protects all routes in this file and ensures only a 'superadmin' can access them.
+// This is much cleaner than adding 'superAdminAccess' to every route.
+router.use(protect, authorize('superadmin'));
+
+
+// --- Guest Quiz Management (Upgraded with router.route()) ---
+router.route('/')
+    .post(createGuestQuiz)
+    .get(getAllGuestQuizzes);
+
+router.route('/:quizId')
+    .get(getGuestQuizById)
+    .put(updateGuestQuiz)
+    .delete(deleteGuestQuiz);
 
 // --- Guest Quiz Question Management ---
-router.post('/:quizId/questions', superAdminAccess, addGuestQuizQuestion);
-router.put('/questions/:questionId', superAdminAccess, updateGuestQuizQuestion); 
-router.delete('/questions/:questionId', superAdminAccess, deleteGuestQuizQuestion);
+// POST /api/guest-quizzes/:quizId/questions
+router.post('/:quizId/questions', addGuestQuizQuestion);
+
+// PUT /api/guest-quizzes/questions/:questionId
+router.put('/questions/:questionId', updateGuestQuizQuestion); 
+
+// DELETE /api/guest-quizzes/questions/:questionId
+router.delete('/questions/:questionId', deleteGuestQuizQuestion);
 
 export default router;

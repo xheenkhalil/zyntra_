@@ -1,8 +1,11 @@
+// /backend/src/controllers/authController.ts
+
 import { Request, Response } from 'express';
 import pool from '../services/db';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import config from '../config';
+import { AuthRequest } from '../middleware/authMiddleware';
 
 // ===========================================
 // LOGIN CONTROLLER
@@ -47,7 +50,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Please provide either a Student ID or an email and password.' });
         }
 
-        // --- ✅ Account Status Safety Check ---
+        // --- Account Status Safety Check ---
         if (user.status === 'pending_setup') {
             await pool.query(
                 `UPDATE users SET status = 'active', updated_at = NOW() WHERE id = $1`,
@@ -125,7 +128,7 @@ export const setupAccount = async (req: Request, res: Response) => {
         const user = userResult.rows[0];
         const passwordHash = await argon2.hash(password);
 
-        // --- ✅ Update password, clear token, and set status active ---
+        // --- Update password, clear token, and set status active ---
         const updateQuery = `
             UPDATE users
             SET password_hash = $1,
@@ -151,22 +154,18 @@ export const setupAccount = async (req: Request, res: Response) => {
 // ===========================================
 // SESSION CHECK CONTROLLER
 // ===========================================
-export const getMe = async (req: Request, res: Response) => {
-    const { token } = req.cookies;
-    if (!token) {
+export const getMe = async (req: AuthRequest, res: Response) => { // <-- Changed to AuthRequest
+    // --- UPDATED: Get userId from 'protect' middleware ---
+    const userId = req.user?.userId;
+
+    if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
     }
 
     try {
-        if (!config.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
-        const payload = jwt.verify(token, config.JWT_SECRET) as {
-            userId: string;
-            role: string;
-        };
-
         const userResult = await pool.query(
-            'SELECT id, full_name, email, role, status, organization_id FROM users WHERE id = $1',
-            [payload.userId]
+            'SELECT id, full_name, email, username, role, status, organization_id FROM users WHERE id = $1',
+            [userId]
         );
 
         if (userResult.rows.length === 0) {
@@ -180,6 +179,103 @@ export const getMe = async (req: Request, res: Response) => {
 };
 
 // ===========================================
+// NEW: UPDATE PROFILE CONTROLLER
+// ===========================================
+export const updateMyProfile = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    const { fullName, email } = req.body;
+
+    if (!fullName || !email) {
+        return res.status(400).json({ message: 'Full name and email are required.' });
+    }
+
+    try {
+        const query = `
+            UPDATE users
+            SET full_name = $1, email = $2, updated_at = NOW()
+            WHERE id = $3
+            RETURNING id, full_name, email, username, role, status, organization_id;
+        `;
+        const result = await pool.query(query, [fullName, email, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.status(200).json({
+            message: 'Profile updated successfully.',
+            user: result.rows[0]
+        });
+
+    } catch (error: any) {
+        if (error.code === '23505') { // Unique constraint violation
+            return res.status(409).json({ message: 'An account with this email already exists.' });
+        }
+        console.error('Update profile error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// ===========================================
+// NEW: CHANGE PASSWORD CONTROLLER
+// ===========================================
+export const changeMyPassword = async (req: AuthRequest, res: Response) => {
+    const userId = req.user?.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'All password fields are required.' });
+    }
+
+    if (currentPassword === newPassword) {
+        return res.status(400).json({ message: 'New password cannot be the same as the old password.' });
+    }
+
+    // --- Re-using your password strength validation ---
+    const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({
+            message:
+                'New password does not meet requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+        });
+    }
+
+    try {
+        // 1. Get the user's current password hash
+        const userResult = await pool.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        
+        const user = userResult.rows[0];
+
+        // 2. Verify the "current password" is correct
+        const isPasswordValid = await argon2.verify(user.password_hash, currentPassword);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Incorrect current password.' });
+        }
+
+        // 3. Hash the new password
+        const newPasswordHash = await argon2.hash(newPassword);
+
+        // 4. Update the password in the database
+        await pool.query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            [newPasswordHash, userId]
+        );
+
+        res.status(200).json({ message: 'Password changed successfully.' });
+
+    } catch (error: any) {
+        console.error('Change password error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+// ===========================================
 // LOGOUT CONTROLLER
 // ===========================================
 export const logoutUser = (req: Request, res: Response) => {
@@ -187,7 +283,7 @@ export const logoutUser = (req: Request, res: Response) => {
         httpOnly: true,
         expires: new Date(0),
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'none',
     });
     res.status(200).json({ message: 'Logout successful' });
 };

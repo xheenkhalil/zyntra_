@@ -5,13 +5,18 @@ import config from '../config';
 
 const pool = new Pool({
     connectionString: config.DATABASE_URL,
-    // THE FIX IS HERE: We are explicitly adding the SSL configuration
-    // This is often required for cloud databases like Supabase to maintain a stable connection.
     ssl: {
         rejectUnauthorized: false
-    }
+    },
+    idleTimeoutMillis: 10000,
+    maxUses: 5000, // Recycle a connection after 5000 queries for stability
 });
 
+pool.on('error', (err, client) => {
+    console.error('[DATABASE POOL ERROR]', err.message, client);
+});
+
+// This is your existing, correct test function
 export const testDbConnection = async () => {
     let client;
     try {

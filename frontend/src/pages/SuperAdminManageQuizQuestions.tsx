@@ -1,397 +1,477 @@
 // /frontend/src/pages/SuperAdminManageQuizQuestions.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Box, Typography, TextField, Button, Paper, Alert, CircularProgress,
-    List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Chip
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Alert,
+  CircularProgress,
+  IconButton,
+  Radio,
+  FormControlLabel,
+  RadioGroup,
+  Grid,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    getGuestQuizById,
-    addGuestQuizQuestion,
-    updateGuestQuizQuestion,
-    deleteGuestQuizQuestion
+  getGuestQuizById,
+  addGuestQuizQuestion,
+  updateGuestQuizQuestion,
+  deleteGuestQuizQuestion,
 } from '../services/superAdminGuestQuizService';
 
 // --- Type Interfaces ---
 interface GuestQuiz {
-    id: string;
-    title: string;
-    category: string;
-    status: 'draft' | 'published';
-    questions: GuestQuestion[];
+  id: string;
+  title: string;
+  category: string;
+  status: 'draft' | 'published';
+  questions: GuestQuestion[];
+}
+
+interface Option {
+  text: string;
+  isCorrect: boolean;
 }
 
 interface GuestQuestion {
-    id: string;
-    quiz_id: string;
-    question_text: string;
-    options: { text: string; isCorrect: boolean }[];
+  id: string;
+  quiz_id: string;
+  question_text: string;
+  options: Option[];
 }
 
 const SuperAdminManageQuizQuestions: React.FC = () => {
-    const { quizId } = useParams<{ quizId: string }>();
-    const navigate = useNavigate();
+  const { quizId } = useParams<{ quizId: string }>();
+  const navigate = useNavigate();
 
-    const [quiz, setQuiz] = useState<GuestQuiz | null>(null);
-    const [questions, setQuestions] = useState<GuestQuestion[]>([]);
-    const [newQuestionText, setNewQuestionText] = useState('');
-    const [newOptions, setNewOptions] = useState([{ text: '', isCorrect: false }]);
-    const [editingQuestion, setEditingQuestion] = useState<GuestQuestion | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+  const [quiz, setQuiz] = useState<GuestQuiz | null>(null);
+  const [questions, setQuestions] = useState<GuestQuestion[]>([]);
+  
+  // --- Form State ---
+  const [formTitle, setFormTitle] = useState('Add New Question');
+  const [newQuestionText, setNewQuestionText] = useState('');
+  const [newOptions, setNewOptions] = useState<Option[]>([
+    { text: '', isCorrect: true }, // Start with one correct option
+    { text: '', isCorrect: false },
+  ]);
+  const [editingQuestion, setEditingQuestion] = useState<GuestQuestion | null>(null);
 
-    // --- Fetch Quiz & Questions ---
-    useEffect(() => {
-        const fetchQuizAndQuestions = async () => {
-            if (!quizId) {
-                setError('Quiz ID is missing.');
-                setLoading(false);
-                return;
-            }
-            try {
-                setLoading(true);
-                setError('');
-                const data = await getGuestQuizById(quizId);
-                setQuiz(data);
-                setQuestions(
-                    (data.questions || []).map((q: GuestQuestion) => ({
-                        ...q,
-                        quiz_id: q.quiz_id ?? data.id,
-                    }))
-                );
-            } catch (err: unknown) {
-                if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
-                    setError((err as { response: { data: { message: string } } }).response.data.message);
-                } else {
-                    setError('Failed to fetch quiz and questions.');
-                }
-                console.error('Error fetching quiz and questions:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchQuizAndQuestions();
-    }, [quizId]);
+  // --- System State ---
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<GuestQuestion | null>(null);
 
-    // --- Option Handlers ---
-    const handleAddOption = () => setNewOptions([...newOptions, { text: '', isCorrect: false }]);
-
-    const handleOptionChange = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
-        const updatedOptions = [...newOptions];
-        updatedOptions[index] = { ...updatedOptions[index], [field]: value };
-        setNewOptions(updatedOptions);
-    };
-
-    const handleRemoveOption = (index: number) => {
-        setNewOptions(newOptions.filter((_, i) => i !== index));
-    };
-
-    // --- Add or Update Question ---
-    const handleAddUpdateQuestion = async (event?: React.FormEvent) => {
-        if (event) event.preventDefault();
-
-        setError('');
-        setSuccess('');
-
-        if (!quizId) {
-            setError('Quiz ID is missing.');
-            return;
-        }
-        if (!newQuestionText.trim()) {
-            setError('Question text cannot be empty.');
-            return;
-        }
-        if (newOptions.filter(opt => opt.text.trim()).length < 2) {
-            setError('Please provide at least two non-empty options.');
-            return;
-        }
-        if (!newOptions.some(opt => opt.isCorrect)) {
-            setError('At least one option must be marked as correct.');
-            return;
-        }
-
-        setSaving(true);
-
-        try {
-            const optionsToSend = newOptions.filter(opt => opt.text.trim());
-            const payload = {
-                question_text: newQuestionText,
-                options: optionsToSend,
-            };
-
-            console.log('Frontend Payload:', payload);
-
-            if (editingQuestion) {
-                // --- Update existing question ---
-                const updatedQuestion = await updateGuestQuizQuestion(editingQuestion.id, {
-                    quiz_id: editingQuestion.quiz_id,
-                    question_text: newQuestionText,
-                    options: optionsToSend,
-                });
-
-                const updatedQuestionWithQuizId: GuestQuestion = {
-                    ...updatedQuestion,
-                    quiz_id: editingQuestion.quiz_id,
-                };
-
-                setQuestions(questions.map(q =>
-                    q.id === updatedQuestionWithQuizId.id ? updatedQuestionWithQuizId : q
-                ));
-                setSuccess('Question updated successfully!');
-            } else {
-                // --- Add new question ---
-                const addedQuestion = await addGuestQuizQuestion(quizId, payload);
-
-                const addedQuestionWithQuizId: GuestQuestion = {
-                    ...addedQuestion,
-                    quiz_id: quizId,
-                };
-
-                setQuestions([...questions, addedQuestionWithQuizId]);
-                setSuccess('Question added successfully!');
-            }
-
-            // --- Reset form ---
-            setNewQuestionText('');
-            setNewOptions([{ text: '', isCorrect: false }]);
-            setEditingQuestion(null);
-        } catch (err: unknown) {
-            console.error('Error saving question:', err);
-            if (
-                err &&
-                typeof err === 'object' &&
-                'response' in err &&
-                err.response &&
-                typeof err.response === 'object' &&
-                'data' in err.response &&
-                err.response.data &&
-                typeof err.response.data === 'object' &&
-                'message' in err.response.data
-            ) {
-                setError((err as { response: { data: { message: string } } }).response.data.message);
-            } else {
-                setError('Failed to save question.');
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    // --- Edit/Delete Handlers ---
-    const handleEditClick = (question: GuestQuestion) => {
-        setEditingQuestion(question);
-        setNewQuestionText(question.question_text);
-        setNewOptions(question.options);
-        setError('');
-        setSuccess('');
-    };
-
-    const handleDeleteClick = async (questionId: string) => {
-        if (!window.confirm('Are you sure you want to delete this question?')) return;
-        setSaving(true);
-        try {
-            await deleteGuestQuizQuestion(questionId);
-            setQuestions(questions.filter(q => q.id !== questionId));
-            setSuccess('Question deleted successfully!');
-        } catch (err: unknown) {
-            if (
-                err &&
-                typeof err === 'object' &&
-                'response' in err &&
-                (err as { response?: { data?: { message?: string } } }).response !== undefined &&
-                typeof (err as { response?: { data?: { message?: string } } }).response === 'object' &&
-                (err as { response?: { data?: { message?: string } } }).response &&
-                'data' in ((err as { response?: { data?: { message?: string } } }).response ?? {}) &&
-                (err as { response: { data?: { message?: string } } }).response.data !== undefined &&
-                typeof (err as { response: { data?: { message?: string } } }).response.data === 'object' &&
-                'message' in ((err as { response: { data?: { message?: string } } }).response.data ?? {})
-            ) {
-                setError((err as { response: { data: { message: string } } }).response.data.message);
-            } else {
-                setError('Failed to delete question.');
-            }
-            console.error('Error deleting question:', err);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    // --- UI ---
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-                <CircularProgress />
-            </Box>
-        );
+  // --- Fetch Quiz & Questions ---
+  const fetchQuizAndQuestions = useCallback(async () => {
+    if (!quizId) {
+      setError('Quiz ID is missing.');
+      setLoading(false);
+      return;
     }
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getGuestQuizById(quizId);
+      setQuiz(data);
+      setQuestions(data.questions || []);
+    } catch (err: unknown) {
+      setError('Failed to fetch quiz and questions.');
+      console.error('Error fetching quiz and questions:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [quizId]);
 
-    if (error && !quiz) return <Alert severity="error">{error}</Alert>;
-    if (!quiz) return <Alert severity="info">Quiz not found or not loaded.</Alert>;
+  useEffect(() => {
+    fetchQuizAndQuestions();
+  }, [fetchQuizAndQuestions]);
 
+  // --- Form Reset Utility ---
+  const resetForm = () => {
+    setEditingQuestion(null);
+    setFormTitle('Add New Question');
+    setNewQuestionText('');
+    setNewOptions([
+      { text: '', isCorrect: true },
+      { text: '', isCorrect: false },
+    ]);
+    setError('');
+    setSuccess('');
+  };
+
+  // --- Option Handlers for the Form ---
+  const handleAddOption = () => {
+    if (newOptions.length < 6) { // Limit options
+      setNewOptions([...newOptions, { text: '', isCorrect: false }]);
+    }
+  };
+
+  const handleOptionTextChange = (index: number, value: string) => {
+    const updatedOptions = [...newOptions];
+    updatedOptions[index].text = value;
+    setNewOptions(updatedOptions);
+  };
+  
+  // --- NEW: Radio button handler ---
+  const handleCorrectOptionChange = (index: number) => {
+    const updatedOptions = newOptions.map((opt, i) => ({
+      ...opt,
+      isCorrect: i === index,
+    }));
+    setNewOptions(updatedOptions);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    // Keep at least 2 options
+    if (newOptions.length > 2) {
+      const updatedOptions = newOptions.filter((_, i) => i !== index);
+      // If we removed the correct answer, default the first one to correct
+      if (!updatedOptions.some(opt => opt.isCorrect)) {
+        updatedOptions[0].isCorrect = true;
+      }
+      setNewOptions(updatedOptions);
+    }
+  };
+
+  // --- Add or Update Question ---
+  const handleAddUpdateQuestion = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!quizId) return setError('Quiz ID is missing.');
+    if (!newQuestionText.trim()) return setError('Question text cannot be empty.');
+    
+    const validOptions = newOptions.filter(opt => opt.text.trim());
+    if (validOptions.length < 2) return setError('Please provide at least two non-empty options.');
+    if (!validOptions.some(opt => opt.isCorrect)) return setError('At least one option must be marked as correct.');
+
+    setSaving(true);
+    
+    try {
+      if (editingQuestion) {
+        // --- Update existing question (include quiz_id required by API) ---
+        const updatePayload = {
+          quiz_id: quizId!,
+          question_text: newQuestionText,
+          options: validOptions,
+        };
+        const updatedQuestion = await updateGuestQuizQuestion(editingQuestion.id, updatePayload);
+        setQuestions(questions.map(q =>
+            q.id === updatedQuestion.id ? { ...q, ...updatedQuestion } : q
+        ));
+        setSnackbar({ open: true, message: 'Question updated successfully!' });
+      } else {
+        // --- Add new question ---
+        const addPayload = {
+          question_text: newQuestionText,
+          options: validOptions,
+        };
+        const addedQuestion = await addGuestQuizQuestion(quizId, addPayload);
+        setQuestions([...questions, addedQuestion]);
+        setSuccess('Question added successfully!');
+      }
+      resetForm(); // Reset form on success
+    } catch (err: unknown) {
+      console.error('Error saving question:', err);
+      setError('Failed to save question.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Edit/Delete Handlers ---
+  const handleEditClick = (question: GuestQuestion) => {
+    setEditingQuestion(question);
+    setFormTitle('Edit Question');
+    setNewQuestionText(question.question_text);
+    setNewOptions(question.options);
+    setError('');
+    setSuccess('');
+    // Scroll to form for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openDeleteConfirm = (question: GuestQuestion) => {
+    setQuestionToDelete(question);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteQuestion = async () => {
+    if (!questionToDelete) return;
+    
+    setSaving(true); // Use 'saving' state for delete operation as well
+    try {
+      await deleteGuestQuizQuestion(questionToDelete.id);
+      setQuestions(questions.filter(q => q.id !== questionToDelete.id));
+      setSnackbar({ open: true, message: 'Question deleted successfully!' });
+      if(editingQuestion?.id === questionToDelete.id) {
+        resetForm(); // Reset form if we deleted the question we were editing
+      }
+    } catch (err: unknown) {
+      setSnackbar({ open: true, message: 'Failed to delete question.' });
+      console.error('Error deleting question:', err);
+    } finally {
+      setSaving(false);
+      setDeleteConfirmOpen(false);
+      setQuestionToDelete(null);
+    }
+  };
+
+  // --- UI ---
+  if (loading) {
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                Manage Questions for: {quiz.title}
-            </Typography>
-            <Typography variant="h6" gutterBottom>
-                Category: {quiz.category} | Status:{' '}
-                <Chip
-                    label={quiz.status}
-                    color={quiz.status === 'published' ? 'success' : 'info'}
-                    size="small"
-                />
+      <Box className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && !quiz) return <Alert severity="error">{error}</Alert>;
+  if (!quiz) return <Alert severity="info">Quiz not found or not loaded.</Alert>;
+
+  return (
+    <Box>
+      {/* --- UI UPGRADE: Page Header --- */}
+      <Box className="flex justify-between items-center mb-6">
+        <Box>
+          <Typography variant="h5" className="font-bold text-gray-900">
+            Manage Questions
+          </Typography>
+          <Typography className="text-gray-600">
+            For Quiz: <span className="font-semibold">{quiz.title}</span>
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<FaArrowLeft />}
+          onClick={() => navigate('/superadmin/guest-quizzes')}
+        >
+          Back to List
+        </Button>
+      </Box>
+
+      {/* --- UI UPGRADE: Two-Column Layout --- */}
+      <Grid container spacing={4}>
+        
+        {/* --- Column 1: Add/Edit Form --- */}
+        <Grid item xs={12} lg={5}>
+          <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 sticky top-24">
+            <Typography variant="h6" className="font-semibold text-gray-900 mb-6">
+              {formTitle}
             </Typography>
 
-            <Paper sx={{ p: 3, mt: 3, mb: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                    {editingQuestion ? 'Edit Question' : 'Add New Question'}
+            <Box component="form" onSubmit={handleAddUpdateQuestion}>
+              <TextField
+                label="Question Text"
+                fullWidth
+                multiline
+                rows={3}
+                margin="normal"
+                value={newQuestionText}
+                onChange={(e) => setNewQuestionText(e.target.value)}
+                required
+                disabled={saving}
+              />
+
+              <Box className="mt-4 mb-2">
+                <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-2">
+                  Options
                 </Typography>
-
-                {/* Prevent native form submission */}
-                <form onSubmit={(e) => e.preventDefault()}>
-                    <TextField
-                        label="Question Text"
+                
+                <RadioGroup
+                  value={newOptions.findIndex(opt => opt.isCorrect)}
+                  onChange={(e) => handleCorrectOptionChange(Number(e.target.value))}
+                >
+                  {newOptions.map((option, index) => (
+                    <Box key={index} className="flex items-center mb-2">
+                      <FormControlLabel 
+                        value={index} 
+                        control={<Radio size="small" />} 
+                        label=""
+                        className="mr-1"
+                        disabled={saving}
+                      />
+                      <TextField
+                        label={`Option ${index + 1}`}
                         fullWidth
-                        margin="normal"
-                        value={newQuestionText}
-                        onChange={(e) => setNewQuestionText(e.target.value)}
+                        size="small"
+                        value={option.text}
+                        onChange={(e) => handleOptionTextChange(index, e.target.value)}
                         required
                         disabled={saving}
-                    />
-
-                    <Box sx={{ mt: 2, mb: 2 }}>
-                        <Typography variant="subtitle1" gutterBottom>Options:</Typography>
-                        {newOptions.map((option, index) => (
-                            <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <TextField
-                                    label={`Option ${index + 1}`}
-                                    fullWidth
-                                    size="small"
-                                    value={option.text}
-                                    onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
-                                    sx={{ mr: 1 }}
-                                    required
-                                    disabled={saving}
-                                />
-                                <Button
-                                    variant={option.isCorrect ? "contained" : "outlined"}
-                                    color="success"
-                                    onClick={() => handleOptionChange(index, 'isCorrect', !option.isCorrect)}
-                                    size="small"
-                                    sx={{ minWidth: '80px', mr: 1 }}
-                                    disabled={saving}
-                                >
-                                    {option.isCorrect ? 'Correct' : 'Mark Correct'}
-                                </Button>
-                                {newOptions.length > 1 && (
-                                    <IconButton color="error" onClick={() => handleRemoveOption(index)} disabled={saving}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
-                            </Box>
-                        ))}
-                        <Button
-                            startIcon={<AddIcon />}
-                            onClick={handleAddOption}
-                            variant="outlined"
-                            size="small"
-                            sx={{ mt: 1 }}
-                            disabled={saving}
+                      />
+                      {newOptions.length > 2 && (
+                        <IconButton 
+                          color="error" 
+                          onClick={() => handleRemoveOption(index)} 
+                          disabled={saving}
+                          className="ml-1"
                         >
-                            Add Option
-                        </Button>
+                          <FaTimes size={16} />
+                        </IconButton>
+                      )}
                     </Box>
+                  ))}
+                </RadioGroup>
+                
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={handleAddOption}
+                  variant="outlined"
+                  size="small"
+                  className="mt-1"
+                  disabled={saving || newOptions.length >= 6}
+                >
+                  Add Option
+                </Button>
+              </Box>
 
-                    {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                    {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
+              {error && <Alert severity="error" className="mt-4">{error}</Alert>}
+              {success && <Alert severity="success" className="mt-4">{success}</Alert>}
 
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                        {editingQuestion && (
-                            <Button
-                                variant="outlined"
-                                onClick={() => {
-                                    setEditingQuestion(null);
-                                    setNewQuestionText('');
-                                    setNewOptions([{ text: '', isCorrect: false }]);
-                                    setError('');
-                                    setSuccess('');
-                                }}
-                                sx={{ mr: 2 }}
-                                disabled={saving}
-                            >
-                                Cancel Edit
-                            </Button>
-                        )}
-                        <Button
-                            variant="contained"
-                            onClick={handleAddUpdateQuestion}
-                            disabled={saving}
-                            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}
-                        >
-                            {saving ? 'Saving...' : (editingQuestion ? 'Update Question' : 'Add Question')}
-                        </Button>
+              <Box className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                {editingQuestion && (
+                  <Button
+                    variant="text"
+                    onClick={resetForm}
+                    className="text-gray-600"
+                    disabled={saving}
+                  >
+                    Cancel Edit
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  color="inherit"
+                  disabled={saving}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  sx={{ border: 'none', ml: 'auto' }} // ml: 'auto' pushes to the right
+                  startIcon={
+                    saving ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      <FaSave />
+                    )
+                  }
+                >
+                  {saving ? 'Saving...' : (editingQuestion ? 'Update Question' : 'Add Question')}
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* --- Column 2: Existing Questions List --- */}
+        <Grid item xs={12} lg={7}>
+          <Typography variant="h6" className="font-semibold text-gray-900 mb-6">
+            Existing Questions ({questions.length})
+          </Typography>
+          {questions.length === 0 ? (
+            <Alert severity="info">No questions added to this quiz yet.</Alert>
+          ) : (
+            <Box className="space-y-4">
+              {questions.map((question, qIndex) => (
+                <Paper key={question.id} className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                  <Box className="flex justify-between items-start">
+                    <Typography className="font-semibold text-gray-900 mb-2 pr-4">
+                      {qIndex + 1}. {question.question_text}
+                    </Typography>
+                    <Box className="flex-shrink-0">
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleEditClick(question)} 
+                        disabled={saving}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        size="small" 
+                        color="error"
+                        onClick={() => openDeleteConfirm(question)} 
+                        disabled={saving}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
                     </Box>
-                </form>
-            </Paper>
-
-            <Button
-                variant="outlined"
-                onClick={() => navigate('/superadmin/guest-quizzes')}
-                sx={{ mb: 3 }}
-                disabled={saving || loading}
-            >
-                Back to All Quizzes
-            </Button>
-
-            <Typography variant="h5" gutterBottom>Existing Questions</Typography>
-            {questions.length === 0 ? (
-                <Alert severity="info">No questions added to this quiz yet.</Alert>
-            ) : (
-                <List component={Paper} sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                    {questions.map((question) => (
-                        <ListItem divider key={question.id} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <ListItemText
-                                primary={question.question_text}
-                                sx={{ width: '100%', mb: 1 }}
-                                primaryTypographyProps={{ variant: 'h6' }}
-                            />
-                            <Box sx={{ width: '100%', pl: 2 }}>
-                                {question.options.map((option, idx) => (
-                                    <Typography
-                                        key={idx}
-                                        variant="body2"
-                                        color={option.isCorrect ? 'success.main' : 'text.secondary'}
-                                        sx={{
-                                            fontWeight: option.isCorrect ? 'bold' : 'normal',
-                                            '&::before': {
-                                                content: option.isCorrect ? '"✅ "' : '"- "',
-                                            },
-                                        }}
-                                    >
-                                        {option.text}
-                                    </Typography>
-                                ))}
-                            </Box>
-                            <ListItemSecondaryAction>
-                                <IconButton edge="end" aria-label="edit" onClick={() => handleEditClick(question)} disabled={saving}>
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(question.id)} disabled={saving}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        </ListItem>
+                  </Box>
+                  <Box className="pl-4">
+                    {question.options.map((option, idx) => (
+                      <Typography
+                        key={idx}
+                        variant="body2"
+                        className={`pl-2 ${
+                          option.isCorrect ? 'text-green-600 font-bold' : 'text-gray-600'
+                        }`}
+                      >
+                        {option.isCorrect ? '✅ ' : '- '} {option.text}
+                      </Typography>
                     ))}
-                </List>
-            )}
-        </Box>
-    );
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </Grid>
+      </Grid>
+      
+      {/* --- NEW: Delete Confirmation Dialog --- */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Delete Question?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to permanently delete this question?
+          </DialogContentText>
+          <Paper variant="outlined" className="p-3 mt-2 bg-gray-50">
+            <Typography variant="body2" className="text-gray-800">
+              {questionToDelete?.question_text}
+            </Typography>
+          </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteQuestion}
+            color="error"
+            variant="contained"
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+          >
+            {saving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* --- NEW: Feedback Snackbar --- */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+    </Box>
+  );
 };
 
 export default SuperAdminManageQuizQuestions;

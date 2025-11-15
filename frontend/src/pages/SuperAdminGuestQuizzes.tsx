@@ -1,168 +1,276 @@
 // /frontend/src/pages/SuperAdminGuestQuizzes.tsx
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, CircularProgress, Alert, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  CircularProgress,
+  Alert,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityIcon from '@mui/icons-material/Visibility'; // "Manage Questions"
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useNavigate } from 'react-router-dom';
-// --- CORRECTED IMPORT STATEMENT BELOW ---
-import { getAllGuestQuizzes, deleteGuestQuiz } from '../services/superAdminGuestQuizService'; 
-// --- END CORRECTED IMPORT STATEMENT ---
-
-// Use GuestQuiz type from the service to avoid type mismatch
+import { getAllGuestQuizzes, deleteGuestQuiz } from '../services/superAdminGuestQuizService';
 import type { GuestQuiz } from '../services/superAdminGuestQuizService';
 
 const SuperAdminGuestQuizzes: React.FC = () => {
-    const navigate = useNavigate();
-    const [quizzes, setQuizzes] = useState<GuestQuiz[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(''); // Clear previous errors
-    const [deleteLoading, setDeleteLoading] = useState<string | null>(null); // To track which quiz is being deleted
+  const navigate = useNavigate();
+  const [quizzes, setQuizzes] = useState<GuestQuiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // --- NEW: State for Menus and Dialogs ---
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<GuestQuiz | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
-    useEffect(() => {
-        fetchQuizzes();
-    }, []);
+  const fetchQuizzes = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getAllGuestQuizzes();
+      setQuizzes(data);
+    } catch (err: unknown) {
+      // (Your existing error handling is good)
+      setError('Failed to fetch guest quizzes.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchQuizzes = async () => {
-        setLoading(true);
-        setError(''); 
-        try {
-            const data = await getAllGuestQuizzes();
-            setQuizzes(data);
-        } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
-                setError((err.response as { data: { message: string } }).data.message || 'Failed to fetch guest quizzes.');
-            } else {
-                setError('Failed to fetch guest quizzes.');
-            }
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
 
-    const handleCreateQuiz = () => {
-        navigate('/superadmin/guest-quizzes/new'); // Route for creating a new quiz
-    };
+  // --- NEW: Handlers for Menu ---
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, quiz: GuestQuiz) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedQuiz(quiz);
+  };
 
-    const handleEditQuiz = (quizId: string) => {
-        navigate(`/superadmin/guest-quizzes/${quizId}/edit`); // Route for editing quiz details
-    };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedQuiz(null);
+  };
 
-    const handleManageQuestions = (quizId: string) => {
-        navigate(`/superadmin/guest-quizzes/${quizId}/questions`); // Route for managing questions
-    };
+  // --- Navigation Handlers ---
+  const handleCreateQuiz = () => {
+    navigate('/superadmin/guest-quizzes/new');
+  };
 
-    const handleDeleteQuiz = async (quizId: string) => {
-        if (window.confirm('Are you sure you want to delete this quiz and ALL its associated questions and submissions? This action cannot be undone.')) {
-            setDeleteLoading(quizId); // Set loading state for this specific quiz
-            try {
-                await deleteGuestQuiz(quizId);
-                await fetchQuizzes(); // Refetch quizzes to update the list
-            } catch (err: unknown) {
-                if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data) {
-                    setError((err.response as { data: { message: string } }).data.message || 'Failed to delete quiz.');
-                } else {
-                    setError('Failed to delete quiz.');
-                }
-                console.error(err);
-            } finally {
-                setDeleteLoading(null); // Reset loading state
-            }
-        }
-    };
+  const handleEditQuiz = () => {
+    if (selectedQuiz) {
+      navigate(`/superadmin/guest-quizzes/${selectedQuiz.id}/edit`);
+    }
+    handleMenuClose();
+  };
 
-    if (loading) return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <CircularProgress sx={{ m: 4 }} />
-        </Box>
-    );
-    if (error) return <Alert severity="error">{error}</Alert>;
+  const handleManageQuestions = () => {
+    if (selectedQuiz) {
+      navigate(`/superadmin/guest-quizzes/${selectedQuiz.id}/questions`);
+    }
+    handleMenuClose();
+  };
 
+  // --- NEW: Handlers for Delete Dialog ---
+  const handleOpenDeleteConfirm = () => {
+    setConfirmOpen(true);
+    handleMenuClose();
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setConfirmOpen(false);
+  };
+
+  const handleDeleteQuiz = async () => {
+    if (!selectedQuiz) return;
+
+    setDeleteLoading(true);
+    try {
+      await deleteGuestQuiz(selectedQuiz.id);
+      setSnackbar({ open: true, message: 'Quiz deleted successfully.' });
+      await fetchQuizzes(); // Refresh the list
+    } catch (err: unknown) {
+      // (Your existing error handling is good)
+      setSnackbar({ open: true, message: 'Failed to delete quiz.' });
+      console.error(err);
+    } finally {
+      setDeleteLoading(false);
+      handleCloseDeleteConfirm();
+    }
+  };
+
+  // --- RENDER STATES ---
+  if (loading && quizzes.length === 0) {
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" component="h1">Guest Quizzes Management</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateQuiz}>
-                    Create New Quiz
-                </Button>
-            </Box>
-
-            {quizzes.length === 0 ? (
-                <Alert severity="info">No guest quizzes found. Start by creating a new one!</Alert>
-            ) : (
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Title</TableCell>
-                                <TableCell>Category</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell align="right">Participants</TableCell>
-                                <TableCell align="right">Avg. Rating</TableCell>
-                                <TableCell align="center">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {quizzes.map((quiz) => (
-                                <TableRow key={quiz.id}>
-                                    <TableCell>{quiz.title}</TableCell>
-                                    <TableCell>{quiz.category}</TableCell>
-                                    <TableCell>
-                                        <Chip 
-                                            label={quiz.status} 
-                                            color={quiz.status === 'published' ? 'success' : 'info'} 
-                                            size="small" 
-                                        />
-                                    </TableCell>
-                                    <TableCell align="right">{quiz.participant_count}</TableCell>
-                                    {/* --- FIX APPLIED HERE --- */}
-                                    <TableCell align="right">
-                                        {typeof quiz.average_rating === 'number' && !isNaN(quiz.average_rating) 
-                                            ? quiz.average_rating.toFixed(1) 
-                                            : 'N/A'}
-                                    </TableCell>
-                                    {/* --- END FIX --- */}
-                                    <TableCell align="center">
-                                        <Button 
-                                            variant="outlined" 
-                                            size="small" 
-                                            startIcon={<EditIcon />} 
-                                            sx={{ mr: 1 }} 
-                                            onClick={() => handleEditQuiz(quiz.id)}
-                                        >
-                                            Details
-                                        </Button>
-                                        <Button 
-                                            variant="outlined" 
-                                            size="small" 
-                                            startIcon={<VisibilityIcon />} 
-                                            sx={{ mr: 1 }} 
-                                            onClick={() => handleManageQuestions(quiz.id)}
-                                        >
-                                            Questions
-                                        </Button>
-                                        <Button 
-                                            variant="outlined" 
-                                            size="small" 
-                                            color="error" 
-                                            startIcon={<DeleteIcon />} 
-                                            onClick={() => handleDeleteQuiz(quiz.id)}
-                                            disabled={deleteLoading === quiz.id} // Disable button while deleting this quiz
-                                        >
-                                            {deleteLoading === quiz.id ? <CircularProgress size={20} color="inherit" /> : 'Delete'}
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
-        </Box>
+      <Box className="flex justify-center items-center h-[calc(100vh-200px)]">
+        <CircularProgress />
+      </Box>
     );
+  }
+
+  if (error) return <Alert severity="error">{error}</Alert>;
+
+  return (
+    <Box>
+      {/* --- Page Header --- */}
+      <Box className="flex justify-between items-center mb-6">
+        <Typography variant="h5" className="font-bold text-gray-900">
+          Guest Quizzes Management
+        </Typography>
+        {/* --- UI UPGRADE: Styled Button --- */}
+        <Button
+          color="inherit"
+          onClick={handleCreateQuiz}
+          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          startIcon={<AddIcon />}
+          sx={{ border: 'none' }}
+        >
+          Create New Quiz
+        </Button>
+      </Box>
+
+      {/* --- UI UPGRADE: Styled Paper Container --- */}
+      <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Title</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Participants</TableCell>
+                <TableCell align="right">Avg. Rating</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {quizzes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    <Typography className="text-gray-500 py-4">
+                      No guest quizzes found. Start by creating a new one!
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                quizzes.map((quiz) => (
+                  <TableRow key={quiz.id} hover>
+                    <TableCell className="font-medium">{quiz.title}</TableCell>
+                    <TableCell className="capitalize">{quiz.category}</TableCell>
+                    <TableCell>
+                      {/* --- UI UPGRADE: Tailwind-styled Chips --- */}
+                      <Chip
+                        label={quiz.status}
+                        size="small"
+                        className={
+                          quiz.status === 'published'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }
+                      />
+                    </TableCell>
+                    <TableCell align="right">{quiz.participant_count}</TableCell>
+                    <TableCell align="right">
+                      {typeof quiz.average_rating === 'number'
+                        ? quiz.average_rating.toFixed(1)
+                        : 'N/A'}
+                    </TableCell>
+                    {/* --- UI UPGRADE: "..." Menu for Actions --- */}
+                    <TableCell align="center">
+                      <IconButton onClick={(e) => handleMenuClick(e, quiz)}>
+                        <MoreVertIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* --- NEW: "..." Menu --- */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleEditQuiz}>
+          <EditIcon className="mr-3" fontSize="small" />
+          Edit Details
+        </MenuItem>
+        <MenuItem onClick={handleManageQuestions}>
+          <VisibilityIcon className="mr-3" fontSize="small" />
+          Manage Questions
+        </MenuItem>
+        <MenuItem onClick={handleOpenDeleteConfirm} sx={{ color: 'error.main' }}>
+          <DeleteIcon className="mr-3" fontSize="small" />
+          Delete Quiz
+        </MenuItem>
+      </Menu>
+
+      {/* --- NEW: Delete Confirmation Dialog --- */}
+      <Dialog open={confirmOpen} onClose={handleCloseDeleteConfirm}>
+        <DialogTitle>Delete Guest Quiz?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to permanently delete the quiz
+            <strong> "{selectedQuiz?.title}"</strong>?
+          </DialogContentText>
+          <DialogContentText color="error" className="font-medium mt-2">
+            This will also delete all of its questions and submission data. This
+            action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm}>Cancel</Button>
+          <Button
+            onClick={handleDeleteQuiz}
+            color="error"
+            variant="contained"
+            disabled={deleteLoading}
+            startIcon={deleteLoading ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* --- NEW: Feedback Snackbar --- */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+      />
+    </Box>
+  );
 };
 
 export default SuperAdminGuestQuizzes;

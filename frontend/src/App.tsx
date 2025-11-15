@@ -7,32 +7,45 @@ import './index.css';
 // Import Layouts
 import CourseAdminLayout from './layouts/CourseAdminLayout';
 import StudentLayout from './layouts/StudentLayout';
-import SuperAdminLayout from './components/SuperAdminLayout'; 
+// --- FIX: Corrected import path ---
+import SuperAdminLayout from './layouts/SuperAdminLayout'; 
 
 // Import Pages (ALL DIRECTLY FROM ./pages/)
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import CentralAdminDashboard from './pages/CentralAdminDashboard';
 import SetupAccountPage from './pages/SetupAccountPage';
-import CourseAdminDashboard from './pages/CourseAdminDashboard';
-import ExamBankPage from './pages/ExamBankPage';
-import ExamBuilderPage from './pages/ExamBuilderPage';
-import StudentDashboard from './pages/StudentDashboard';
-import ExamRunnerPage from './pages/ExamRunnerPage';
-import ResultsPage from './pages/ResultsPage';
-import SubmissionCompletePage from './pages/SubmissionCompletePage';
-import CourseAdminOverview from './pages/CourseAdminOverview';
 import GuestQuizRunner from './pages/GuestQuizRunner';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 
-// --- Super Admin Guest Quiz Management Pages ---
+// --- Super Admin Pages ---
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminGuestQuizzes from './pages/SuperAdminGuestQuizzes';
-import SuperAdminCreateGuestQuiz from './pages/SuperAdminCreateGuestQuiz'; // <-- UNCOMMENTED/ADDED
-import SuperAdminEditGuestQuiz from './pages/SuperAdminEditGuestQuiz'; // <-- ADDED (assuming this name)
-import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions'; // <-- ADDED (assuming this name)
+import SuperAdminCreateGuestQuiz from './pages/SuperAdminCreateGuestQuiz';
+import SuperAdminEditGuestQuiz from './pages/SuperAdminEditGuestQuiz';
+import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions';
+// --- NEW: Added imports for the new pages ---
+import SuperAdminUsers from './pages/SuperAdminUsers';
+import SuperAdminOrganizations from './pages/SuperAdminOrganizations';
+import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
+import SuperAdminSystemStatus from './pages/SuperAdminSystemStatus';
+import SuperAdminSettings from './pages/SuperAdminSettings';
+
+// --- Client Admin Pages ---
+import CentralAdminDashboard from './pages/CentralAdminDashboard';
+
+// --- Course Admin (Teacher) Pages ---
+import CourseAdminDashboard from './pages/CourseAdminDashboard';
+import ExamBankPage from './pages/ExamBankPage';
+import ExamBuilderPage from './pages/ExamBuilderPage';
+import ResultsPage from './pages/ResultsPage';
+import CourseAdminOverview from './pages/CourseAdminOverview';
+
+// --- Student Pages ---
+import StudentDashboard from './pages/StudentDashboard';
+import ExamRunnerPage from './pages/ExamRunnerPage';
+import SubmissionCompletePage from './pages/SubmissionCompletePage';
 
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -58,17 +71,25 @@ function App() {
                         <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
                             <Route path="/superadmin" element={<SuperAdminLayout />}>
                                 <Route index element={<SuperAdminDashboard />} /> 
-                                <Route path="guest-quizzes" element={<SuperAdminGuestQuizzes />} />
                                 
-                                {/* --- Super Admin Guest Quiz Management Nested Routes --- */}
+                                {/* Guest Quiz Management */}
+                                <Route path="guest-quizzes" element={<SuperAdminGuestQuizzes />} />
                                 <Route path="guest-quizzes/new" element={<SuperAdminCreateGuestQuiz />} /> 
                                 <Route path="guest-quizzes/:quizId/edit" element={<SuperAdminEditGuestQuiz />} />
                                 <Route path="guest-quizzes/:quizId/questions" element={<SuperAdminManageQuizQuestions />} />
+                                
+                                {/* --- NEW: Added routes for all sidebar links --- */}
+                                <Route path="users" element={<SuperAdminUsers />} />
+                                <Route path="analytics" element={<SuperAdminAnalytics />} />
+                                <Route path="organizations" element={<SuperAdminOrganizations />} />
+                                <Route path="system-status" element={<SuperAdminSystemStatus />} />
+                                <Route path="settings" element={<SuperAdminSettings />} />
+
                             </Route>
                         </Route>
 
                         {/* --- Protected Central Admin Routes --- */}
-                        <Route element={<ProtectedRoute allowedRoles={['centraladmin']} />}>
+                        <Route element={<ProtectedRoute allowedRoles={['clientadmin']} />}>
                             <Route path="/centraladmin" element={<CentralAdminDashboard />} />
                         </Route>
                         

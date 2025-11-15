@@ -1,128 +1,167 @@
+// frontend/src/components/superAdminSidebar.tsx
+
 import React from 'react';
+import { Box, Typography } from '@mui/material';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import {
-    List,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Divider,
-    IconButton,
-    Tooltip,
-    Box,
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import SchoolIcon from '@mui/icons-material/School';
-import QuizIcon from '@mui/icons-material/Quiz';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import { Link, useLocation } from 'react-router-dom';
+  FaChartLine,
+  FaPlusCircle, // Changed to FaListAlt to match the "Guest Quizzes" intention
+  FaUsers,
+  FaChartBar,
+  FaBuilding,
+  FaServer,
+  FaCog,
+  FaSignOutAlt,
+  FaGraduationCap,
+} from 'react-icons/fa';
 
 interface SidebarProps {
-    collapsed: boolean;
-    onToggle: () => void;
+  isCollapsed: boolean;
+  isMobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
-const SuperAdminSidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
-    const location = useLocation();
+// Reusable NavLink component to handle styles
+const NavItem: React.FC<{ to: string; icon: React.ReactElement; text: string; isCollapsed: boolean; onClick: () => void }> = 
+  ({ to, icon, text, isCollapsed, onClick }) => (
+    // Removed the <li> wrapper to get rid of default list bullets
+    <NavLink
+      to={to}
+      onClick={onClick}
+      end // Ensures parent routes don't stay active if sub-routes are active
+      // NavLink automatically adds 'active' class when the path matches
+      className={({ isActive }) =>
+        // These are the classes from your new index.css for correct styling
+        `nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium ${
+          isActive ? 'active' : ''
+        }`
+      }
+      style={{ textDecoration: 'none' }} // Ensure no underline
+    >
+      {React.cloneElement(icon, { className: 'text-lg flex-shrink-0' })} {/* Added flex-shrink-0 */}
+      <span
+        className={`nav-text transition-opacity duration-200 ${
+          isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto' // Added w-0 to hide completely
+        } whitespace-nowrap overflow-hidden`}
+      >
+        {text}
+      </span>
+    </NavLink>
+);
 
-    const menuItems = [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/superadmin' },
-        { text: 'Users', icon: <PeopleIcon />, path: '/superadmin/users' },
-        { text: 'Organizations', icon: <SchoolIcon />, path: '/superadmin/organizations' },
-        { text: 'Guest Quizzes', icon: <QuizIcon />, path: '/superadmin/guest-quizzes' },
-    ];
+const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onMobileClose }) => {
+  const { logout } = useAuth();
 
-    return (
-        <Box
-            sx={{
-                width: collapsed ? '70px' : '240px',
-                backgroundColor: '#0D47A1',
-                color: '#FFFFFF',
-                height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'width 0.3s ease',
-                overflowX: 'hidden',
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                boxShadow: '2px 0 10px rgba(0,0,0,0.2)',
-                zIndex: (theme) => theme.zIndex.drawer + 2,
-            }}
-        >
-            {/* Toggle Button */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: collapsed ? 'center' : 'flex-end',
-                    alignItems: 'center',
-                    p: 1,
-                    mt: 1,
-                }}
-            >
-                <IconButton onClick={onToggle} sx={{ color: '#FFFFFF' }}>
-                    {collapsed ? <MenuOpenIcon /> : <ChevronLeftIcon />}
-                </IconButton>
-            </Box>
-
-            {/* Menu Items */}
-            <List>
-                {menuItems.map((item) => {
-                    const isActive =
-                        location.pathname === item.path ||
-                        (item.path === '/superadmin' && location.pathname === '/superadmin');
-
-                    return (
-                        <Tooltip
-                            key={item.text}
-                            title={collapsed ? item.text : ''}
-                            placement="right"
-                            arrow
-                        >
-                            <ListItemButton
-                                component={Link}
-                                to={item.path}
-                                selected={isActive}
-                                sx={{
-                                    color: '#FFFFFF',
-                                    py: 1.5,
-                                    '&.Mui-selected': {
-                                        backgroundColor: '#1565C0',
-                                        '&:hover': {
-                                            backgroundColor: '#1976D2',
-                                        },
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: '#1976D2',
-                                    },
-                                }}
-                            >
-                                <ListItemIcon
-                                    sx={{
-                                        color: '#FFFFFF',
-                                        minWidth: collapsed ? '40px' : '56px',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                                {!collapsed && (
-                                    <ListItemText
-                                        primary={item.text}
-                                        primaryTypographyProps={{
-                                            fontSize: '0.95rem',
-                                            fontWeight: 500,
-                                        }}
-                                    />
-                                )}
-                            </ListItemButton>
-                        </Tooltip>
-                    );
-                })}
-                <Divider sx={{ backgroundColor: 'rgba(255,255,255,0.2)', mt: 1 }} />
-            </List>
+  return (
+    <Box
+      id="sidebar"
+      component="aside"
+      className={`fixed left-0 top-0 h-full bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-2xl transition-all duration-300 z-40 ${
+        isCollapsed ? 'sidebar-collapsed lg:w-[80px]' : 'sidebar-expanded lg:w-[280px]'
+      } ${
+        isMobileOpen ? 'mobile-open translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0`}
+    >
+      {/* Logo Section */}
+      <Box className="p-6 border-b border-blue-700">
+        <Box className="flex items-center space-x-3">
+          <Box className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
+            <FaGraduationCap className="text-white text-xl" />
+          </Box>
+          <Box
+            id="logo-text"
+            className={`transition-opacity duration-300 ${
+              isCollapsed ? 'lg:opacity-0' : 'lg:opacity-100'
+            }`}
+          >
+            <Typography variant="h1" className="text-xl font-bold text-white">
+              ZYNTRA
+            </Typography>
+            <Typography className="text-blue-200 text-xs">
+              Admin Dashboard
+            </Typography>
+          </Box>
         </Box>
-    );
+      </Box>
+
+      {/* Navigation Menu */}
+      {/* Changed <ul> to <Box> and direct children are NavItem to remove dots */}
+      <Box component="nav" className="mt-6 px-4 flex flex-col justify-between h-[calc(100%-160px)]">
+        <Box className="space-y-2"> {/* Using Box instead of ul for cleaner styling */}
+          <NavItem
+            to="/superadmin" // Dashboard
+            icon={<FaChartLine />}
+            text="Dashboard"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/guest-quizzes" // List existing quizzes (matching your HTML navigation)
+            icon={<FaPlusCircle />} // Changed icon to represent "Guest Quizzes" as a list/overview
+            text="Guest Quizzes"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/users"
+            icon={<FaUsers />}
+            text="Users"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/analytics"
+            icon={<FaChartBar />}
+            text="Analytics"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/organizations"
+            icon={<FaBuilding />}
+            text="Organizations"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/system-status"
+            icon={<FaServer />}
+            text="System Status"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+        </Box>
+
+        {/* Settings Section (at the bottom) */}
+        <Box>
+          <Box className="border-t border-blue-700 pt-4">
+            <NavItem
+              to="/superadmin/settings"
+              icon={<FaCog />}
+              text="Settings"
+              isCollapsed={isCollapsed}
+              onClick={onMobileClose}
+            />
+            {/* Logout is a button, not a NavLink */}
+            <div // Using div instead of li to avoid list styling
+              onClick={logout}
+              className="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer text-sm font-medium"
+            >
+              <FaSignOutAlt className="text-lg flex-shrink-0" />
+              <span
+                className={`nav-text transition-opacity duration-200 ${
+                  isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto'
+                } whitespace-nowrap overflow-hidden`}
+              >
+                Logout
+              </span>
+            </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
 };
 
 export default SuperAdminSidebar;

@@ -1,9 +1,10 @@
+// frontend/src/context/AuthProvider.tsx
+
 import React, { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext, type IAuthContext, type User } from "./AuthContext";
 
-// frontend/src/context/AuthProvider.tsx
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL, // Use the env var
   withCredentials: true,
@@ -80,7 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

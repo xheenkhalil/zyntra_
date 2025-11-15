@@ -1,7 +1,10 @@
+// backend/src/index.ts
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import config from "./config";
+import helmet from "helmet";
 
 // === Route Imports ===
 import authRoutes from "./routes/authRoutes";
@@ -12,14 +15,21 @@ import examRoutes from "./routes/examRoutes";
 import questionRoutes from "./routes/questionRoutes";
 import studentRoutes from "./routes/studentRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
-import guestRoutes from "./routes/guestRoutes";
-import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes";
+import guestRoutes from "./routes/guestRoutes"; // Public routes
+import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes"; // Admin-only routes
+import systemRoutes from './routes/systemRoutes';
+
 
 const app = express();
 const PORT = config.PORT;
 
 // =====================================================
-// ✅ CORS CONFIGURATION (Render + Vercel Compatible)
+//  SECURITY MIDDLEWARE (HELMET)
+// =====================================================
+app.use(helmet());
+
+// =====================================================
+//  CORS CONFIGURATION
 // =====================================================
 const allowedOrigins: string[] = [
   "https://zyntraexams.vercel.app",
@@ -29,11 +39,7 @@ const allowedOrigins: string[] = [
 app.use(
   cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin) {
-        console.warn("CORS: No origin detected — possible server-to-server call.");
-        return callback(null, true);
-      }
-      if (allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
         const msg = `CORS Policy: Access denied for origin ${origin}`;
@@ -41,44 +47,45 @@ app.use(
         return callback(new Error(msg), false);
       }
     },
-    credentials: true, // ✅ allow cookies & auth headers
+    credentials: true,
   })
 );
 
 // =====================================================
-// ✅ MIDDLEWARE SETUP
+//  MIDDLEWARE SETUP
 // =====================================================
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // =====================================================
-// ✅ ROUTES
+//  ROUTES
 // =====================================================
 app.use("/api/auth", authRoutes);
-app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/superadmin", superAdminRoutes); // All superadmin routes
+app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes); // Guest quiz admin routes
 app.use("/api/centraladmin", centralAdminRoutes);
 app.use("/api/courseadmin", courseAdminRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/public", guestRoutes);
-app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes);
+app.use("/api/public", guestRoutes); // Public-facing routes (like taking guest quizzes)
+app.use('/api/system', systemRoutes); 
 
 // =====================================================
-// ✅ HEALTH CHECK ENDPOINT
+//  HEALTH CHECK ENDPOINT
 // =====================================================
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
     status: "success",
-    message: "ZyntraExams Backend Running Successfully 🚀",
+    message: "ZyntraExams Backend Running Successfully ",
     allowedOrigins,
   });
 });
 
 // =====================================================
-// ✅ ERROR HANDLER (Optional for better debugging)
+//  ERROR HANDLER
 // =====================================================
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error("Server Error:", err.message);
@@ -86,7 +93,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 // =====================================================
-// ✅ SERVER START
+//  SERVER START
 // =====================================================
 app.listen(PORT, () => {
   console.log(`✅ Backend server is running on port ${PORT}`);
