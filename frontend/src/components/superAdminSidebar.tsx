@@ -6,7 +6,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import {
   FaChartLine,
-  FaPlusCircle, // Changed to FaListAlt to match the "Guest Quizzes" intention
+  FaPlusCircle,
   FaUsers,
   FaChartBar,
   FaBuilding,
@@ -23,26 +23,40 @@ interface SidebarProps {
 }
 
 // Reusable NavLink component to handle styles
-const NavItem: React.FC<{ to: string; icon: React.ReactElement; text: string; isCollapsed: boolean; onClick: () => void }> = 
-  ({ to, icon, text, isCollapsed, onClick }) => (
-    // Removed the <li> wrapper to get rid of default list bullets
+// --- FIX: The type for 'icon' is simplified and the component logic is safer ---
+const NavItem: React.FC<{ 
+  to: string; 
+  icon: React.ReactElement; // Simplified type
+  text: string; 
+  isCollapsed: boolean; 
+  onClick: () => void 
+}> = ({ to, icon, text, isCollapsed, onClick }) => (
     <NavLink
       to={to}
       onClick={onClick}
       end // Ensures parent routes don't stay active if sub-routes are active
-      // NavLink automatically adds 'active' class when the path matches
       className={({ isActive }) =>
-        // These are the classes from your new index.css for correct styling
         `nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium ${
           isActive ? 'active' : ''
         }`
       }
       style={{ textDecoration: 'none' }} // Ensure no underline
     >
-      {React.cloneElement(icon, { className: 'text-lg flex-shrink-0' })} {/* Added flex-shrink-0 */}
+      {/* --- THIS IS THE FIX ---
+        We wrap the icon in a styled 'span' instead of cloning it.
+        This is type-safe and guarantees our styles apply without error.
+      */}
+      <Box 
+        component="span" 
+        className="text-lg flex-shrink-0 w-6 text-center" // w-6 gives a consistent icon width
+      >
+         {icon}
+      </Box>
+      {/* --------------------- */}
+
       <span
         className={`nav-text transition-opacity duration-200 ${
-          isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto' // Added w-0 to hide completely
+          isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto'
         } whitespace-nowrap overflow-hidden`}
       >
         {text}
@@ -86,9 +100,8 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
       </Box>
 
       {/* Navigation Menu */}
-      {/* Changed <ul> to <Box> and direct children are NavItem to remove dots */}
       <Box component="nav" className="mt-6 px-4 flex flex-col justify-between h-[calc(100%-160px)]">
-        <Box className="space-y-2"> {/* Using Box instead of ul for cleaner styling */}
+        <Box className="space-y-2">
           <NavItem
             to="/superadmin" // Dashboard
             icon={<FaChartLine />}
@@ -97,8 +110,8 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
             onClick={onMobileClose}
           />
           <NavItem
-            to="/superadmin/guest-quizzes" // List existing quizzes (matching your HTML navigation)
-            icon={<FaPlusCircle />} // Changed icon to represent "Guest Quizzes" as a list/overview
+            to="/superadmin/guest-quizzes"
+            icon={<FaPlusCircle />}
             text="Guest Quizzes"
             isCollapsed={isCollapsed}
             onClick={onMobileClose}
@@ -144,11 +157,16 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
               onClick={onMobileClose}
             />
             {/* Logout is a button, not a NavLink */}
-            <div // Using div instead of li to avoid list styling
+            <div 
               onClick={logout}
               className="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer text-sm font-medium"
             >
-              <FaSignOutAlt className="text-lg flex-shrink-0" />
+              <Box 
+                component="span" 
+                className="text-lg flex-shrink-0 w-6 text-center"
+              >
+                <FaSignOutAlt />
+              </Box>
               <span
                 className={`nav-text transition-opacity duration-200 ${
                   isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto'

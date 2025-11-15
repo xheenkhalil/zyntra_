@@ -6,7 +6,7 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
+  // Grid, // <-- We are no longer using Grid
   TextField,
   Button,
   Alert,
@@ -16,13 +16,12 @@ import {
 import { FaSave, FaLock, FaUserEdit } from 'react-icons/fa';
 import { useAuth } from '../context/useAuth';
 
-// --- We will create these in the backend & service file next ---
-// import { updateMyProfile, changeMyPassword } from '../services/authService';
+// --- Import the new service functions ---
+import { updateMyProfile, changeMyPassword } from '../services/authService';
 
 const SuperAdminSettings: React.FC = () => {
-  // Use auth context to get current user and update it on success
-  const auth = useAuth();
-  const { user } = auth;
+  // --- FIX: Destructure setUser to avoid type errors ---
+  const { user, setUser } = useAuth();
 
   // --- Profile Form State ---
   const [profileForm, setProfileForm] = useState({ fullName: '', email: '' });
@@ -57,22 +56,18 @@ const SuperAdminSettings: React.FC = () => {
     setProfileError('');
     setProfileSuccess('');
 
-    // --- API CALL (Mocked for now) ---
-    // We will build this backend endpoint next.
     try {
-      // const updatedData = await updateMyProfile(profileForm);
-      
-      // Simulate API call
-      const updatedUser = { ...user!, ...profileForm }; // Mock response
+      // --- FIX: Using real API call ---
+      const data = await updateMyProfile(profileForm);
       
       // Update the auth context and local storage
-      if (typeof (auth as any).setUser === 'function') {
-        (auth as any).setUser(updatedUser);
+      if (setUser) {
+        setUser(data.user); // Update context
       }
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('user', JSON.stringify(data.user)); // Update local storage
       
-      setProfileSuccess('Profile updated successfully!');
-      setProfileSuccess('Profile updated successfully!');
+      setProfileSuccess(data.message || 'Profile updated successfully!');
+
     } catch (err: any) {
       setProfileError(err.response?.data?.message || 'Failed to update profile.');
     } finally {
@@ -99,28 +94,17 @@ const SuperAdminSettings: React.FC = () => {
       return;
     }
 
-    // --- API CALL (Mocked for now) ---
-    // We will build this backend endpoint next.
     try {
-      // const response = await changeMyPassword({
-      //   currentPassword: passwordForm.currentPassword,
-      //   newPassword: passwordForm.newPassword,
-      // });
-      
-      // Simulate API call
-      await new Promise((res, rej) => {
-        setTimeout(() => {
-          if (passwordForm.currentPassword === 'wrong') {
-             rej(new Error('Current password does not match.'));
-          }
-          res(true);
-        }, 1000);
+      // --- FIX: Using real API call ---
+      const data = await changeMyPassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
       });
       
-      setPasswordSuccess('Password changed successfully!');
+      setPasswordSuccess(data.message || 'Password changed successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); // Reset form
     } catch (err: any) {
-      setPasswordError(err.message || 'Failed to change password. Please check your current password.');
+      setPasswordError(err.response?.data?.message || 'Failed to change password. Please check your current password.');
     } finally {
       setPasswordLoading(false);
     }
@@ -140,9 +124,12 @@ const SuperAdminSettings: React.FC = () => {
         Super Admin Settings
       </Typography>
 
-      <Grid container spacing={4}>
+      {/* --- FIX: Replaced <Grid container> with a <Box> using Tailwind grid classes --- */}
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
         {/* --- Column 1: Profile Settings --- */}
-        <Grid item xs={12} md={6}>
+        {/* No 'item' or 'xs' prop needed. Just a simple Box. */}
+        <Box>
           <Paper className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100 h-full">
             <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
               <FaUserEdit className="mr-3 text-blue-600" /> Profile Information
@@ -172,7 +159,7 @@ const SuperAdminSettings: React.FC = () => {
                 label="Username"
                 fullWidth
                 margin="normal"
-                value={user.username || 'N/A'} // Assuming username is in user object
+                value={user.username || 'N/A'}
                 disabled
                 InputProps={{ readOnly: true }}
                 helperText="Username cannot be changed."
@@ -194,10 +181,11 @@ const SuperAdminSettings: React.FC = () => {
               </Box>
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* --- Column 2: Security Settings --- */}
-        <Grid item xs={12} md={6}>
+        {/* No 'item' or 'xs' prop needed. */}
+        <Box>
           <Paper className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100 h-full">
             <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
               <FaLock className="mr-3 text-blue-600" /> Change Password
@@ -252,8 +240,8 @@ const SuperAdminSettings: React.FC = () => {
               </Box>
             </Box>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Snackbar for success messages */}
       <Snackbar

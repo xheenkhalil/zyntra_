@@ -113,26 +113,24 @@ const SuperAdminSystemStatus: React.FC = () => {
       setStatusReport(data);
       setLastUpdated(new Date(data.lastUpdated).toLocaleString());
     } catch (err: unknown) {
-      // Narrow the unknown error and extract response data if present
       let message = 'Failed to fetch system status.';
       let responseData: SystemStatusReport | null = null;
-
       type ErrorWithResponse = { response?: { data?: unknown } };
 
       if (typeof err === 'object' && err !== null && 'response' in err) {
         const maybeErr = err as ErrorWithResponse;
         const data = maybeErr.response?.data;
         if (data && typeof data === 'object') {
-          // safely extract message if present and a string
           const maybeMessage = (data as { message?: unknown }).message;
           if (typeof maybeMessage === 'string') {
             message = maybeMessage;
           }
-          // attempt to assign responseData if the shape matches
-          responseData = data as SystemStatusReport;
+          // This will correctly type 'data' if it matches the report shape
+          if ('overview' in data && 'services' in data) {
+            responseData = data as SystemStatusReport;
+          }
         }
       }
-
       setError(message);
       setStatusReport(responseData); // Still try to set data if server sent a 503
     } finally {
@@ -275,15 +273,20 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ icon, name, status, metrics
     <Box className="bg-gray-50 rounded-lg p-4">
       <Box className="flex items-center justify-between mb-3">
         <Box className="flex items-center space-x-2">
-          {React.cloneElement(icon, { className: 'text-gray-600' })}
+          {/* --- FIX: Wrap icon in a styled Box --- */}
+          <Box component="span" className="text-gray-600">
+            {icon}
+          </Box>
           <span className="font-medium text-gray-900">{name}</span>
         </Box>
         <Box className="flex items-center space-x-2">
           <Box className={`w-3 h-3 ${styles.dot} rounded-full status-indicator`}></Box>
           <span className={`text-sm font-medium ${styles.text}`}>{status}</span>
         </Box>
+      </Box>
       <Box className="space-y-2 text-sm">
         {Object.entries(metrics)
+          // Use keyof to type-check the key
           .filter(([key, value]) => key !== 'status' && value !== undefined && value !== null && value !== '')
           .map(([key, value]) => (
             <Box key={key} className="flex justify-between">
@@ -291,7 +294,6 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ icon, name, status, metrics
               <span className="font-medium text-gray-900">{String(value)}</span>
             </Box>
           ))}
-      </Box>
       </Box>
     </Box>
   );
@@ -309,8 +311,9 @@ const ServiceDetailItem: React.FC<ServiceDetailItemProps> = ({ icon, service }) 
   return (
     <Box className={`flex items-center justify-between p-4 ${styles.bg} rounded-lg border ${styles.border}`}>
       <Box className="flex items-center space-x-4">
-        <Box className={`w-10 h-10 ${styles.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-          {React.cloneElement(icon, { className: styles.icon })}
+        {/* --- FIX: Wrap icon in a styled Box --- */}
+        <Box className={`w-10 h-10 ${styles.iconBg} ${styles.icon} rounded-lg flex items-center justify-center flex-shrink-0`}>
+          {icon}
         </Box>
         <Box>
           <Typography className="font-semibold text-gray-900">{service.name}</Typography>

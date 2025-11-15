@@ -31,7 +31,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import type { ChartData } from 'chart.js';
+import type { ChartData, ChartDataset } from 'chart.js';
 
 // --- 2. Register Chart.js components ---
 ChartJS.register(
@@ -123,7 +123,7 @@ const SuperAdminAnalytics: React.FC = () => {
       // Set System Performance chart data (from mock)
       setPerfChartData({
         labels: perfChart.labels,
-        datasets: perfChart.datasets.map((ds: any) => ({
+        datasets: perfChart.datasets.map((ds: ChartDataset<'line', number[]>) => ({
           ...ds,
           fill: false,
           borderWidth: 2,
@@ -148,14 +148,14 @@ const SuperAdminAnalytics: React.FC = () => {
   }, [fetchChartData, timeRange]);
 
   // --- Handlers ---
-    const handleTimeRangeChange = (
-      _event: React.MouseEvent<HTMLElement>,
-      newRange: TimeRange | null
-    ) => {
-      if (newRange) {
-        setTimeRange(newRange);
-      }
-    };
+  const handleTimeRangeChange = (
+    _event: React.MouseEvent<HTMLElement>, // Prefixed with _ as it's not used
+    newRange: TimeRange | null
+  ) => {
+    if (newRange) {
+      setTimeRange(newRange);
+    }
+  };
 
   // --- Main Render ---
   return (
@@ -272,9 +272,15 @@ const MetricCard: React.FC<{ title: string; value: string; change: string; icon:
           <FaArrowUp className="inline-block mr-1" /> {change}
         </Typography>
       </Box>
-      <Box className={`w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center`}>
-        {React.cloneElement(icon, { className: `${iconColor} text-xl` })}
+      
+      {/* --- THIS IS THE FIX ---
+        We apply the color and size classes to the Box, not the icon.
+      */}
+      <Box className={`w-12 h-12 ${iconBg} ${iconColor} text-xl rounded-lg flex items-center justify-center`}>
+        {icon}
       </Box>
+      {/* --------------------- */}
+      
     </Box>
   </Paper>
 );

@@ -1,28 +1,28 @@
-import { createContext } from "react";
+// /frontend/src/context/AuthContext.ts
 
+import React, { createContext } from 'react';
+
+// so we must add it to the User type here.
 export interface User {
   id: string;
   fullName: string;
-  email?: string;
-  role: "superadmin" | "centraladmin" | "courseadmin" | "student";
-}
-
-export interface AdminLoginCredentials {
   email: string;
-  password: string;
+  username: string; 
+  role: string;
+  status: string;
+  organization_id?: string;
 }
-
-export interface StudentLoginCredentials {
-  studentId: string;
-}
-
-export type LoginCredentials = AdminLoginCredentials | StudentLoginCredentials;
 
 export interface IAuthContext {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<{ user: User }>;
-  logout: () => Promise<void>;
+  login: (credentials: {
+    email?: string;
+    password?: string;
+    studentId?: string;
+  }) => Promise<{ user: User }>;
+  logout: () => void;
+  setUser?: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 export const AuthContext = createContext<IAuthContext | undefined>(undefined);

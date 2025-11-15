@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // === Axios Client ===
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL, // <--- USE ENVIRONMENT VARIABLE
+  baseURL: import.meta.env.VITE_BACKEND_URL + '/api', // Added /api prefix
   withCredentials: true,
 });
 
@@ -40,8 +40,9 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
 };
 
 // === LOGIN ===
-export const login = async (credentials: { email: string; password: string }) => {
+export const login = async (credentials: { email?: string; password?: string, studentId?: string }) => {
   try {
+    // This single endpoint handles both student and admin login
     const response = await apiClient.post('/auth/login', credentials);
     return response.data;
   } catch (error: unknown) {
@@ -56,8 +57,9 @@ export const checkSession = async () => {
     const response = await apiClient.get('/auth/me');
     return response.data;
   } catch (error: unknown) {
-    const message = extractErrorMessage(error, 'Session check failed.');
-    throw new Error(message);
+    // We don't throw an error here, as a failed check is normal
+    console.warn('Session check failed (likely not logged in):', error);
+    throw new Error('No active session.');
   }
 };
 
@@ -79,6 +81,46 @@ export const apiLogout = async () => {
     return response.data;
   } catch (error: unknown) {
     const message = extractErrorMessage(error, 'Logout failed.');
+    throw new Error(message);
+  }
+};
+
+// ===========================================
+// NEW: SETTINGS PAGE FUNCTIONS
+// ===========================================
+
+// --- Profile Data Type ---
+interface ProfileData {
+  fullName: string;
+  email: string;
+}
+
+// --- Password Data Type ---
+interface PasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// === UPDATE PROFILE ===
+export const updateMyProfile = async (data: ProfileData) => {
+  try {
+    // This calls the PUT /api/auth/profile route
+    const response = await apiClient.put('/auth/profile', data);
+    return response.data; // Returns { message: '...', user: {...} }
+  } catch (error: unknown) {
+    const message = extractErrorMessage(error, 'Failed to update profile.');
+    throw new Error(message);
+  }
+};
+
+// === CHANGE PASSWORD ===
+export const changeMyPassword = async (data: PasswordData) => {
+  try {
+    // This calls the PUT /api/auth/change-password route
+    const response = await apiClient.put('/auth/change-password', data);
+    return response.data; // Returns { message: '...' }
+  } catch (error: unknown) {
+    const message = extractErrorMessage(error, 'Failed to change password.');
     throw new Error(message);
   }
 };

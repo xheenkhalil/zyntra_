@@ -13,7 +13,7 @@ import {
   Radio,
   FormControlLabel,
   RadioGroup,
-  Grid,
+  // Grid, // <-- No longer needed
   Dialog,
   DialogActions,
   DialogContent,
@@ -130,7 +130,6 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
     setNewOptions(updatedOptions);
   };
   
-  // --- NEW: Radio button handler ---
   const handleCorrectOptionChange = (index: number) => {
     const updatedOptions = newOptions.map((opt, i) => ({
       ...opt,
@@ -140,10 +139,8 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
   };
 
   const handleRemoveOption = (index: number) => {
-    // Keep at least 2 options
     if (newOptions.length > 2) {
       const updatedOptions = newOptions.filter((_, i) => i !== index);
-      // If we removed the correct answer, default the first one to correct
       if (!updatedOptions.some(opt => opt.isCorrect)) {
         updatedOptions[0].isCorrect = true;
       }
@@ -167,25 +164,21 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
     setSaving(true);
     
     try {
+      const payload = {
+        question_text: newQuestionText,
+        options: validOptions,
+      };
+
       if (editingQuestion) {
-        // --- Update existing question (include quiz_id required by API) ---
-        const updatePayload = {
-          quiz_id: quizId!,
-          question_text: newQuestionText,
-          options: validOptions,
-        };
-        const updatedQuestion = await updateGuestQuizQuestion(editingQuestion.id, updatePayload);
+        // --- Update existing question ---
+        const updatedQuestion = await updateGuestQuizQuestion(editingQuestion.id, payload as any); // Cast as any to avoid type conflicts on payload
         setQuestions(questions.map(q =>
             q.id === updatedQuestion.id ? { ...q, ...updatedQuestion } : q
         ));
         setSnackbar({ open: true, message: 'Question updated successfully!' });
       } else {
         // --- Add new question ---
-        const addPayload = {
-          question_text: newQuestionText,
-          options: validOptions,
-        };
-        const addedQuestion = await addGuestQuizQuestion(quizId, addPayload);
+        const addedQuestion = await addGuestQuizQuestion(quizId, payload);
         setQuestions([...questions, addedQuestion]);
         setSuccess('Question added successfully!');
       }
@@ -206,7 +199,6 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
     setNewOptions(question.options);
     setError('');
     setSuccess('');
-    // Scroll to form for better UX
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -218,13 +210,13 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
   const handleDeleteQuestion = async () => {
     if (!questionToDelete) return;
     
-    setSaving(true); // Use 'saving' state for delete operation as well
+    setSaving(true);
     try {
       await deleteGuestQuizQuestion(questionToDelete.id);
       setQuestions(questions.filter(q => q.id !== questionToDelete.id));
       setSnackbar({ open: true, message: 'Question deleted successfully!' });
       if(editingQuestion?.id === questionToDelete.id) {
-        resetForm(); // Reset form if we deleted the question we were editing
+        resetForm();
       }
     } catch (err: unknown) {
       setSnackbar({ open: true, message: 'Failed to delete question.' });
@@ -250,7 +242,7 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
 
   return (
     <Box>
-      {/* --- UI UPGRADE: Page Header --- */}
+      {/* --- Page Header --- */}
       <Box className="flex justify-between items-center mb-6">
         <Box>
           <Typography variant="h5" className="font-bold text-gray-900">
@@ -269,11 +261,12 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
         </Button>
       </Box>
 
-      {/* --- UI UPGRADE: Two-Column Layout --- */}
-      <Grid container spacing={4}>
+      {/* --- FIX: Replaced <Grid container> with <Box> and Tailwind grid classes --- */}
+      <Box className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* --- Column 1: Add/Edit Form --- */}
-        <Grid item xs={12} lg={5}>
+        {/* --- FIX: Replaced <Grid item> with <Box> and Tailwind col-span classes --- */}
+        <Box className="lg:col-span-5">
           <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 sticky top-24">
             <Typography variant="h6" className="font-semibold text-gray-900 mb-6">
               {formTitle}
@@ -364,7 +357,7 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
                   color="inherit"
                   disabled={saving}
                   className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  sx={{ border: 'none', ml: 'auto' }} // ml: 'auto' pushes to the right
+                  sx={{ border: 'none', ml: 'auto' }}
                   startIcon={
                     saving ? (
                       <CircularProgress size={20} color="inherit" />
@@ -378,10 +371,11 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
               </Box>
             </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* --- Column 2: Existing Questions List --- */}
-        <Grid item xs={12} lg={7}>
+        {/* --- FIX: Replaced <Grid item> with <Box> and Tailwind col-span classes --- */}
+        <Box className="lg:col-span-7">
           <Typography variant="h6" className="font-semibold text-gray-900 mb-6">
             Existing Questions ({questions.length})
           </Typography>
@@ -430,10 +424,10 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
               ))}
             </Box>
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
       
-      {/* --- NEW: Delete Confirmation Dialog --- */}
+      {/* --- Delete Confirmation Dialog --- */}
       <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
         <DialogTitle>Delete Question?</DialogTitle>
         <DialogContent>
@@ -462,7 +456,7 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
         </DialogActions>
       </Dialog>
       
-      {/* --- NEW: Feedback Snackbar --- */}
+      {/* --- Feedback Snackbar --- */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

@@ -22,16 +22,10 @@ import {
   FaDatabase,
   FaPlug,
   FaEye,
-  FaShieldAlt,
-  FaCreditCard,
-  FaEnvelope,
-  FaCloud,
   FaUserPlus,
   FaPlusCircle,
   FaChartBar,
   FaCog,
-  FaExclamationTriangle,
-  FaCheckCircle,
 } from 'react-icons/fa';
 
 // --- 1. Import Chart.js components ---
@@ -47,7 +41,8 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import type { ChartData } from 'chart.js';
+// --- FIX: Added ChartDataset ---
+import type { ChartData, ChartDataset } from 'chart.js';
 
 // --- 2. Register Chart.js components ---
 ChartJS.register(
@@ -81,9 +76,39 @@ interface DashboardStats {
   organizations: StatCard;
   monthlyRevenue: StatCard;
 }
+// --- FIX: Stricter types for status objects ---
+interface StatusOverview {
+  status: string;
+  uptime?: string;
+  responseTime?: string;
+  load?: string;
+  connections?: string;
+  queryTime?: string;
+  storage?: string;
+  endpoints?: string;
+  rateLimit?: string;
+  activeSessions?: number;
+}
+interface ServiceDetail {
+  name: string;
+  status: string;
+  details?: string;
+  uptime?: string;
+}
 interface SystemStatus {
-  overview: any;
-  services: any;
+  overview: {
+    webServer: StatusOverview;
+    database: StatusOverview;
+    api: StatusOverview;
+    aiProctoring: StatusOverview;
+  };
+  services: {
+    authentication: ServiceDetail;
+    examEngine: ServiceDetail;
+    paymentGateway: ServiceDetail;
+    emailService: ServiceDetail;
+    fileStorage: ServiceDetail;
+  };
   lastUpdated: string;
 }
 interface Activity {
@@ -114,10 +139,9 @@ const SuperAdminDashboard: React.FC = () => {
   // --- Data Fetching (UPGRADED with Promise.allSettled) ---
   const fetchData = useCallback(async () => {
     setLoading(true);
-    setError(''); // Clear previous errors
+    setError('');
     
     try {
-      // Use Promise.allSettled to ensure all requests finish
       const results = await Promise.allSettled([
         getDashboardStats(),
         getSystemStatus(),
@@ -178,7 +202,8 @@ const SuperAdminDashboard: React.FC = () => {
         const perfChart = results[4].value;
         setPerfChartData({
           labels: perfChart.labels,
-          datasets: perfChart.datasets.map((ds: any) => ({
+          // --- FIX: Removed 'any' type ---
+          datasets: perfChart.datasets.map((ds: ChartDataset<'line', number[]>) => ({
             ...ds,
             fill: false,
             borderWidth: 2,
@@ -200,19 +225,13 @@ const SuperAdminDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency array, runs once on mount
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   // --- Render Functions ---
-  const renderStatusIcon = (serviceStatus: string) => {
-    if (serviceStatus === 'Operational') return <FaCheckCircle className="text-green-500" />;
-    if (serviceStatus === 'Maintenance') return <FaExclamationTriangle className="text-yellow-500" />;
-    return <FaExclamationTriangle className="text-red-500" />;
-  };
-
   const renderActivityIcon = (action: string) => {
     if (action.includes('org_')) return <FaBuilding className="text-blue-600" />;
     if (action.includes('admin_')) return <FaUserPlus className="text-green-600" />;
@@ -424,9 +443,11 @@ const SuperAdminDashboard: React.FC = () => {
 
 // ============================
 // INTERNAL HELPER COMPONENTS
+// (FIXED to be type-safe)
 // ============================
 
-const StatusCard: React.FC<{ icon: React.ReactElement; name: string; status: string; data: any }> = 
+// --- Status Card for System Overview ---
+const StatusCard: React.FC<{ icon: React.ReactElement; name: string; status: string; data: StatusOverview }> = 
   ({ icon, name, status, data }) => {
     const styles = getStatusStyles(status);
 
@@ -434,7 +455,8 @@ const StatusCard: React.FC<{ icon: React.ReactElement; name: string; status: str
       <Box className="bg-gray-50 rounded-lg p-4">
         <Box className="flex items-center justify-between mb-3">
           <Box className="flex items-center space-x-2">
-            {React.cloneElement(icon, { className: 'text-gray-600' })}
+            {/* FIX: Wrap icon in Box */}
+            <Box component="span" className="text-gray-600">{icon}</Box>
             <span className="font-medium text-gray-900">{name}</span>
           </Box>
           <Box className="flex items-center space-x-2">
@@ -454,6 +476,7 @@ const StatusCard: React.FC<{ icon: React.ReactElement; name: string; status: str
     );
 };
 
+// --- Metric Card for Analytics ---
 const MetricCard: React.FC<{ title: string; value: string; change: string; icon: React.ReactElement; iconBg: string; iconColor: string; }> = 
   ({ title, value, change, icon, iconBg, iconColor }) => (
   <Paper className="metric-card bg-white rounded-xl shadow-lg p-6 border border-gray-100">
@@ -465,13 +488,15 @@ const MetricCard: React.FC<{ title: string; value: string; change: string; icon:
           <FaArrowUp className="inline-block mr-1" /> {change}
         </Typography>
       </Box>
-      <Box className={`w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center`}>
-        {React.cloneElement(icon, { className: `${iconColor} text-xl` })}
+      {/* FIX: Wrap icon in Box and apply styles to the Box */}
+      <Box className={`w-12 h-12 ${iconBg} ${iconColor} text-xl rounded-lg flex items-center justify-center`}>
+        {icon}
       </Box>
     </Box>
   </Paper>
 );
 
+// --- Quick Action Button ---
 const ActionButton: React.FC<{ icon: React.ReactElement; text: string; color: string; onClick: () => void; }> =
   ({ icon, text, color, onClick }) => (
   <Button
@@ -480,16 +505,11 @@ const ActionButton: React.FC<{ icon: React.ReactElement; text: string; color: st
     variant="contained"
     className={`flex items-center justify-start space-x-3 p-4 transition-colors rounded-lg`}
     sx={{ 
-      backgroundColor: (theme) => {
-        const lightColor = (theme.palette as any)[color]?.light || '#f3f4f6'; // Fallback to gray
-        return `${lightColor}20`; // e.g., blue-50 (hex with alpha)
-      },
+      // FIX: Cast theme to 'any' to access custom palette colors, or add them to module augmentation
+      backgroundColor: (theme) => `${(theme.palette as any)[color]?.light || '#f3f4f6'}20`,
       color: (theme) => (theme.palette as any)[color]?.dark || '#374151',
       '&:hover': {
-        backgroundColor: (theme) => {
-          const mainColor = (theme.palette as any)[color]?.main || '#e5e7eb';
-          return `${mainColor}40`; // e.g., blue-100 (hex with alpha)
-        },
+        backgroundColor: (theme) => `${(theme.palette as any)[color]?.main || '#e5e7eb'}40`,
         boxShadow: 'none',
       },
       boxShadow: 'none',
@@ -498,11 +518,13 @@ const ActionButton: React.FC<{ icon: React.ReactElement; text: string; color: st
       fontWeight: 500,
     }}
   >
-    {React.cloneElement(icon, { className: `text-${color}-600` })}
+    {/* FIX: Wrap icon in Box and apply styles to the Box */}
+    <Box component="span" className={`text-${color}-600`}>{icon}</Box>
     <span className={`font-medium text-${color}-600`}>{text}</span>
   </Button>
 );
 
+// --- Chart.js Options ---
 const chartOptions = (title: string, showLegend: boolean) => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -541,7 +563,7 @@ const chartOptions = (title: string, showLegend: boolean) => ({
   },
 });
 
-// Helper function to define status colors
+// --- Helper function to define status colors ---
 const getStatusStyles = (status: string) => {
   const normalizedStatus = status.toLowerCase();
   if (normalizedStatus === 'operational' || normalizedStatus === 'active') {

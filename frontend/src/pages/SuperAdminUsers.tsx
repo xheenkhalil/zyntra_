@@ -34,12 +34,10 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import {
-  FaUsers,
   FaSearch,
   FaEdit,
   FaArchive,
   FaUserCheck,
-  FaUserSlash,
 } from 'react-icons/fa';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {
