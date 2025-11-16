@@ -1,3 +1,5 @@
+// frontend/src/components/chatbot/Chatbot.tsx
+
 import React, { useState, useRef, useEffect } from "react";
 import {
   FaComments,
@@ -75,13 +77,22 @@ const Chatbot: React.FC = () => {
   }, [messages, isTyping]);
 
   // --- Event Handlers ---
-  const toggleChatbot = () => setIsOpen(!isOpen);
+  const handleToggle = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  // --- THIS IS THE FIX ---
+  // A separate handler just for closing the modal
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation(); // This stops the click from triggering handleToggle
+    setIsOpen(false);
+  };
+  // --------------------
 
   const handleSend = () => {
     const text = inputValue.trim();
     if (!text) return;
 
-    // Add user message
     const newUserMessage: Message = {
       id: Date.now(),
       sender: "user",
@@ -90,15 +101,13 @@ const Chatbot: React.FC = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setInputValue("");
 
-    // Trigger bot response
     setIsTyping(true);
     setTimeout(() => {
       getBotResponse(text);
-    }, 1000 + Math.random() * 1000); // Simulate network delay
+    }, 1000 + Math.random() * 1000);
   };
 
   const handleQuickReply = (text: string) => {
-    // Add user message (as if they typed it)
     const newUserMessage: Message = {
       id: Date.now(),
       sender: "user",
@@ -106,7 +115,6 @@ const Chatbot: React.FC = () => {
     };
     setMessages((prev) => [...prev, newUserMessage]);
 
-    // Trigger bot response
     setIsTyping(true);
     setTimeout(() => {
       getBotResponse(text);
@@ -115,9 +123,8 @@ const Chatbot: React.FC = () => {
 
   const getBotResponse = (userText: string) => {
     const lowerText = userText.toLowerCase();
-    let botReply = chatbotKnowledge.default; // Default reply
+    let botReply = chatbotKnowledge.default;
 
-    // Find a matching keyword
     for (const key in chatbotKnowledge) {
       if (lowerText.includes(key)) {
         botReply = chatbotKnowledge[key];
@@ -147,7 +154,7 @@ const Chatbot: React.FC = () => {
       <button
         id="chatbot-button"
         className={`chatbot-button ${isOpen ? "active" : ""}`}
-        onClick={toggleChatbot}
+        onClick={handleToggle}
       >
         {isOpen ? (
           <FaTimes id="chatbot-icon" />
@@ -171,8 +178,11 @@ const Chatbot: React.FC = () => {
               </div>
             </div>
           </div>
+          
+          {/* --- APPLY THE FIX HERE --- */}
+          {/* This button now only calls handleClose, not toggleChatbot */}
           <button
-            onClick={toggleChatbot}
+            onClick={handleClose}
             className="text-white hover:text-gray-200 text-xl"
           >
             <FaTimes />

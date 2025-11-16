@@ -8,10 +8,22 @@ const pool = new Pool({
     ssl: {
         rejectUnauthorized: false
     },
-    idleTimeoutMillis: 10000,
+
+    // --- FIX #1: Prevent Stale Connections ---
+    // Supabase/PgBouncer is very aggressive with idle connections.
+    // We set our pool's idle timeout to be *shorter* (10s) than the server's,
+    // telling our app to proactively close its own idle connections
+    // before Supabase has a chance to kill them and cause an error.
+    idleTimeoutMillis: 10000, // 10 seconds
     maxUses: 5000, // Recycle a connection after 5000 queries for stability
 });
 
+// --- FIX #2: Prevent the App Crash ---
+// This is the most important part.
+// We add an error listener to the pool itself. If a client
+// in the pool gets terminated unexpectedly (like by Supabase),
+// this listener will just log the error instead of crashing the
+// entire application.
 pool.on('error', (err, client) => {
     console.error('[DATABASE POOL ERROR]', err.message, client);
 });

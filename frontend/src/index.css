@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 /* =========================================
---- 2. ADMIN DASHBOARD STYLES (NEW) ---
+--- 2. ADMIN DASHBOARD STYLES (FIXED) ---
 =========================================
 */
 
@@ -23,27 +23,27 @@
 }
 
 /* --- Sidebar Navigation Item Styling (THE FIX) --- */
-.nav-item {
+/* We use the unique parent ID '#sidebar' to ensure these styles
+   ONLY apply to the admin sidebar and not the homepage.
+*/
+#sidebar .nav-item {
     transition: all 0.3s ease;
-    border-left: 4px solid transparent; /* Add transparent border for alignment */
-    color: #FFFFFF; /* Base text color */
+    border-left: 4px solid transparent; 
+    color: #FFFFFF; 
 }
-.nav-item:hover {
+#sidebar .nav-item:hover {
     background: rgba(59, 130, 246, 0.1);
     border-left: 4px solid #3b82f6;
-    color: #FFFFFF; /* Keep text white on hover */
-}
-.nav-item.active {
-    background: rgba(255, 255, 255, 0.15); /* Brighter background for active */
-    border-left: 4px solid #FFFFFF; /* White border for active */
-    color: #FFFFFF; /* Keep text white for active */
-    font-weight: 600;
-}
-/* This colors the icon inside the active NavLink */
-.nav-item.active svg {
     color: #FFFFFF;
 }
-.nav-item:hover svg {
+#sidebar .nav-item.active {
+    background: rgba(255, 255, 255, 0.15); 
+    border-left: 4px solid #FFFFFF; 
+    color: #FFFFFF; 
+    font-weight: 600;
+}
+#sidebar .nav-item.active svg,
+#sidebar .nav-item:hover svg {
     color: #FFFFFF;
 }
 
@@ -51,25 +51,13 @@
 .status-indicator {
     animation: pulse 2s infinite;
 }
-.status-active {
-    background: #10b981;
-}
-.status-warning {
-    background: #f59e0b;
-}
-.status-error {
-    background: #ef4444;
-}
-.status-maintenance {
-    background: #8b5cf6;
-}
+.status-active { background: #10b981; }
+.status-warning { background: #f59e0b; }
+.status-error { background: #ef4444; }
+.status-maintenance { background: #8b5cf6; }
 @keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 /* --- Admin Chart Container --- */
@@ -90,7 +78,6 @@
 
 /* --- Admin Mobile Sidebar --- */
 @media (max-width: 1023px) {
-    /* These classes match your new HTML file */
     .sidebar-expanded {
         width: 280px;
         transform: translateX(-100%);
@@ -100,17 +87,14 @@
     .sidebar-expanded.mobile-open {
         transform: translateX(0);
     }
-    .main-content-expanded {
-        margin-left: 0;
-    }
+    .main-content-expanded,
     .main-content-collapsed {
         margin-left: 0;
     }
 }
 
-
 /* =========================================
---- 3. HOMEPAGE STYLES (EXISTING) ---
+--- 3. HOMEPAGE STYLES (FIXED) ---
 =========================================
 */
 
@@ -136,8 +120,10 @@
   transition: all 0.3s ease;
   pointer-events: none;
 }
-/* NOTE: Changed selector to be more specific to homepage nav */
-.homepage-nav .nav-item:hover .mega-menu {
+/* --- THE FIX: We use the unique parent 'nav' tag to apply this rule
+   ONLY to the homepage navbar. This fixes the hover conflict.
+*/
+nav .nav-item:hover .mega-menu {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -148,20 +134,11 @@
 .floating-element {
   animation: float 6s ease-in-out infinite;
 }
-.floating-element:nth-child(2) {
-  animation-delay: -2s;
-}
-.floating-element:nth-child(3) {
-  animation-delay: -4s;
-}
+.floating-element:nth-child(2) { animation-delay: -2s; }
+.floating-element:nth-child(3) { animation-delay: -4s; }
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(180deg);
-  }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
 }
 
 /* Homepage Quiz Card Hover */
@@ -173,10 +150,7 @@
 }
 
 /* Homepage Hero Slider */
-.hero-slider {
-  position: relative;
-  overflow: hidden;
-}
+.hero-slider { position: relative; overflow: hidden; }
 .hero-slide {
   position: absolute;
   top: 0;
@@ -186,45 +160,20 @@
   opacity: 0;
   transition: opacity 1s ease-in-out;
 }
-.hero-slide.active {
-  opacity: 1;
-}
-.hero-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.hero-slide.active { opacity: 1; }
+.hero-slide img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Homepage Mobile Menu Accordion */
 @media (max-width: 1023px) {
-  .mega-menu {
-    position: static !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    display: none; /* Controlled by React state */
-    background: white;
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
-    margin-top: 0;
-    padding: 1rem;
-    pointer-events: auto;
-  }
-  .mega-menu.mobile-show {
-    display: block; /* This class will be added by React */
-  }
+  /* This rule is safe as it's already inside a media query */
+  .mega-menu.mobile-show { display: block; }
 }
-.mobile-menu-item {
-  cursor: pointer;
-}
-.mobile-menu-item.active .fa-chevron-down {
-  transform: rotate(180deg);
-}
+.mobile-menu-item { cursor: pointer; }
+.mobile-menu-item.active .fa-chevron-down { transform: rotate(180deg); }
 
 /* Homepage Modal Styles */
 .modal {
-  display: none; /* Controlled by React state */
+  display: none;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -250,24 +199,16 @@
   animation: modalSlideIn 0.3s ease-out;
 }
 @keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-50px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Homepage Form Input Group (Floating Label) */
-.input-group {
-  position: relative;
-}
+.input-group { position: relative; }
 .input-group input:focus + label,
 .input-group input:not(:placeholder-shown) + label {
   transform: translateY(-1.5rem) scale(0.85);
-  color: #2563eb; /* blue-600 */
+  color: #2563eb; 
 }
 .input-group label {
   position: absolute;
@@ -275,13 +216,13 @@
   top: 0.75rem;
   transition: all 0.2s ease;
   pointer-events: none;
-  color: #6b7280; /* gray-500 */
+  color: #6b7280; 
   background: white;
   padding: 0 4px;
 }
 .input-group input:focus + label,
 .input-group input:not(:placeholder-shown) + label {
-  top: 0; /* Move label up on focus/fill */
+  top: 0;
 }
 
 /* Homepage Success Animation */
@@ -289,35 +230,232 @@
   animation: successPulse 0.6s ease-in-out;
 }
 @keyframes successPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-/* --- Chatbot Styles (Shared) --- */
+/* --- Chatbot Styles (FIXED) --- */
+/* All styles for the chatbot are now correctly prefixed with a '.' */
 .chatbot-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 1000;
 }
-/* ... (all other chatbot styles) ... */
 .chatbot-button {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  /* ... etc ... */
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  animation: pulse 2s infinite;
+  border: none;
 }
-/* ... (all other chatbot styles) ... */
+.chatbot-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+}
+.chatbot-button.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+.chatbot-window {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 350px;
+  height: 500px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transform: scale(0) translateY(20px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transform-origin: bottom right;
+}
+.chatbot-window.open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+.chatbot-header {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bot-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bot-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.bot-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: blink 1.5s infinite;
+}
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+.chatbot-messages {
+  height: 340px;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f8fafc;
+}
+.message {
+  margin-bottom: 16px;
+  animation: messageSlideIn 0.3s ease-out;
+}
+@keyframes messageSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.message.bot { display: flex; align-items: flex-start; gap: 8px; }
+.message.user { display: flex; justify-content: flex-end; }
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.message-content {
+  background: white;
+  padding: 12px 16px;
+  border-radius: 18px;
+  max-width: 240px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.message.user .message-content {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.quick-reply {
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quick-reply:hover {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 18px;
+  max-width: 80px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.typing-dots { display: flex; gap: 4px; }
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: typingDot 1.4s infinite;
+}
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-10px); opacity: 1; }
+}
+.chatbot-input {
+  padding: 16px;
+  border-top: 1px solid #e2e8f0;
+  background: white;
+}
+.input-container { display: flex; gap: 8px; align-items: center; }
+.chatbot-input input {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.chatbot-input input:focus { border-color: #3b82f6; }
+.send-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.send-button:hover { transform: scale(1.1); }
+.send-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .chatbot-window { width: 300px; height: 450px; }
+  .chatbot-messages { height: 290px; }
+}
 @media (max-width: 480px) {
-  .chatbot-messages {
-    height: 240px;
-  }
+  .chatbot-container { bottom: 15px; right: 15px; }
+  .chatbot-window { width: 280px; height: 400px; bottom: 70px; right: -10px; }
+  .chatbot-messages { height: 240px; }
 }
