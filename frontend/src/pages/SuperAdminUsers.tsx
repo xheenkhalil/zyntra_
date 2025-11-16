@@ -260,7 +260,7 @@ const SuperAdminUsers: React.FC = () => {
           >
             <MenuItem value="all">All Roles</MenuItem>
             <MenuItem value="superadmin">Super Admin</MenuItem>
-            <MenuItem value="clientadmin">Client Admin</MenuItem>
+            <MenuItem value="centraladmin">Client Admin</MenuItem>
             <MenuItem value="courseadmin">Teacher</MenuItem>
             <MenuItem value="student">Student</MenuItem>
           </Select>

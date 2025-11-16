@@ -6,35 +6,31 @@ import {
   archiveCourseAdmin,
   unarchiveCourseAdmin,
   deleteCourseAdmin,
-  sendInviteEmail, // ✅ newly added
+  sendInviteEmail, 
 } from '../controllers/centralAdminController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
-/**
- * All routes in this file require authentication and central admin privileges.
- * If in the future you add public routes (like password setup), 
- * move them *above* this middleware.
- */
+
 router.use(protect, authorize('centraladmin'));
 
 // === Base CRUD Routes ===
 router
   .route('/course-admins')
-  .post(createCourseAdmin)       // Create new course admin
-  .get(getCourseAdminsForOrg);   // Fetch all course admins for this org
+  .post(createCourseAdmin)      
+  .get(getCourseAdminsForOrg);
 
 router
   .route('/course-admins/:userId')
-  .put(updateCourseAdmin)        // Update course admin details
-  .delete(deleteCourseAdmin);    // Permanently delete course admin
+  .put(updateCourseAdmin)        
+  .delete(deleteCourseAdmin);   
 
 // === Status Management Routes ===
 router.put('/course-admins/:userId/archive', archiveCourseAdmin);
 router.put('/course-admins/:userId/unarchive', unarchiveCourseAdmin);
 
 // === Invitation Route ===
-router.post('/send-invite/:userId', sendInviteEmail); // ✅ fixed
+router.post('/send-invite/:userId', sendInviteEmail);
 
 export default router;
