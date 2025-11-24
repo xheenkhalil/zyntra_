@@ -1,17 +1,20 @@
 // /backend/src/routes/examRoutes.ts
 
 import { Router } from 'express';
-import { 
-    createExam, 
-    getExamsForCourseAdmin, 
-    addQuestionToExam, 
-    getExamById, 
+import {
+    createExam,
+    getExamsForCourseAdmin,
+    addQuestionToExam,
+    getExamById,
     updateExamSettings,
-    archiveExam,
     deleteExam,
-    restoreExam,
-    getExamResults // 1. Import our new function
+    getExamResults
 } from '../controllers/examController';
+import {
+    archiveExam,
+    restoreExam,
+    updateQuestionInExam
+} from '../controllers/examController-stubs';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -36,6 +39,7 @@ router.put('/:examId/restore', restoreExam);
 
 // Routes for an exam's sub-resources (like questions and results)
 router.post('/:examId/questions', addQuestionToExam);
-router.get('/:examId/results', getExamResults); // 2. Add the new route here
+router.put('/:examId/questions/:questionId', updateQuestionInExam);
+router.get('/:examId/results', getExamResults);
 
 export default router;

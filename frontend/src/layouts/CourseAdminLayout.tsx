@@ -1,217 +1,198 @@
+// frontend/src/layouts/CourseAdminLayout.tsx
+
 import React, { useState } from "react";
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  Divider,
   IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  CssBaseline,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/useAuth"; // ✅ fixed import (new hook file)
+import { Outlet, NavLink } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 
-const drawerWidth = 240;
-const collapsedDrawerWidth = 70;
+import {
+  FaTachometerAlt,
+  FaUsers,
+  FaBook,
+  FaChartBar,
+  FaVideo,
+  FaCog,
+  FaSignOutAlt,
+  FaGraduationCap,
+  FaBars
+} from 'react-icons/fa';
+
+const SIDEBAR_WIDTH_EXPANDED = '16rem'; // 256px
+const SIDEBAR_WIDTH_COLLAPSED = '5rem'; // 80px
+
+// --- Helper Component for Nav Items ---
+const NavItem: React.FC<{ to: string; icon: React.ReactElement; text: string; isCollapsed: boolean; onClick: () => void }> =
+  ({ to, icon, text, isCollapsed, onClick }) => (
+    <NavLink
+      to={to}
+      onClick={onClick}
+      end
+      className={({ isActive }) =>
+        `nav-item flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium ${isActive ? 'active' : ''
+        }`
+      }
+      style={{ textDecoration: 'none' }}
+    >
+      <Box component="span" className="text-lg flex-shrink-0 w-6 text-center">
+        {icon}
+      </Box>
+      <span
+        className={`nav-text transition-opacity duration-200 ${isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100 lg:w-auto'
+          } whitespace-nowrap overflow-hidden`}
+      >
+        {text}
+      </span>
+    </NavLink>
+  );
+
 
 const CourseAdminLayout: React.FC = () => {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [open, setOpen] = useState(false);
+  const { logout, user } = useAuth();
 
-  const handleToggleDrawer = () => setOpen((prev) => !prev);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const navItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "/courseadmin" },
-    { text: "Students", icon: <PeopleIcon />, path: "/courseadmin/students" },
-    { text: "Exams", icon: <LibraryBooksIcon />, path: "/courseadmin/exams" },
-    { text: "Results", icon: <BarChartIcon />, path: "/courseadmin/results" },
-  ];
+  const currentWidth = isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
+
+  const handleToggleCollapse = () => setIsCollapsed((prev) => !prev);
+  const handleToggleMobile = () => setIsMobileOpen((prev) => !prev);
+  const handleMobileClose = () => setIsMobileOpen(false);
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
+    <Box className="flex bg-gray-50 min-h-screen">
 
-      {/* === NAVBAR === */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: `calc(100% - ${collapsedDrawerWidth}px)`,
-          ml: `${collapsedDrawerWidth}px`,
-          backgroundColor: "#0D47A1",
-          color: "#FFFFFF",
-          boxShadow: "0px 3px 10px rgba(0,0,0,0.3)",
-          transition: "width 0.3s ease, margin-left 0.3s ease",
-        }}
-      >
-        <Toolbar>
-          <Typography
-            variant="h5"
-            noWrap
-            sx={{
-              fontWeight: 600,
-              letterSpacing: "0.5px",
-            }}
-          >
-            Course Admin Portal
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      {/* === SIDEBAR === */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: open ? drawerWidth : collapsedDrawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: open ? drawerWidth : collapsedDrawerWidth,
-            boxSizing: "border-box",
-            borderRight: "none",
-            backgroundColor: "#0D47A1",
-            color: "#FFFFFF",
-            transition: "width 0.3s ease",
-            boxShadow: "2px 0 10px rgba(0,0,0,0.2)",
-          },
-        }}
-      >
-        {/* === MENU TOGGLE === */}
-        <Toolbar
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: open ? "flex-end" : "center",
-            px: [1],
-          }}
-        >
-          <IconButton
-            onClick={handleToggleDrawer}
-            sx={{
-              color: "#FFFFFF",
-              "&:hover": { transform: "rotate(90deg)", transition: "0.3s" },
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-        </Toolbar>
-
-        <Divider sx={{ backgroundColor: "rgba(255,255,255,0.2)" }} />
-
-        {/* === NAVIGATION LINKS === */}
-        <List sx={{ flexGrow: 1 }}>
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-                <ListItemButton
-                  onClick={() => navigate(item.path)}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: open ? "initial" : "center",
-                    px: 2.5,
-                    color: "#FFFFFF",
-                    backgroundColor: isActive ? "#1565C0" : "transparent",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      backgroundColor: "#1976D2",
-                      transform: "scale(1.02)",
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: "#FFFFFF",
-                      minWidth: 0,
-                      mr: open ? 3 : "auto",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-
-                  <ListItemText
-                    primary={item.text}
-                    sx={{
-                      opacity: open ? 1 : 0,
-                      transition: "opacity 0.3s ease",
-                      "& .MuiListItemText-primary": {
-                        fontWeight: isActive ? 600 : 400,
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </List>
-
-        <Divider sx={{ backgroundColor: "rgba(255,255,255,0.2)" }} />
-
-        {/* === LOGOUT === */}
-        <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              onClick={logout}
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                color: "#FFFFFF",
-                "&:hover": {
-                  backgroundColor: "#1976D2",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                }}
-              >
-                <LogoutIcon />
-              </ListItemIcon>
-
-              <ListItemText
-                primary="Logout"
-                sx={{
-                  opacity: open ? 1 : 0,
-                  transition: "opacity 0.3s ease",
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Drawer>
-
-      {/* === MAIN CONTENT === */}
+      {/* === 1. SIDEBAR === */}
       <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          transition: "margin 0.3s ease",
-          ml: open ? `${drawerWidth}px` : `${collapsedDrawerWidth}px`,
-          bgcolor: "background.default",
-          minHeight: "100vh",
-        }}
+        id="sidebar"
+        component="aside"
+        className={`fixed left-0 top-0 h-full bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-2xl transition-all duration-300 z-40 ${isCollapsed ? 'sidebar-collapsed lg:w-20' : 'sidebar-expanded lg:w-64'
+          } ${isMobileOpen ? 'mobile-open translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0`}
       >
-        <Toolbar />
-        <Outlet />
+        {/* Logo/Header Section */}
+        <Box className="flex items-center justify-between p-4 border-b border-blue-700">
+          <Box className="flex items-center space-x-3">
+            <Box className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FaGraduationCap className="text-white text-lg" />
+            </Box>
+            <span id="logo-text" className={`text-xl font-bold transition-opacity duration-300 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+              ZYNTRA
+            </span>
+          </Box>
+          {/* Toggle Button inside Sidebar (Visible on Desktop) */}
+          <IconButton
+            onClick={handleToggleCollapse}
+            className="hidden lg:flex text-white hover:bg-blue-700"
+            size="small"
+          >
+            <FaBars />
+          </IconButton>
+          {/* Mobile Close Button */}
+          <IconButton
+            onClick={handleToggleMobile}
+            className="lg:hidden text-white hover:bg-blue-700"
+            size="small"
+          >
+            <FaBars />
+          </IconButton>
+        </Box>
+
+        {/* Navigation Menu */}
+        <Box component="nav" className="mt-6 px-3 flex flex-col justify-between h-[calc(100%-80px)]">
+          <div className="space-y-2">
+            <NavItem to="/courseadmin" icon={<FaTachometerAlt />} text="Dashboard" isCollapsed={isCollapsed} onClick={handleMobileClose} />
+            <NavItem to="/courseadmin/students" icon={<FaUsers />} text="Students" isCollapsed={isCollapsed} onClick={handleMobileClose} />
+            <NavItem to="/courseadmin/exams" icon={<FaBook />} text="Exams" isCollapsed={isCollapsed} onClick={handleMobileClose} />
+            <NavItem to="/courseadmin/results" icon={<FaChartBar />} text="Results" isCollapsed={isCollapsed} onClick={handleMobileClose} />
+
+            {/* Proctoring Link */}
+            <a
+              href="/courseadmin/proctoring"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-item flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 text-blue-100 hover:text-white transition-all duration-200"
+              style={{ textDecoration: 'none' }}
+            >
+              <Box component="span" className="text-lg flex-shrink-0 w-6 text-center">
+                <FaVideo />
+              </Box>
+              <span className={`nav-text transition-opacity duration-200 ${isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100'} whitespace-nowrap overflow-hidden`}>
+                Live Proctoring
+              </span>
+            </a>
+          </div>
+
+          {/* Settings and Logout */}
+          <div className="border-t border-blue-700 pt-4 pb-4">
+            <NavItem to="/courseadmin/settings" icon={<FaCog />} text="Settings" isCollapsed={isCollapsed} onClick={handleMobileClose} />
+
+            <div
+              onClick={logout}
+              className="nav-item flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer text-sm font-medium hover:bg-blue-700 text-blue-100 hover:text-white transition-all duration-200"
+            >
+              <Box component="span" className="text-lg flex-shrink-0 w-6 text-center">
+                <FaSignOutAlt />
+              </Box>
+              <span className={`nav-text transition-opacity duration-200 ${isCollapsed ? 'lg:opacity-0 lg:w-0' : 'lg:opacity-100'} whitespace-nowrap overflow-hidden`}>
+                Logout
+              </span>
+            </div>
+          </div>
+        </Box>
+      </Box>
+
+      {/* Mobile Overlay */}
+      <Box
+        onClick={handleMobileClose}
+        className={`lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 ${isMobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
+      />
+
+      {/* === 2. MAIN CONTENT === */}
+      <Box
+        component="div"
+        className={`flex-1 transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}
+      >
+        {/* Top Header */}
+        <AppBar
+          position="static"
+          className="bg-white shadow-sm border-b border-gray-200"
+          sx={{ ml: { sm: currentWidth }, backgroundColor: 'white', color: 'black' }}
+        >
+          <Toolbar className="h-16 flex justify-between items-center px-4">
+            {/* Mobile Toggle Button (Header) */}
+            <IconButton onClick={handleToggleMobile} className="lg:hidden text-gray-600">
+              <MenuIcon />
+            </IconButton>
+
+            <Typography variant="h6" className="text-lg sm:text-xl font-bold text-gray-900 flex-grow ml-2 lg:ml-0">
+              Course Admin Portal
+            </Typography>
+
+            <Box className="flex items-center space-x-3">
+              <Typography className="text-gray-600 text-sm hidden sm:block">
+                {user?.fullName || 'Teacher'}
+              </Typography>
+              <img
+                src={`https://ui-avatars.com/api/?name=${user?.fullName || 'C A'}&background=3b82f6&color=fff`}
+                alt="Profile"
+                className="w-8 h-8 rounded-full"
+              />
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        {/* Page Content Outlet */}
+        <Box component="main" className="p-4 sm:p-6">
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

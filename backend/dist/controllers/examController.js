@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getExamResults = exports.restoreExam = exports.deleteExam = exports.archiveExam = exports.updateExamSettings = exports.addQuestionToExam = exports.getExamById = exports.getExamsForCourseAdmin = exports.createExam = void 0;
+exports.getExamResults = exports.restoreExam = exports.deleteExam = exports.archiveExam = exports.updateExamSettings = exports.deleteQuestion = exports.updateQuestionInExam = exports.addQuestionToExam = exports.getExamById = exports.getExamsForCourseAdmin = exports.createExam = void 0;
 const db_1 = __importDefault(require("../services/db"));
 // ---------------------------------------------------------
 // Create Exam
@@ -36,14 +36,55 @@ exports.createExam = createExam;
 // ---------------------------------------------------------
 const getExamsForCourseAdmin = async (req, res) => {
     const courseAdminId = req.user?.userId;
+    const organizationId = req.user?.organizationId;
     try {
-        const query = `
-            SELECT * FROM exams 
-            WHERE course_admin_id = $1 
-            ORDER BY created_at DESC;
-        `;
-        const result = await db_1.default.query(query, [courseAdminId]);
-        res.status(200).json(result.rows);
+        // Get all exams
+        const examsQuery = `SELECT * FROM exams WHERE course_admin_id = $1 ORDER BY created_at DESC`;
+        const examsResult = await db_1.default.query(examsQuery, [courseAdminId]);
+        // Get total students in admin's organization
+        const studentsQuery = `SELECT COUNT(*) as total_students FROM users WHERE organization_id = $1 AND role = 'student'`;
+        const studentsResult = await db_1.default.query(studentsQuery, [organizationId]);
+        const totalStudents = parseInt(studentsResult.rows[0]?.total_students) || 0;
+        // For each exam, get question data and submission stats
+        const formattedExams = await Promise.all(examsResult.rows.map(async (exam) => {
+            // Question data
+            const questionsQuery = `
+                SELECT 
+                    COUNT(*) as total_questions,
+                    ARRAY_AGG(DISTINCT question_type) FILTER (WHERE question_type IS NOT NULL) as question_types
+                FROM questions 
+                WHERE exam_id = $1
+            `;
+            const questionResult = await db_1.default.query(questionsQuery, [exam.id]);
+            const questionData = questionResult.rows[0];
+            // Submission stats
+            const submissionsQuery = `
+                SELECT 
+                    COUNT(DISTINCT student_id) as completed_count,
+                    COUNT(DISTINCT CASE WHEN auto_submitted = true THEN student_id END) as auto_submitted_count
+                FROM exam_submissions 
+                WHERE exam_id = $1 AND status = 'completed'
+            `;
+            const submissionsResult = await db_1.default.query(submissionsQuery, [exam.id]);
+            const submissionData = submissionsResult.rows[0];
+            const completedCount = parseInt(submissionData.completed_count) || 0;
+            const autoSubmittedCount = parseInt(submissionData.auto_submitted_count) || 0;
+            const pendingCount = Math.max(0, totalStudents - completedCount);
+            return {
+                ...exam,
+                total_questions: parseInt(questionData.total_questions) || 0,
+                question_types: questionData.question_types || [],
+                time_limit: exam.duration_minutes || 60,
+                stats: {
+                    registered: totalStudents,
+                    completed: completedCount,
+                    pending: pendingCount,
+                    auto_submitted: autoSubmittedCount,
+                    proctoring_defaulters: 0,
+                }
+            };
+        }));
+        res.status(200).json(formattedExams);
     }
     catch (error) {
         console.error('Error fetching exams:', error);
@@ -107,6 +148,61 @@ const addQuestionToExam = async (req, res) => {
     }
 };
 exports.addQuestionToExam = addQuestionToExam;
+// ---------------------------------------------------------
+// Update Question in Exam
+// ---------------------------------------------------------
+const updateQuestionInExam = async (req, res) => {
+    const { questionId } = req.params;
+    const { examId, questionText, options } = req.body;
+    const courseAdminId = req.user?.userId;
+    try {
+        const examCheck = await db_1.default.query('SELECT id FROM exams WHERE id = $1 AND course_admin_id = $2', [examId, courseAdminId]);
+        if (examCheck.rows.length === 0) {
+            return res.status(403).json({ message: 'Forbidden: You do not own this exam.' });
+        }
+        const query = `
+            UPDATE questions 
+            SET question_text = $1, options = $2, updated_at = NOW()
+            WHERE id = $3 AND exam_id = $4
+            RETURNING *;
+        `;
+        const result = await db_1.default.query(query, [questionText, JSON.stringify(options), questionId, examId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Question not found.' });
+        }
+        res.status(200).json(result.rows[0]);
+    }
+    catch (error) {
+        console.error('Error updating question:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.updateQuestionInExam = updateQuestionInExam;
+// ---------------------------------------------------------
+// Delete Question
+// ---------------------------------------------------------
+const deleteQuestion = async (req, res) => {
+    const { questionId } = req.params;
+    const courseAdminId = req.user?.userId;
+    try {
+        const query = `
+            DELETE FROM questions q
+            USING exams e
+            WHERE q.id = $1 AND q.exam_id = e.id AND e.course_admin_id = $2
+            RETURNING q.id;
+        `;
+        const result = await db_1.default.query(query, [questionId, courseAdminId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Question not found or you do not have permission to delete it.' });
+        }
+        res.status(200).json({ message: 'Question deleted successfully.' });
+    }
+    catch (error) {
+        console.error('Error deleting question:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.deleteQuestion = deleteQuestion;
 // ---------------------------------------------------------
 // Update Exam Settings
 // ---------------------------------------------------------

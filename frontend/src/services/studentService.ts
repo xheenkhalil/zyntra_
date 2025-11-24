@@ -3,8 +3,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    withCredentials: true,
 });
 // ---------------------------------------------------------
 // Student Exam Operations
@@ -20,7 +20,7 @@ export const startOrResumeExam = async (examId: string) => {
 };
 
 // --- THIS IS THE NEWLY ADDED FUNCTION ---
-export const saveExamProgress = async (submissionId: string, data: { answers: object; time_remaining_seconds: number }) => {
+export const saveExamProgress = async (submissionId: string, data: { answers: object; time_remaining_seconds: number; last_question_index?: number }) => {
     const response = await apiClient.put(`/student/submissions/${submissionId}/progress`, data);
     return response.data;
 };

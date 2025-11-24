@@ -19,7 +19,10 @@ router.route('/:examId')
 // Specific action routes for an exam
 router.put('/:examId/archive', examController_1.archiveExam);
 router.put('/:examId/restore', examController_1.restoreExam);
-// Routes for an exam's sub-resources (like questions and results)
+// ===========================================
+// ROUTES FOR QUESTIONS AND RESULTS
+// ===========================================
 router.post('/:examId/questions', examController_1.addQuestionToExam);
-router.get('/:examId/results', examController_1.getExamResults); // 2. Add the new route here
+router.put('/:examId/questions/:questionId', examController_1.updateQuestionInExam);
+router.get('/:examId/results', examController_1.getExamResults);
 exports.default = router;

@@ -21,6 +21,7 @@ const analyticsRoutes_1 = __importDefault(require("./routes/analyticsRoutes"));
 const guestRoutes_1 = __importDefault(require("./routes/guestRoutes")); // Public routes
 const superAdminGuestQuizRoutes_1 = __importDefault(require("./routes/superAdminGuestQuizRoutes")); // Admin-only routes
 const systemRoutes_1 = __importDefault(require("./routes/systemRoutes"));
+const proctoringRoutes_1 = __importDefault(require("./routes/proctoringRoutes"));
 const app = (0, express_1.default)();
 const PORT = config_1.default.PORT;
 // =====================================================
@@ -48,25 +49,27 @@ app.use((0, cors_1.default)({
     credentials: true,
 }));
 // =====================================================
-//  MIDDLEWARE SETUP
+//  MIDDLEWARE SETUP (FIXED LIMITS)
 // =====================================================
-app.use(express_1.default.json());
+// FIX: Increased limit to 50mb to handle Base64 image uploads
+app.use(express_1.default.json({ limit: '50mb' }));
 app.use((0, cookie_parser_1.default)());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '50mb' }));
 // =====================================================
 //  ROUTES
 // =====================================================
 app.use("/api/auth", authRoutes_1.default);
-app.use("/api/superadmin", superAdminRoutes_1.default); // All superadmin routes
-app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes_1.default); // Guest quiz admin routes
+app.use("/api/superadmin", superAdminRoutes_1.default);
+app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes_1.default);
 app.use("/api/centraladmin", centralAdminRoutes_1.default);
 app.use("/api/courseadmin", courseAdminRoutes_1.default);
 app.use("/api/exams", examRoutes_1.default);
 app.use("/api/questions", questionRoutes_1.default);
 app.use("/api/student", studentRoutes_1.default);
 app.use("/api/analytics", analyticsRoutes_1.default);
-app.use("/api/public", guestRoutes_1.default); // Public-facing routes (like taking guest quizzes)
+app.use("/api/public", guestRoutes_1.default);
 app.use('/api/system', systemRoutes_1.default);
+app.use('/api/proctoring', proctoringRoutes_1.default);
 // =====================================================
 //  HEALTH CHECK ENDPOINT
 // =====================================================

@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
+const encryptionService_1 = require("../services/encryptionService"); // NEW: For secure content
 // Fetches all exams with 'live' status for the student's organization.
-// It will now ALSO show exams that are 'in_progress' for the student to resume.
 const getAvailableExams = async (req, res) => {
     const studentId = req.user?.userId;
     const organizationId = req.user?.organizationId;
@@ -17,6 +17,7 @@ const getAvailableExams = async (req, res) => {
                 e.title, 
                 e.duration_minutes, 
                 e.created_at,
+                e.is_proctored, -- NEW: Fetch proctoring status
                 es.status as submission_status
             FROM exams e
             LEFT JOIN exam_submissions es ON e.id = es.exam_id AND es.student_id = $1
@@ -34,7 +35,6 @@ const getAvailableExams = async (req, res) => {
 };
 exports.getAvailableExams = getAvailableExams;
 // Starts an exam if not started, or resumes it if 'in_progress'
-// REFACTORED: Removed recursion to prevent race conditions.
 const startOrResumeExam = async (req, res) => {
     const { examId } = req.params;
     const studentId = req.user?.userId;
@@ -44,48 +44,68 @@ const startOrResumeExam = async (req, res) => {
         const examQuery = 'SELECT * FROM exams WHERE id = $1 AND status = \'live\'';
         const examResult = await client.query(examQuery, [examId]);
         if (examResult.rows.length === 0) {
-            // No finally block needed, error will bubble to catch
             return res.status(404).json({ message: 'Exam not found or is not live.' });
         }
         const exam = examResult.rows[0];
+        // --- NEW PROCTORING CHECK ---
+        if (exam.is_proctored) {
+            try {
+                const proctorCheck = await client.query('SELECT user_id FROM proctor_profiles WHERE user_id = $1', [studentId]);
+                if (proctorCheck.rows.length === 0) {
+                    return res.status(403).json({ message: 'Proctoring required: You must complete face enrollment before starting this exam.' });
+                }
+            }
+            catch (err) {
+                // Graceful fallback: If table doesn't exist, skip check (dev mode safety)
+                if (err.code === '42P01') {
+                    console.warn("⚠️ Proctoring table 'proctor_profiles' missing. Skipping proctor check.");
+                }
+                else {
+                    throw err; // Rethrow other errors to be caught by main catch
+                }
+            }
+        }
+        // --- END NEW PROCTORING CHECK ---
         // --- 2. Find or Create Submission ---
         let submission;
         const existingSubmissionQuery = 'SELECT * FROM exam_submissions WHERE exam_id = $1 AND student_id = $2';
         const submissionResult = await client.query(existingSubmissionQuery, [examId, studentId]);
         if (submissionResult.rows.length > 0) {
-            // --- RESUME PATH ---
-            if (submissionResult.rows[0].status === 'completed') {
+            if (submissionResult.rows[0].status === 'completed' || submissionResult.rows[0].status === 'submitted_auto') {
                 return res.status(409).json({ message: 'You have already completed this exam.' });
             }
-            // Submission exists and is 'in_progress', so we'll use it
             submission = submissionResult.rows[0];
         }
         else {
-            // --- START PATH ---
-            // No submission exists, so create a new one
-            const startTime = exam.duration_minutes * 60; // Convert duration to seconds
+            // Create a new submission
+            const startTime = exam.duration_minutes * 60;
             const startQuery = `
                 INSERT INTO exam_submissions (exam_id, student_id, status, time_remaining_seconds, answers)
-                VALUES ($1, $2, 'in_progress', $3, '{}') 
+                VALUES ($1, $2, $3, '{}') 
                 RETURNING *;
             `;
             const newSubmissionResult = await client.query(startQuery, [examId, studentId, startTime]);
             submission = newSubmissionResult.rows[0];
         }
-        // --- 3. Fetch & Send Exam (Common to both paths) ---
-        // By this point, we are guaranteed to have a valid 'submission' object
-        const questionsQuery = 'SELECT id, question_text, options FROM questions WHERE exam_id = $1 ORDER BY created_at ASC';
-        const questionsResult = await client.query(questionsQuery, [examId]);
-        const sanitizedQuestions = questionsResult.rows.map(q => ({
-            id: q.id,
-            question_text: q.question_text,
-            options: q.options.map((opt) => ({ text: opt.text }))
-        }));
+        // --- 3. Fetch & Decrypt Questions for Student Runner ---
+        const questionsResult = await client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
+        const sanitizedQuestions = questionsResult.rows.map(q => {
+            const decryptedContent = JSON.parse((0, encryptionService_1.decrypt)(q.encrypted_data));
+            // Only send necessary fields to the student (never the correct answers)
+            return {
+                id: q.id,
+                question_text: decryptedContent.questionText,
+                question_type: decryptedContent.questionType,
+                question_instructions: decryptedContent.questionInstructions, // <-- FIX: This property is now defined
+                options: decryptedContent.options ? decryptedContent.options.map(opt => ({ text: opt.text })) : null,
+            };
+        });
         return res.status(200).json({
             message: submissionResult.rows.length > 0 ? "Resuming exam." : "Starting new exam.",
             exam: {
                 id: exam.id,
                 title: exam.title,
+                duration_minutes: exam.duration_minutes,
                 questions: sanitizedQuestions,
             },
             submission: {
@@ -96,12 +116,10 @@ const startOrResumeExam = async (req, res) => {
         });
     }
     catch (error) {
-        // This will now catch the Unique Constraint Violation if it happens
         console.error("Error starting or resuming exam:", error);
         res.status(500).json({ message: 'Internal server error' });
     }
     finally {
-        // This will always run, releasing the *single* client
         client.release();
     }
 };
@@ -140,8 +158,9 @@ const submitExam = async (req, res) => {
     const client = await db_1.default.connect();
     try {
         await client.query('BEGIN');
+        // 1. Fetch submission and lock row
         const submissionQuery = `
-            SELECT * FROM exam_submissions 
+            SELECT exam_id FROM exam_submissions 
             WHERE id = $1 AND student_id = $2 AND status = 'in_progress' FOR UPDATE;
         `;
         const submissionResult = await client.query(submissionQuery, [submissionId, studentId]);
@@ -149,24 +168,58 @@ const submitExam = async (req, res) => {
             return res.status(404).json({ message: 'In-progress submission not found. It may have been completed or expired.' });
         }
         const examId = submissionResult.rows[0].exam_id;
-        const examQuery = 'SELECT grading_scale FROM exams WHERE id = $1';
-        // CORRECTED: Apply the QuestionFromDB type here
-        const questionsQuery = 'SELECT id, options FROM questions WHERE exam_id = $1';
-        const examResult = await client.query(examQuery, [examId]);
-        const questionsResult = await client.query(questionsQuery, [examId]);
+        // 2. Fetch Exam Settings and ALL encrypted Questions
+        const [examResult, questionsResult] = await Promise.all([
+            client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
+            client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [examId])
+        ]);
         const gradingScale = examResult.rows[0].grading_scale;
-        // TypeScript now understands 'q' and 'opt' correctly because of our new interfaces
-        const correctAnswers = new Map(questionsResult.rows.map(q => {
-            const correctOption = q.options.find(opt => opt.isCorrect === true);
-            return [q.id, correctOption ? correctOption.text : null];
-        }));
         let score = 0;
-        Object.keys(answers).forEach(questionId => {
-            if (correctAnswers.get(questionId) === answers[questionId]) {
-                score++;
+        let totalQuestions = questionsResult.rows.length;
+        // 3. Grade Each Question
+        for (const q of questionsResult.rows) {
+            if (!q.encrypted_data)
+                continue; // Skip if content is missing
+            const decryptedContent = JSON.parse((0, encryptionService_1.decrypt)(q.encrypted_data));
+            const studentAnswer = answers[q.id];
+            if (!studentAnswer)
+                continue; // Skip unanswered questions
+            switch (decryptedContent.questionType) {
+                case 'MCQ':
+                case 'TRUE_FALSE': {
+                    const correctAnswer = decryptedContent.options?.find(opt => opt.isCorrect)?.text;
+                    if (correctAnswer === studentAnswer) {
+                        score++;
+                    }
+                    break;
+                }
+                case 'MSQ': {
+                    // Answer is expected to be an array of selected option texts
+                    const correctAnswers = decryptedContent.options?.filter(opt => opt.isCorrect).map(opt => opt.text) || [];
+                    const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
+                    // Logic: Score is only given if the student selected the EXACT same set of correct answers
+                    const isCorrect = correctAnswers.length === studentAnswers.length &&
+                        correctAnswers.every(ans => studentAnswers.includes(ans));
+                    if (isCorrect) {
+                        score++;
+                    }
+                    break;
+                }
+                case 'FILL_BLANK': {
+                    // Simple case-insensitive match for the primary keyword
+                    if (studentAnswer.toLowerCase().trim() === decryptedContent.correctAnswer?.toLowerCase().trim()) {
+                        score++;
+                    }
+                    break;
+                }
+                case 'ESSAY': {
+                    // Essay questions are scored 0 automatically. The teacher must grade manually.
+                    // Score is tracked by the 'score' variable, so 0 is correct here.
+                    break;
+                }
             }
-        });
-        const totalQuestions = correctAnswers.size;
+        }
+        // 4. Calculate Final Score
         const scorePercentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
         let finalGrade = 'F';
         if (gradingScale) {
@@ -178,6 +231,7 @@ const submitExam = async (req, res) => {
                 }
             }
         }
+        // 5. Update Submission Record
         const updateSubmissionQuery = `
             UPDATE exam_submissions
             SET score_percentage = $1, grade = $2, answers = $3, status = 'completed'
@@ -189,8 +243,9 @@ const submitExam = async (req, res) => {
         ]);
         await client.query('COMMIT');
         res.status(201).json({
-            message: 'Exam submitted successfully!',
-            submission: finalResult.rows[0]
+            message: 'Exam submitted successfully! Final grade calculated.',
+            submission: finalResult.rows[0],
+            // Only send the grade/score, not the full answer set
         });
     }
     catch (error) {

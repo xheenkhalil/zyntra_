@@ -6,6 +6,7 @@ import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import { AuthRequest } from '../middleware/authMiddleware';
+import { validatePassword } from '../utils/passwordValidator';
 
 // ===========================================
 // LOGIN CONTROLLER
@@ -27,7 +28,7 @@ export const loginUser = async (req: Request, res: Response) => {
             }
             user = userResult.rows[0];
 
-        // --- Admin Login ---
+            // --- Admin Login ---
         } else if (email && password) {
             const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userResult.rows.length === 0) {
@@ -102,12 +103,10 @@ export const setupAccount = async (req: Request, res: Response) => {
     const { token, password } = req.body;
 
     // --- Password Strength Validation ---
-    const passwordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!password || !passwordRegex.test(password)) {
+    const { valid, errors } = validatePassword(password);
+    if (!valid) {
         return res.status(400).json({
-            message:
-                'Password does not meet requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            message: 'Password does not meet requirements: ' + errors.join(' '),
         });
     }
 
@@ -154,8 +153,7 @@ export const setupAccount = async (req: Request, res: Response) => {
 // ===========================================
 // SESSION CHECK CONTROLLER
 // ===========================================
-export const getMe = async (req: AuthRequest, res: Response) => { // <-- Changed to AuthRequest
-    // --- UPDATED: Get userId from 'protect' middleware ---
+export const getMe = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -232,12 +230,10 @@ export const changeMyPassword = async (req: AuthRequest, res: Response) => {
     }
 
     // --- Re-using your password strength validation ---
-    const passwordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
+    const { valid, errors } = validatePassword(newPassword);
+    if (!valid) {
         return res.status(400).json({
-            message:
-                'New password does not meet requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            message: 'New password does not meet requirements: ' + errors.join(' '),
         });
     }
 
@@ -248,7 +244,7 @@ export const changeMyPassword = async (req: AuthRequest, res: Response) => {
         if (userResult.rows.length === 0) {
             return res.status(404).json({ message: 'User not found.' });
         }
-        
+
         const user = userResult.rows[0];
 
         // 2. Verify the "current password" is correct

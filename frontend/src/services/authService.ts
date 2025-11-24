@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // === Axios Client ===
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL + '/api', // Added /api prefix
+  baseURL: import.meta.env.VITE_BACKEND_URL, // Added /api prefix
   withCredentials: true,
 });
 

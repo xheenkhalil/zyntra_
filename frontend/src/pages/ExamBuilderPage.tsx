@@ -1,374 +1,617 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+// /frontend/src/pages/ExamBuilderPage.tsx
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-    Box, Typography, Button, Alert, CircularProgress, Paper,
-    TextField, IconButton, List, ListItem, ListItemText, Radio, FormControlLabel,
-    Tabs, Tab, Checkbox, FormControl, InputLabel, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Chip
+    Box,
+    Typography,
+    Button,
+    Alert,
+    CircularProgress,
+    Paper,
+    TextField,
+    IconButton,
+    List,
+    ListItem,
+    Radio,
+    FormControlLabel,
+    Checkbox,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Chip,
+    Divider,
+    Switch,
+    Tooltip,
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { 
-    getExamById, addQuestionToExam, generateAiQuestions, generateFromDocument,
-    updateQuestion, deleteQuestion, updateExamSettings
-} from '../services/examService';
+import {
+    AddCircleOutline as AddIcon,
+    Delete as DeleteIcon,
+    Edit as EditIcon,
+    ArrowBack as ArrowBackIcon,
+    Settings as SettingsIcon,
+    Save as SaveIcon,
+    Timer as TimerIcon,
+    Security as SecurityIcon,
+    Close as CloseIcon,
+    // FIX: Restored DescriptionIcon
+    Description as DescriptionIcon,
+} from '@mui/icons-material';
 
-// Interfaces
-interface Option { text: string; isCorrect: boolean; }
-interface Question { id: string; question_text: string; options: Option[]; }
-interface Exam { id: string; title: string; status: 'draft' | 'live' | 'completed'; questions: Question[]; grading_scale?: Record<string, number>; duration_minutes?: number; }
+// Import Services
+import {
+    getExamById,
+    addQuestionToExam,
+    updateQuestionInExam,
+    deleteQuestion,
+    updateExamSettings,
+} from '../services/courseAdminService';
 
-// --- Reusable Question Form (for Create & Edit) ---
+// --- Types ---
+type QuestionType = 'MCQ' | 'MSQ' | 'TRUE_FALSE' | 'FILL_BLANK' | 'ESSAY';
+
+interface Option {
+    text: string;
+    isCorrect: boolean;
+}
+
+interface Question {
+    id: string;
+    question_text: string;
+    question_type: QuestionType;
+    question_instructions?: string;
+    options?: Option[];
+    correct_answer?: string;
+}
+
+interface Exam {
+    id: string;
+    title: string;
+    status: 'draft' | 'live' | 'archived' | 'completed';
+    questions: Question[];
+    grading_scale?: Record<string, number>;
+    duration_minutes: number;
+    is_proctored: boolean;
+    instructions?: string;
+}
+
+// =====================================================
+// SUB-COMPONENT: QUESTION FORM
+// =====================================================
 interface QuestionFormProps {
     examId: string;
     onSave: () => void;
     initialQuestion?: Question | null;
     closeDialog: () => void;
 }
-const QuestionForm: React.FC<QuestionFormProps> = ({ examId, onSave, initialQuestion = null, closeDialog }) => {
-    const [questionText, setQuestionText] = useState(initialQuestion?.question_text || '');
-    const [options, setOptions] = useState(initialQuestion?.options.map(o => ({text: o.text})) || [{ text: '' }, { text: '' }]);
-    const [correctOptionIndex, setCorrectOptionIndex] = useState<number | null>(() => {
-        if (!initialQuestion) return null;
-        const index = initialQuestion.options.findIndex(opt => opt.isCorrect);
-        return index > -1 ? index : null;
-    });
+
+const QuestionForm: React.FC<QuestionFormProps> = ({
+    examId,
+    onSave,
+    initialQuestion = null,
+    closeDialog,
+}) => {
+    // --- Form State ---
+    const [qType, setQType] = useState<QuestionType>(
+        initialQuestion?.question_type || 'MCQ'
+    );
+    const [qText, setQText] = useState(initialQuestion?.question_text || '');
+    const [qInstructions, setQInstructions] = useState(
+        initialQuestion?.question_instructions || ''
+    );
+
+    // State for MCQ/MSQ/TF options
+    const [options, setOptions] = useState<Option[]>(
+        initialQuestion?.options || [
+            { text: '', isCorrect: false },
+            { text: '', isCorrect: false },
+        ]
+    );
+
+    // State for Fill-in-the-Blank
+    const [correctAnswerText, setCorrectAnswerText] = useState(
+        initialQuestion?.correct_answer || ''
+    );
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    
-    const handleAddOption = () => setOptions([...options, { text: '' }]);
-    const handleRemoveOption = (index: number) => {
-        if (correctOptionIndex === index) setCorrectOptionIndex(null);
-        setOptions(options.filter((_, i) => i !== index));
-    };
-    const handleOptionTextChange = (index: number, text: string) => {
-        const newOptions = [...options]; newOptions[index].text = text; setOptions(newOptions);
+
+    // --- Type Change Handler ---
+    const handleTypeChange = (newType: QuestionType) => {
+        setQType(newType);
+        // Reset options based on type for better UX
+        if (newType === 'TRUE_FALSE') {
+            setOptions([
+                { text: 'True', isCorrect: true },
+                { text: 'False', isCorrect: false },
+            ]);
+        } else if (newType === 'MCQ' || newType === 'MSQ') {
+            if (options.length < 2) {
+                setOptions([{ text: '', isCorrect: false }, { text: '', isCorrect: false }]);
+            }
+        }
     };
 
+    // --- Option Handlers ---
+    const handleOptionChange = (index: number, field: 'text' | 'isCorrect', value: any) => {
+        const newOptions = [...options];
+
+        // Logic for Single Choice: Only one can be correct
+        if ((qType === 'MCQ' || qType === 'TRUE_FALSE') && field === 'isCorrect' && value === true) {
+            newOptions.forEach((opt) => (opt.isCorrect = false));
+        }
+
+        newOptions[index] = { ...newOptions[index], [field]: value };
+        setOptions(newOptions);
+    };
+
+    const addOption = () => setOptions([...options, { text: '', isCorrect: false }]);
+
+    const removeOption = (index: number) => {
+        if (options.length > 2) {
+            setOptions(options.filter((_, i) => i !== index));
+        }
+    };
+
+    // --- Submit Handler ---
     const handleSubmit = async () => {
         setError('');
-        if (!questionText.trim() || correctOptionIndex === null || options.some(opt => !opt.text.trim())) {
-            return setError('Please fill out the question, all options, and select a correct answer.');
+        if (!qText.trim()) return setError('Question text is required.');
+
+        // Prepare Payload
+        const payload: any = {
+            questionText: qText,
+            questionType: qType,
+            questionInstructions: qInstructions,
+        };
+
+        if (qType === 'MCQ' || qType === 'MSQ' || qType === 'TRUE_FALSE') {
+            const validOptions = options.filter(o => o.text.trim() !== '');
+            if (validOptions.length < 2) return setError('At least two options are required.');
+            if (!validOptions.some(o => o.isCorrect)) return setError('Please mark at least one correct answer.');
+            payload.options = validOptions;
         }
+        else if (qType === 'FILL_BLANK') {
+            if (!correctAnswerText.trim()) return setError('Correct answer text is required.');
+            payload.correctAnswer = correctAnswerText;
+        }
+
         setLoading(true);
-        const formattedOptions = options.map((opt: { text: string }, index: number) => ({ text: opt.text, isCorrect: index === correctOptionIndex }));
-        const questionData = { questionText, options: formattedOptions };
         try {
             if (initialQuestion) {
-                await updateQuestion(initialQuestion.id, questionData);
+                await updateQuestionInExam(examId, initialQuestion.id, payload);
             } else {
-                await addQuestionToExam(examId, questionData);
+                await addQuestionToExam(examId, payload);
             }
             onSave();
             closeDialog();
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                if (typeof err === 'object' && err !== null && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
-                    setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || (err as Error).message || 'Failed to save question.');
-                } else {
-                    setError((err as Error).message || 'Failed to save question.');
-                }
-            } else {
-                setError('Failed to save question.');
-            }
-        } finally { setLoading(false); }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to save question.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <Box>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            <TextField autoFocus label="Question Text" fullWidth multiline rows={3} defaultValue={questionText} onChange={e => setQuestionText(e.target.value)} sx={{ mb: 2 }} />
-            <Typography variant="body1" gutterBottom>Options (select the correct answer):</Typography>
-            {options.map((opt: { text: string }, index: number) => (
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <FormControlLabel value={index} control={<Radio checked={correctOptionIndex === index} onChange={() => setCorrectOptionIndex(index)} />} label="" />
-                    <TextField size="small" fullWidth label={`Option ${index + 1}`} defaultValue={opt.text} onChange={e => handleOptionTextChange(index, e.target.value)} />
-                    <IconButton onClick={() => handleRemoveOption(index)} disabled={options.length <= 2}><DeleteIcon /></IconButton>
+        <Box className="pt-2">
+            <FormControl fullWidth margin="normal">
+                <InputLabel>Question Type</InputLabel>
+                <Select
+                    value={qType}
+                    label="Question Type"
+                    onChange={(e) => handleTypeChange(e.target.value as QuestionType)}
+                >
+                    <MenuItem value="MCQ">Multiple Choice (Single Answer)</MenuItem>
+                    <MenuItem value="MSQ">Multiple Select (Multiple Answers)</MenuItem>
+                    <MenuItem value="TRUE_FALSE">True / False</MenuItem>
+                    <MenuItem value="FILL_BLANK">Fill in the Blank</MenuItem>
+                    <MenuItem value="ESSAY">Essay / Free Text</MenuItem>
+                </Select>
+            </FormControl>
+
+            <TextField
+                label="Question Text"
+                fullWidth
+                multiline
+                rows={3}
+                margin="normal"
+                value={qText}
+                onChange={(e) => setQText(e.target.value)}
+            />
+
+            <TextField
+                label="Instructions (Optional)"
+                placeholder="e.g., 'Select all that apply'"
+                fullWidth
+                margin="normal"
+                size="small"
+                value={qInstructions}
+                onChange={(e) => setQInstructions(e.target.value)}
+            />
+
+            <Divider className="my-4" />
+
+            {/* --- DYNAMIC INPUT AREA --- */}
+            {(qType === 'MCQ' || qType === 'MSQ' || qType === 'TRUE_FALSE') && (
+                <Box>
+                    <Typography variant="subtitle2" className="mb-2 font-semibold text-gray-700">
+                        Answer Options {qType === 'MSQ' ? '(Select all correct)' : '(Select one correct)'}
+                    </Typography>
+
+                    {options.map((opt, idx) => (
+                        <Box key={idx} className="flex items-center gap-2 mb-2">
+                            {qType === 'MSQ' ? (
+                                <Checkbox
+                                    checked={opt.isCorrect}
+                                    onChange={(e) => handleOptionChange(idx, 'isCorrect', e.target.checked)}
+                                    color="success"
+                                />
+                            ) : (
+                                <Radio
+                                    checked={opt.isCorrect}
+                                    onChange={() => handleOptionChange(idx, 'isCorrect', true)}
+                                    color="success"
+                                />
+                            )}
+
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder={`Option ${idx + 1}`}
+                                value={opt.text}
+                                onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
+                                disabled={qType === 'TRUE_FALSE'}
+                            />
+
+                            {qType !== 'TRUE_FALSE' && (
+                                <IconButton
+                                    onClick={() => removeOption(idx)}
+                                    disabled={options.length <= 2}
+                                    color="error"
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            )}
+                        </Box>
+                    ))}
+
+                    {qType !== 'TRUE_FALSE' && (
+                        <Button startIcon={<AddIcon />} onClick={addOption} size="small">
+                            Add Option
+                        </Button>
+                    )}
                 </Box>
-            ))}
-            <Button startIcon={<AddCircleOutlineIcon />} onClick={handleAddOption} sx={{ mt: 1 }}>Add Option</Button>
-            <DialogActions>
-                <Button onClick={closeDialog}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit} disabled={loading}>{loading ? 'Saving...' : 'Save Question'}</Button>
+            )}
+
+            {qType === 'FILL_BLANK' && (
+                <Box>
+                    <Alert severity="info" className="mb-3">
+                        Students must type the answer exactly as written below.
+                    </Alert>
+                    <TextField
+                        label="Correct Answer"
+                        fullWidth
+                        value={correctAnswerText}
+                        onChange={(e) => setCorrectAnswerText(e.target.value)}
+                        color="success"
+                        focused
+                    />
+                </Box>
+            )}
+
+            {qType === 'ESSAY' && (
+                <Alert severity="info">
+                    Essay questions require manual grading.
+                </Alert>
+            )}
+
+            {error && <Alert severity="error" className="mt-3">{error}</Alert>}
+
+            <DialogActions className="mt-4 p-0">
+                <Button onClick={closeDialog} disabled={loading}>Cancel</Button>
+                <Button
+                    onClick={handleSubmit}
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                >
+                    {loading ? 'Saving...' : 'Save Question'}
+                </Button>
             </DialogActions>
         </Box>
     );
 };
 
-// --- Reusable sub-component for topic-based AI generation ---
-interface AiTopicGeneratorProps {
-    examId: string;
-    onQuestionsAdded: () => void;
-}
-const AiTopicGenerator: React.FC<AiTopicGeneratorProps> = ({ examId, onQuestionsAdded }) => {
-    const [aiForm, setAiForm] = useState({ topic: '', difficulty: 'Intermediate', numQuestions: 5 });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
-    const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
 
-    const handleGenerate = async () => {
-        setLoading(true); setError(''); setGeneratedQuestions([]); setSelectedQuestions([]);
-        try {
-            const questions = await generateAiQuestions({ ...aiForm, numOptions: 4 });
-            setGeneratedQuestions(questions);
-        } catch (err: unknown) { 
-            if (err instanceof Error) {
-                setError(err.message || 'Failed to generate questions.');
-            } else {
-                setError('Failed to generate questions.');
-            }
-        }
-        finally { setLoading(false); }
-    };
-
-    const handleToggleSelect = (index: number) => { setSelectedQuestions(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]); };
-
-    const handleAddSelected = async () => {
-        setLoading(true); setError('');
-        const questionsToAdd = generatedQuestions.filter((_, index) => selectedQuestions.includes(index));
-        try {
-            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.question_text, options: q.options })));
-            onQuestionsAdded();
-            setGeneratedQuestions([]);
-            setSelectedQuestions([]);
-        } catch (err: unknown) { 
-            if (err instanceof Error) {
-                setError(err.message || 'Failed to add selected questions.');
-            } else {
-                setError('Failed to add selected questions.');
-            }
-        }
-        finally { setLoading(false); }
-    };
-
-    return (
-        <Paper sx={{ p: 3, mt: 4 }}>
-            <Typography variant="h6" gutterBottom>Generate Questions with AI by Topic</Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center', flexWrap: 'wrap' }}>
-                <TextField label="Topic" value={aiForm.topic} onChange={e => setAiForm({...aiForm, topic: e.target.value})} sx={{flexGrow: 1}} />
-                <FormControl sx={{minWidth: 150}}><InputLabel>Difficulty</InputLabel><Select value={aiForm.difficulty} label="Difficulty" onChange={e => setAiForm({...aiForm, difficulty: e.target.value})}><MenuItem value="Easy">Easy</MenuItem><MenuItem value="Intermediate">Intermediate</MenuItem><MenuItem value="Hard">Hard</MenuItem></Select></FormControl>
-                <TextField label="# Questions" type="number" value={aiForm.numQuestions} onChange={e => setAiForm({...aiForm, numQuestions: parseInt(e.target.value)})} sx={{width: 120}}/>
-                <Button variant="contained" onClick={handleGenerate} disabled={loading || !aiForm.topic}>{loading && generatedQuestions.length === 0 ? <CircularProgress size={24} /> : 'Generate'}</Button>
-            </Box>
-            {error && <Alert severity="error">{error}</Alert>}
-            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.question_text} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
-        </Paper>
-    );
-};
-
-// --- Reusable sub-component for document-based AI generation ---
-interface AiDocumentGeneratorProps {
-    examId: string;
-    onQuestionsAdded: () => void;
-}
-const AiDocumentGenerator: React.FC<AiDocumentGeneratorProps> = ({ examId, onQuestionsAdded }) => {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
-    const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => { if (event.target.files && event.target.files[0]) setSelectedFile(event.target.files[0]); };
-    const handleGenerate = async () => {
-        if (!selectedFile) return setError('Please select a file to upload.');
-        setLoading(true); setError(''); setGeneratedQuestions([]); setSelectedQuestions([]);
-        try {
-            const questions = await generateFromDocument(selectedFile);
-            setGeneratedQuestions(questions);
-        } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
-                setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to generate questions from document.');
-            } else if (err instanceof Error) {
-                setError(err.message || 'Failed to generate questions from document.');
-            } else {
-                setError('Failed to generate questions from document.');
-            }
-        }
-        finally { setLoading(false); }
-    };
-    const handleToggleSelect = (index: number) => { setSelectedQuestions(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]); };
-    const handleAddSelected = async () => {
-        setLoading(true); setError('');
-        const questionsToAdd = generatedQuestions.filter((_, index) => selectedQuestions.includes(index));
-        try {
-            await Promise.all(questionsToAdd.map(q => addQuestionToExam(examId, { questionText: q.question_text, options: q.options })));
-            onQuestionsAdded();
-            setGeneratedQuestions([]); setSelectedQuestions([]); setSelectedFile(null);
-        } catch (err: unknown) { 
-            if (err instanceof Error) {
-                setError(err.message || 'Failed to add selected questions.');
-            } else {
-                setError('Failed to add selected questions.');
-            }
-        }
-        finally { setLoading(false); }
-    };
-
-    return (
-        <Paper sx={{ p: 3, mt: 4 }}>
-            <Typography variant="h6" gutterBottom>Generate Questions from a Document</Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center', flexWrap: 'wrap' }}>
-                <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}> Upload PDF or DOCX <input type="file" hidden accept=".pdf,.docx,.txt" onChange={handleFileChange} /> </Button>
-                {selectedFile && <Typography variant="body2" sx={{color: 'text.secondary'}}>{selectedFile.name}</Typography>}
-                <Box sx={{ flexGrow: 1 }} />
-                <Button variant="contained" onClick={handleGenerate} disabled={loading || !selectedFile}>{loading && generatedQuestions.length === 0 ? <CircularProgress size={24} /> : 'Generate Questions'}</Button>
-            </Box>
-            {error && <Alert severity="error">{error}</Alert>}
-            {generatedQuestions.length > 0 && ( <Box> <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Review & Select Questions</Typography> <List sx={{border: 1, borderColor: 'divider', borderRadius: 1}}> {generatedQuestions.map((q, index) => ( <ListItem key={index} divider> <Checkbox checked={selectedQuestions.includes(index)} onChange={() => handleToggleSelect(index)} /> <ListItemText primary={q.question_text} secondary={q.options.map(opt => (opt.isCorrect ? `✓ ${opt.text}` : opt.text)).join(' | ')} /> </ListItem> ))} </List> <Box sx={{ mt: 2, textAlign: 'right' }}> <Button variant="contained" onClick={handleAddSelected} disabled={loading || selectedQuestions.length === 0}> {loading ? 'Adding...' : `Add ${selectedQuestions.length} Selected to Exam`} </Button> </Box> </Box> )}
-        </Paper>
-    );
-};
-
-// --- Main Component ---
+// =====================================================
+// MAIN PAGE COMPONENT
+// =====================================================
 const ExamBuilderPage: React.FC = () => {
     const { examId } = useParams<{ examId: string }>();
+    const navigate = useNavigate();
+
     const [exam, setExam] = useState<Exam | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [creationMode, setCreationMode] = useState('');
-    const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
-    const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
-    
-    // Updated State for settings
-    const [gradingScale, setGradingScale] = useState({ A: '90', B: '80', C: '70', D: '60', E: '50', F: '40' });
-    const [duration, setDuration] = useState('30');
 
-    const fetchExam = React.useCallback(async () => {
+    // UI States
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [questionModalOpen, setQuestionModalOpen] = useState(false);
+    const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
+
+    // Settings Form State
+    const [settingsForm, setSettingsForm] = useState({
+        duration: 60,
+        isProctored: false,
+        status: 'draft',
+        gradingScale: { A: 90, B: 80, C: 70, D: 60, E: 50, F: 40 },
+        instructions: ''
+    });
+
+    // --- Fetch Data ---
+    const fetchExamData = useCallback(async () => {
         if (!examId) return;
+        if (!exam) setLoading(true);
+
         try {
-            if (!exam) setLoading(true);
             const data = await getExamById(examId);
             setExam(data);
-            if (data.grading_scale) {
-                const stringScale = Object.fromEntries(Object.entries(data.grading_scale).map(([grade, value]) => [grade, String(value)]));
-                setGradingScale(prev => ({...prev, ...stringScale}));
-            }
-            if (data.duration_minutes) {
-                setDuration(String(data.duration_minutes));
-            }
-        } catch (err: unknown) {
-            if (err && typeof err === 'object' && 'response' in err && typeof (err as { response?: { data?: { message?: string } } }).response === 'object') {
-                setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load exam details.');
-            } else {
-                setError('Failed to load exam details.');
-            }
+
+            setSettingsForm({
+                duration: data.duration_minutes || 60,
+                isProctored: data.is_proctored || false,
+                status: data.status || 'draft',
+                gradingScale: data.grading_scale || { A: 90, B: 80, C: 70, D: 60, E: 50, F: 40 },
+                instructions: (data as any).instructions || ''
+            });
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to load exam.');
+        } finally {
+            setLoading(false);
         }
-        finally { setLoading(false); }
-    }, [examId, exam]);
+    }, [examId]);
 
-    useEffect(() => { fetchExam(); }, [examId, fetchExam]);
+    useEffect(() => {
+        fetchExamData();
+    }, [fetchExamData]);
 
-    const handleDelete = async () => {
-        if (!questionToDelete) return;
-        try {
-            await deleteQuestion(questionToDelete.id);
-            setQuestionToDelete(null);
-            fetchExam();
-        } catch (err) { console.error("Failed to delete", err); setQuestionToDelete(null); }
-    };
-
-    const handlePublish = async () => {
+    // --- Handlers ---
+    const handleSaveSettings = async () => {
         if (!exam) return;
         try {
-            const numericGradingScale = Object.fromEntries(
-                Object.entries(gradingScale).map(([grade, value]) => [grade, Number(value)])
-            );
             await updateExamSettings(exam.id, {
-                status: 'live',
-                grading_scale: numericGradingScale,
-                duration_minutes: Number(duration)
+                duration_minutes: Number(settingsForm.duration),
+                is_proctored: settingsForm.isProctored,
+                status: settingsForm.status,
+                grading_scale: settingsForm.gradingScale,
+                instructions: settingsForm.instructions
             });
-            fetchExam();
-        } catch (err) { console.error("Failed to publish", err); }
+            setSettingsOpen(false);
+            fetchExamData();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update settings");
+        }
     };
-    
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
-    if (error) return <Alert severity="error">{error}</Alert>;
-    if (!exam) return <Alert severity="warning">Exam not found.</Alert>;
+
+    const handleDeleteQuestion = async (qId: string) => {
+        if (!window.confirm("Are you sure you want to delete this question?")) return;
+        try {
+            await deleteQuestion(exam!.id, qId);
+            fetchExamData();
+        } catch (err) {
+            alert("Failed to delete question.");
+        }
+    };
+
+    if (loading) return <Box className="flex justify-center items-center h-screen"><CircularProgress /></Box>;
+    if (error) return <Alert severity="error" className="m-4">{error}</Alert>;
+    if (!exam) return <Alert severity="warning" className="m-4">Exam not found.</Alert>;
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" gutterBottom>Exam Builder: {exam.title}</Typography>
-                <Chip label={exam.status} color={exam.status === 'live' ? 'success' : (exam.status === 'completed' ? 'info' : 'default')} />
+            {/* --- PAGE HEADER --- */}
+            <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <Box>
+                    <Button
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => navigate('/courseadmin/exams')}
+                        className="mb-2 text-gray-500"
+                    >
+                        Back to Exams
+                    </Button>
+                    <Typography variant="h4" className="font-bold text-gray-900">
+                        {exam.title}
+                    </Typography>
+                    <Box className="flex flex-wrap gap-2 mt-2">
+                        <Chip
+                            icon={<TimerIcon />}
+                            label={`${exam.duration_minutes} mins`}
+                            size="small"
+                            className="bg-blue-50 text-blue-700"
+                        />
+                        <Chip
+                            icon={<SecurityIcon />}
+                            label={exam.is_proctored ? "Proctored" : "Standard"}
+                            color={exam.is_proctored ? "primary" : "default"}
+                            size="small"
+                        />
+                        <Chip
+                            label={exam.status}
+                            color={exam.status === 'live' ? "success" : "warning"}
+                            size="small"
+                            className="uppercase font-bold"
+                        />
+                    </Box>
+                </Box>
+                <Box className="flex gap-3">
+                    <Button
+                        variant="outlined"
+                        startIcon={<SettingsIcon />}
+                        onClick={() => setSettingsOpen(true)}
+                    >
+                        Settings
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                        onClick={() => { setQuestionToEdit(null); setQuestionModalOpen(true); }}
+                    >
+                        Add Question
+                    </Button>
+                </Box>
             </Box>
 
-            {exam.status === 'draft' && (
-                <Paper sx={{ p: 3, mb: 4, border: 1, borderColor: 'primary.main' }}>
-                    <Typography variant="h6" gutterBottom>Settings & Publish</Typography>
-                    <Box sx={{ mt: 2 }}>
-                        <TextField
-                            label="Exam Duration (minutes)"
-                            type="number"
-                            size="small"
-                            value={duration}
-                            onChange={e => setDuration(e.target.value)}
-                            sx={{ mb: 3, width: 250 }}
-                        />
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <Typography variant="body1" sx={{fontWeight: 600, mr: 1}}>Grading Scale (%):</Typography>
-                            <TextField label="A >=" size="small" value={gradingScale.A} onChange={e => setGradingScale({...gradingScale, A: e.target.value})} sx={{width: 90}} />
-                            <TextField label="B >=" size="small" value={gradingScale.B} onChange={e => setGradingScale({...gradingScale, B: e.target.value})} sx={{width: 90}} />
-                            <TextField label="C >=" size="small" value={gradingScale.C} onChange={e => setGradingScale({...gradingScale, C: e.target.value})} sx={{width: 90}} />
-                            <TextField label="D >=" size="small" value={gradingScale.D} onChange={e => setGradingScale({...gradingScale, D: e.target.value})} sx={{width: 90}} />
-                            <TextField label="E >=" size="small" value={gradingScale.E} onChange={e => setGradingScale({...gradingScale, E: e.target.value})} sx={{width: 90}} />
-                            <TextField label="F <"  size="small" value={gradingScale.F} onChange={e => setGradingScale({...gradingScale, F: e.target.value})} sx={{width: 90}} />
-                            <Box flexGrow={1} />
-                            <Button variant="contained" color="success" onClick={handlePublish} disabled={exam.questions.length === 0}>Save Settings & Publish</Button>
-                        </Box>
-                    </Box>
-                </Paper>
-            )}
+            {/* --- QUESTION LIST --- */}
+            <Paper className="bg-white rounded-xl shadow-lg border border-gray-100 p-0 overflow-hidden">
+                <Box className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <Typography variant="h6" className="font-semibold text-gray-700">
+                        Questions ({exam.questions.length})
+                    </Typography>
+                </Box>
 
-            <Paper sx={{ p: 3, mb: 4 }}>
-                <Typography variant="h6">Existing Questions ({exam.questions.length})</Typography>
-                <List>
-                    {exam.questions.map((q, index) => (
-                        <ListItem key={q.id} divider
-                            secondaryAction={ exam.status !== 'completed' ?
-                                <><IconButton edge="end" aria-label="edit" onClick={() => setQuestionToEdit(q)}><EditIcon /></IconButton><IconButton edge="end" aria-label="delete" onClick={() => setQuestionToDelete(q)}><DeleteIcon /></IconButton></> : null
-                            }
-                        >
-                            <ListItemText primary={`${index + 1}. ${q.question_text}`} />
-                        </ListItem>
-                    ))}
-                    {exam.questions.length === 0 && <Typography sx={{mt: 2, color: 'text.secondary'}}>No questions added yet.</Typography>}
+                <List className="divide-y divide-gray-100">
+                    {exam.questions.length === 0 ? (
+                        <Box className="p-10 text-center text-gray-500">
+                            <DescriptionIcon style={{ fontSize: 48, opacity: 0.3 }} />
+                            <Typography className="mt-2">No questions yet. Click "Add Question" to start.</Typography>
+                        </Box>
+                    ) : (
+                        exam.questions.map((q, index) => (
+                            <ListItem
+                                key={q.id}
+                                className="hover:bg-blue-50 transition-colors group"
+                                secondaryAction={
+                                    <Box>
+                                        <Tooltip title="Edit">
+                                            <IconButton onClick={() => { setQuestionToEdit(q); setQuestionModalOpen(true); }}>
+                                                <EditIcon className="text-blue-600" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Delete">
+                                            <IconButton onClick={() => handleDeleteQuestion(q.id)}>
+                                                <DeleteIcon className="text-red-500" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                }
+                            >
+                                <Box className="w-full pr-12">
+                                    <Box className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-bold text-gray-400">Q{index + 1}</span>
+                                        <Chip
+                                            label={q.question_type.replace('_', ' ')}
+                                            size="small"
+                                            className="text-xs h-5 bg-gray-200 font-bold text-gray-600"
+                                        />
+                                    </Box>
+                                    <Typography className="text-gray-900 font-medium mb-1">
+                                        {q.question_text}
+                                    </Typography>
+
+                                    {/* Preview Answer Key (Teacher View Only) */}
+                                    <Box className="pl-4 border-l-2 border-green-200 mt-2">
+                                        {q.options && q.options.map((opt, i) => (
+                                            <Typography key={i} variant="body2" className={opt.isCorrect ? "text-green-700 font-medium" : "text-gray-500"}>
+                                                {opt.isCorrect ? "● " : "○ "} {opt.text}
+                                            </Typography>
+                                        ))}
+                                        {q.correct_answer && (
+                                            <Typography variant="body2" className="text-green-700 font-medium">
+                                                Answer: {q.correct_answer}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </ListItem>
+                        ))
+                    )}
                 </List>
             </Paper>
-            
-            {exam.status !== 'completed' && (
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={creationMode} onChange={(_, newValue) => setCreationMode(newValue)}>
-                      <Tab label="Add Manually" value="manual" />
-                      <Tab label="AI Generate (Topic)" value="ai_topic" />
-                      <Tab label="AI Generate (Document)" value="ai_doc" />
-                  </Tabs>
-              </Box>
-            )}
 
-            {creationMode === 'ai_topic' && <AiTopicGenerator examId={exam.id} onQuestionsAdded={fetchExam} />}
-            {creationMode === 'ai_doc' && <AiDocumentGenerator examId={exam.id} onQuestionsAdded={fetchExam} />}
-            
-            <Dialog open={creationMode === 'manual'} onClose={() => setCreationMode('')} fullWidth maxWidth="md">
-                <DialogTitle>Add New Question Manually</DialogTitle>
-                <DialogContent><QuestionForm examId={exam.id} onSave={fetchExam} closeDialog={() => setCreationMode('')} /></DialogContent>
-            </Dialog>
+            {/* --- SETTINGS MODAL --- */}
+            <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Exam Settings</DialogTitle>
+                <DialogContent>
+                    <Box className="pt-4 flex flex-col gap-4">
+                        <TextField
+                            label="Duration (Minutes)"
+                            type="number"
+                            fullWidth
+                            value={settingsForm.duration}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, duration: Number(e.target.value) })}
+                        />
 
-            <Dialog open={!!questionToEdit} onClose={() => setQuestionToEdit(null)} fullWidth maxWidth="md">
-                <DialogTitle>Edit Question</DialogTitle>
-                <DialogContent>{questionToEdit && <QuestionForm examId={exam.id} onSave={fetchExam} initialQuestion={questionToEdit} closeDialog={() => setQuestionToEdit(null)} />}</DialogContent>
-            </Dialog>
+                        <Box className="border p-3 rounded-lg border-gray-200">
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={settingsForm.isProctored}
+                                        onChange={(e) => setSettingsForm({ ...settingsForm, isProctored: e.target.checked })}
+                                    />
+                                }
+                                label={
+                                    <Box>
+                                        <Typography className="font-semibold">Enable AI Proctoring</Typography>
+                                        <Typography variant="caption" className="text-gray-500">
+                                            Webcam, tab tracking, and face verification.
+                                        </Typography>
+                                    </Box>
+                                }
+                            />
+                        </Box>
 
-            <Dialog open={!!questionToDelete} onClose={() => setQuestionToDelete(null)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent><Typography>Are you sure you want to delete this question: "{questionToDelete?.question_text}"?</Typography></DialogContent>
+                        <TextField
+                            select
+                            label="Status"
+                            fullWidth
+                            value={settingsForm.status}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, status: e.target.value as any })}
+                        >
+                            <MenuItem value="draft">Draft (Hidden)</MenuItem>
+                            <MenuItem value="live">Live (Visible)</MenuItem>
+                            <MenuItem value="archived">Archived</MenuItem>
+                        </TextField>
+
+                        <TextField
+                            label="Exam Instructions (Markdown Supported)"
+                            multiline
+                            rows={6}
+                            fullWidth
+                            value={settingsForm.instructions}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, instructions: e.target.value })}
+                            placeholder="Enter exam instructions here...&#10;&#10;Formatting tips:&#10;# Heading&#10;**bold text**&#10;*italic text*"
+                            helperText="Use markdown formatting: # for headings, **bold**, *italic*"
+                        />
+                    </Box>
+                </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setQuestionToDelete(null)}>Cancel</Button>
-                    <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+                    <Button onClick={() => setSettingsOpen(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleSaveSettings}>Save Changes</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* --- ADD/EDIT QUESTION MODAL --- */}
+            <Dialog open={questionModalOpen} onClose={() => setQuestionModalOpen(false)} fullWidth maxWidth="md">
+                <DialogTitle>
+                    {questionToEdit ? 'Edit Question' : 'Add New Question'}
+                </DialogTitle>
+                <DialogContent>
+                    <QuestionForm
+                        examId={exam.id}
+                        onSave={fetchExamData}
+                        initialQuestion={questionToEdit}
+                        closeDialog={() => setQuestionModalOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+
         </Box>
     );
 };

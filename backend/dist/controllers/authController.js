@@ -9,6 +9,7 @@ const db_1 = __importDefault(require("../services/db"));
 const argon2_1 = __importDefault(require("argon2"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../config"));
+const passwordValidator_1 = require("../utils/passwordValidator");
 // ===========================================
 // LOGIN CONTROLLER
 // ===========================================
@@ -93,10 +94,10 @@ exports.loginUser = loginUser;
 const setupAccount = async (req, res) => {
     const { token, password } = req.body;
     // --- Password Strength Validation ---
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!password || !passwordRegex.test(password)) {
+    const { valid, errors } = (0, passwordValidator_1.validatePassword)(password);
+    if (!valid) {
         return res.status(400).json({
-            message: 'Password does not meet requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            message: 'Password does not meet requirements: ' + errors.join(' '),
         });
     }
     if (!token) {
@@ -136,7 +137,6 @@ exports.setupAccount = setupAccount;
 // SESSION CHECK CONTROLLER
 // ===========================================
 const getMe = async (req, res) => {
-    // --- UPDATED: Get userId from 'protect' middleware ---
     const userId = req.user?.userId;
     if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -200,10 +200,10 @@ const changeMyPassword = async (req, res) => {
         return res.status(400).json({ message: 'New password cannot be the same as the old password.' });
     }
     // --- Re-using your password strength validation ---
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
+    const { valid, errors } = (0, passwordValidator_1.validatePassword)(newPassword);
+    if (!valid) {
         return res.status(400).json({
-            message: 'New password does not meet requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            message: 'New password does not meet requirements: ' + errors.join(' '),
         });
     }
     try {

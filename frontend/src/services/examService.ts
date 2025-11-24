@@ -3,8 +3,12 @@ import axios from 'axios';
 // ---------------------------------------------------------
 // API Client Setup
 // ---------------------------------------------------------
+// Robustly handle VITE_BACKEND_URL whether it includes /api or not
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const API_URL = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
+  baseURL: API_URL,
   withCredentials: true,
 });
 
@@ -70,7 +74,9 @@ export const updateExamSettings = async (
     status?: string;
     grading_scale?: object;
     duration_minutes?: number;
+    instructions?: string;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => {
   const response = await apiClient.put(`/exams/${examId}`, settings);
   return response.data;
@@ -94,9 +100,7 @@ export const restoreExam = async (examId: string) => {
   return response.data;
 };
 
-// Add this to /frontend/src/services/examService.ts
-
 export const getExamResults = async (examId: string) => {
-    const response = await apiClient.get(`/exams/${examId}/results`);
-    return response.data;
+  const response = await apiClient.get(`/exams/${examId}/results`);
+  return response.data;
 };

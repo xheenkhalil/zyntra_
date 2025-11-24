@@ -8,7 +8,7 @@ import './index.css';
 import CourseAdminLayout from './layouts/CourseAdminLayout';
 import StudentLayout from './layouts/StudentLayout';
 // --- FIX: Corrected import path ---
-import SuperAdminLayout from './layouts/SuperAdminLayout'; 
+import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 // Import Pages (ALL DIRECTLY FROM ./pages/)
 import HomePage from './pages/HomePage';
@@ -26,11 +26,13 @@ import SuperAdminCreateGuestQuiz from './pages/SuperAdminCreateGuestQuiz';
 import SuperAdminEditGuestQuiz from './pages/SuperAdminEditGuestQuiz';
 import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions';
 // --- NEW: Added imports for the new pages ---
+import CourseAdminStudents from './pages/CourseAdminStudents';
 import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminOrganizations from './pages/SuperAdminOrganizations';
 import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
 import SuperAdminSystemStatus from './pages/SuperAdminSystemStatus';
 import SuperAdminSettings from './pages/SuperAdminSettings';
+import EnrollmentTestPage from './pages/EnrollmentTestPage';
 
 // --- Client Admin Pages ---
 import CentralAdminDashboard from './pages/CentralAdminDashboard';
@@ -41,6 +43,9 @@ import ExamBankPage from './pages/ExamBankPage';
 import ExamBuilderPage from './pages/ExamBuilderPage';
 import ResultsPage from './pages/ResultsPage';
 import CourseAdminOverview from './pages/CourseAdminOverview';
+import CourseAdminSettings from './pages/CourseAdminSettings';
+import ProctoringDashboard from './pages/ProctoringDashboard';
+import ProctoringOverview from './pages/ProctoringOverview';
 
 // --- Student Pages ---
 import StudentDashboard from './pages/StudentDashboard';
@@ -67,17 +72,28 @@ function App() {
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/contact" element={<ContactPage />} />
 
+                        {/* --- TEST ROUTE (For AWS Enrollment Testing) --- */}
+                        {/* Temporarily public for easy testing. Later move to Student Routes. */}
+                        <Route path="/test-enroll" element={<EnrollmentTestPage />} />
+
+                        {/* --- PROCTORING ROUTE (Standalone) --- */}
+                        {/* This allows both Superadmins and Course Admins to view the live feed */}
+                        <Route element={<ProtectedRoute allowedRoles={['superadmin', 'courseadmin']} />}>
+                            {/* Note: This is NOT inside a layout because it has its own full-screen UI */}
+                            <Route path="/proctoring/:examId" element={<ProctoringDashboard />} />
+                        </Route>
+
                         {/* --- Protected Super Admin Routes --- */}
                         <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
                             <Route path="/superadmin" element={<SuperAdminLayout />}>
-                                <Route index element={<SuperAdminDashboard />} /> 
-                                
+                                <Route index element={<SuperAdminDashboard />} />
+
                                 {/* Guest Quiz Management */}
                                 <Route path="guest-quizzes" element={<SuperAdminGuestQuizzes />} />
-                                <Route path="guest-quizzes/new" element={<SuperAdminCreateGuestQuiz />} /> 
+                                <Route path="guest-quizzes/new" element={<SuperAdminCreateGuestQuiz />} />
                                 <Route path="guest-quizzes/:quizId/edit" element={<SuperAdminEditGuestQuiz />} />
                                 <Route path="guest-quizzes/:quizId/questions" element={<SuperAdminManageQuizQuestions />} />
-                                
+
                                 {/* --- NEW: Added routes for all sidebar links --- */}
                                 <Route path="users" element={<SuperAdminUsers />} />
                                 <Route path="analytics" element={<SuperAdminAnalytics />} />
@@ -92,7 +108,7 @@ function App() {
                         <Route element={<ProtectedRoute allowedRoles={['clientadmin']} />}>
                             <Route path="/centraladmin" element={<CentralAdminDashboard />} />
                         </Route>
-                        
+
                         {/* --- Protected Course Admin Routes --- */}
                         <Route element={<ProtectedRoute allowedRoles={['courseadmin']} />}>
                             <Route path="/courseadmin" element={<CourseAdminLayout />}>
@@ -101,6 +117,9 @@ function App() {
                                 <Route path="exams" element={<ExamBankPage />} />
                                 <Route path="exams/:examId" element={<ExamBuilderPage />} />
                                 <Route path="results" element={<ResultsPage />} />
+                                <Route path="proctoring" element={<ProctoringOverview />} />
+                                <Route path="students" element={<CourseAdminStudents />} />
+                                <Route path="settings" element={<CourseAdminSettings />} />
                             </Route>
                         </Route>
 

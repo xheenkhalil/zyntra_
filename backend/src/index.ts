@@ -18,6 +18,7 @@ import analyticsRoutes from "./routes/analyticsRoutes";
 import guestRoutes from "./routes/guestRoutes"; // Public routes
 import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes"; // Admin-only routes
 import systemRoutes from './routes/systemRoutes';
+import proctoringRoutes from './routes/proctoringRoutes';
 
 
 const app = express();
@@ -52,26 +53,29 @@ app.use(
 );
 
 // =====================================================
-//  MIDDLEWARE SETUP
+//  MIDDLEWARE SETUP (FIXED LIMITS)
 // =====================================================
-app.use(express.json());
+// FIX: Increased limit to 50mb to handle Base64 image uploads
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // =====================================================
 //  ROUTES
 // =====================================================
 app.use("/api/auth", authRoutes);
-app.use("/api/superadmin", superAdminRoutes); // All superadmin routes
-app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes); // Guest quiz admin routes
+app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/superadmin/guest-quizzes", superAdminGuestQuizRoutes);
 app.use("/api/centraladmin", centralAdminRoutes);
 app.use("/api/courseadmin", courseAdminRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/public", guestRoutes); // Public-facing routes (like taking guest quizzes)
-app.use('/api/system', systemRoutes); 
+app.use("/api/public", guestRoutes);
+app.use('/api/system', systemRoutes);
+app.use('/api/proctoring', proctoringRoutes);
+
 
 // =====================================================
 //  HEALTH CHECK ENDPOINT

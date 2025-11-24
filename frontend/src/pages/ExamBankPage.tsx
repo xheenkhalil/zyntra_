@@ -6,41 +6,39 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   TextField,
-  IconButton,
-  Menu,
-  MenuItem,
-  Chip,
   Snackbar,
   Container,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {
   getExams,
   createExam,
   archiveExam,
   deleteExam,
-  restoreExam, // Assuming restoreExam exists in your examService
+  restoreExam,
 } from '../services/examService';
+import ExamCard from '../components/ExamCard';
 
 interface Exam {
   id: string;
   title: string;
   status: 'draft' | 'live' | 'completed' | 'archived';
   created_at: string;
+  total_questions?: number;
+  question_types?: string[];
+  time_limit?: number;
+  stats?: {
+    registered?: number;
+    completed?: number;
+    pending?: number;
+    auto_submitted?: number;
+    proctoring_defaulters?: number;
+  };
 }
 
 const ExamBankPage: React.FC = () => {
@@ -56,11 +54,9 @@ const ExamBankPage: React.FC = () => {
   const [newExamTitle, setNewExamTitle] = useState('');
   const [dialogError, setDialogError] = useState('');
 
-  // Action menu and confirmation dialog
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  // Delete confirmation
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [actionToConfirm, setActionToConfirm] = useState<'archive' | 'delete' | 'restore' | null>(null);
+  const [examToDelete, setExamToDelete] = useState<string | null>(null);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -84,41 +80,27 @@ const ExamBankPage: React.FC = () => {
   }, []);
 
   // --- Action Handlers ---
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, exam: Exam) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedExam(exam);
+  const handleEdit = (examId: string) => {
+    navigate(`/courseadmin/exams/${examId}`);
   };
 
-  const handleMenuClose = () => setAnchorEl(null);
-
-  const handleAction = (action: 'archive' | 'delete' | 'restore') => {
-    handleMenuClose();
-    setActionToConfirm(action);
+  const handleDelete = (examId: string) => {
+    setExamToDelete(examId);
     setConfirmOpen(true);
   };
 
-  const handleConfirmAction = async () => {
-    if (!selectedExam || !actionToConfirm) return;
+  const handleConfirmDelete = async () => {
+    if (!examToDelete) return;
 
     try {
-      let res;
-
-      if (actionToConfirm === 'archive') {
-        res = await archiveExam(selectedExam.id);
-      } else if (actionToConfirm === 'delete') {
-        res = await deleteExam(selectedExam.id);
-      } else if (actionToConfirm === 'restore') {
-        res = await restoreExam(selectedExam.id);
-      }
-
+      const res = await deleteExam(examToDelete);
       setSnackbar({
         open: true,
-        message: res?.message || 'Action completed successfully!',
+        message: res?.message || 'Exam deleted successfully!',
       });
-
       await fetchExams();
     } catch (err: unknown) {
-      let message = 'Action failed.';
+      let message = 'Failed to delete exam.';
       if (
         err &&
         typeof err === 'object' &&
@@ -138,6 +120,61 @@ const ExamBankPage: React.FC = () => {
       });
     } finally {
       setConfirmOpen(false);
+      setExamToDelete(null);
+    }
+  };
+
+  const handleArchive = async (examId: string) => {
+    try {
+      const res = await archiveExam(examId);
+      setSnackbar({
+        open: true,
+        message: res?.message || 'Exam archived successfully!',
+      });
+      await fetchExams();
+    } catch (err: unknown) {
+      let message = 'Failed to archive exam.';
+      if (
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+      ) {
+        message = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+      setSnackbar({ open: true, message });
+    }
+  };
+
+  const handleRestore = async (examId: string) => {
+    try {
+      const res = await restoreExam(examId);
+      setSnackbar({
+        open: true,
+        message: res?.message || 'Exam restored successfully!',
+      });
+      await fetchExams();
+    } catch (err: unknown) {
+      let message = 'Failed to restore exam.';
+      if (
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+      ) {
+        message = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+      setSnackbar({ open: true, message });
     }
   };
 
@@ -187,96 +224,116 @@ const ExamBankPage: React.FC = () => {
     return (
       <Container maxWidth="sm" sx={{ mt: 8 }}>
         <Alert severity="error">{error}</Alert>
-        <Button variant="contained" onClick={fetchExams}>
+        <Button variant="contained" onClick={fetchExams} sx={{ mt: 2 }}>
           Retry
         </Button>
       </Container>
     );
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Exam Bank
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
-          Create New Exam
-        </Button>
-      </Box>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: '#f9fafb',
+        padding: '40px 20px',
+      }}
+    >
+      <Container maxWidth="lg">
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 4,
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 800,
+              color: '#1e293b',
+            }}
+          >
+            Exam Bank
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{
+              background: '#1e3a8a',
+              color: 'white',
+              px: 3,
+              py: 1.5,
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(30, 58, 138, 0.3)',
+              '&:hover': {
+                background: '#1e40af',
+                boxShadow: '0 6px 16px rgba(30, 58, 138, 0.4)',
+              },
+            }}
+          >
+            Create New Exam
+          </Button>
+        </Box>
 
-      {/* Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Exam Title</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Date Created</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {exams.length > 0 ? (
-              exams.map((exam) => (
-                <TableRow key={exam.id} hover>
-                  <TableCell sx={{ fontWeight: 600 }}>{exam.title}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={exam.status}
-                      size="small"
-                      color={
-                        exam.status === 'live'
-                          ? 'success'
-                          : exam.status === 'draft'
-                          ? 'warning'
-                          : 'default'
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>{new Date(exam.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      onClick={() => navigate(`/courseadmin/exams/${exam.id}`)}
-                      title="Edit / View"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={(e) => handleMenuClick(e, exam)}
-                      title="More Actions"
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No exams created yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Action Menu */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        {selectedExam?.status === 'archived' ? (
-          <MenuItem onClick={() => handleAction('restore')}>Restore to Draft</MenuItem>
+        {/* Exam Cards Grid */}
+        {exams.length > 0 ? (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+              gap: 3,
+            }}
+          >
+            {exams.map((exam) => (
+              <ExamCard
+                key={exam.id}
+                exam={exam}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onArchive={handleArchive}
+                onRestore={handleRestore}
+              />
+            ))}
+          </Box>
         ) : (
-          <MenuItem onClick={() => handleAction('archive')}>Archive</MenuItem>
+          <Box
+            sx={{
+              textAlign: 'center',
+              py: 8,
+              background: 'rgba(255,255,255,0.9)',
+              borderRadius: '20px',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#64748b', mb: 2 }}>
+              No exams created yet.
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#94a3b8', mb: 3 }}>
+              Click "Create New Exam" to get started!
+            </Typography>
+          </Box>
         )}
-        <MenuItem onClick={() => handleAction('delete')} sx={{ color: 'error.main' }}>
-          Delete
-        </MenuItem>
-      </Menu>
+      </Container>
 
       {/* Create Exam Dialog */}
-      <Dialog open={openCreate} onClose={handleCloseCreate}>
-        <DialogTitle>Create a New Exam</DialogTitle>
+      <Dialog
+        open={openCreate}
+        onClose={handleCloseCreate}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            padding: '8px',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: '1.5rem' }}>
+          Create a New Exam
+        </DialogTitle>
         <DialogContent>
           {dialogError && <Alert severity="error" sx={{ mb: 2 }}>{dialogError}</Alert>}
           <TextField
@@ -286,32 +343,64 @@ const ExamBankPage: React.FC = () => {
             label="Exam Title"
             type="text"
             fullWidth
-            variant="standard"
+            variant="outlined"
             value={newExamTitle}
             onChange={(e) => setNewExamTitle(e.target.value)}
+            sx={{ mt: 2 }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCreate}>Cancel</Button>
-          <Button onClick={handleCreate}>Create & Build</Button>
+        <DialogActions sx={{ padding: '16px 24px' }}>
+          <Button onClick={handleCloseCreate} sx={{ color: '#64748b' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            variant="contained"
+            sx={{
+              background: '#1e3a8a',
+              fontWeight: 600,
+              '&:hover': {
+                background: '#1e40af',
+              },
+            }}
+          >
+            Create & Build
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Confirm Action</DialogTitle>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirm Delete</DialogTitle>
         <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This action cannot be undone!
+          </Alert>
           <Typography>
-            Are you sure you want to {actionToConfirm} the exam "{selectedExam?.title}"?
+            Are you sure you want to permanently delete this exam? All associated data will be lost.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ padding: '16px 24px' }}>
+          <Button onClick={() => setConfirmOpen(false)} sx={{ color: '#64748b' }}>
+            Cancel
+          </Button>
           <Button
-            onClick={handleConfirmAction}
-            color={actionToConfirm === 'delete' ? 'error' : 'primary'}
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            sx={{
+              fontWeight: 600,
+            }}
           >
-            Confirm
+            Delete Permanently
           </Button>
         </DialogActions>
       </Dialog>

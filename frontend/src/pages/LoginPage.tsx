@@ -10,8 +10,12 @@ import {
   Alert,
   Tabs,
   Tab,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const LoginPage: React.FC = () => {
   const { login, user } = useAuth();
@@ -24,6 +28,7 @@ const LoginPage: React.FC = () => {
   const [studentId, setStudentId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // === Redirect Logic ===
   const getRedirectPath = (role: string) => {
@@ -57,10 +62,8 @@ const LoginPage: React.FC = () => {
     try {
       let loginData;
       if (loginType === "admin") {
-        // Admin login
         loginData = await login({ email, password });
       } else {
-        // Student login
         loginData = await login({ studentId });
       }
 
@@ -88,20 +91,31 @@ const LoginPage: React.FC = () => {
 
   // === Render ===
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm">
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: 10,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
-        <LockOutlinedIcon
-          sx={{ m: 1, fontSize: "2rem", color: "primary.main" }}
-        />
-        <Typography component="h1" variant="h5" fontWeight={700}>
-          Zyntra Login
+        <Box
+          sx={{
+            backgroundColor: "primary.main",
+            borderRadius: "50%",
+            p: 2,
+            mb: 2,
+          }}
+        >
+          <LockOutlinedIcon sx={{ fontSize: "3rem", color: "white" }} />
+        </Box>
+
+        <Typography component="h1" variant="h4" fontWeight={700} gutterBottom>
+          Welcome Back
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={3}>
+          Sign in to continue to Zyntra Exams
         </Typography>
 
         {/* Tabs for Admin / Student */}
@@ -110,7 +124,7 @@ const LoginPage: React.FC = () => {
             borderBottom: 1,
             borderColor: "divider",
             width: "100%",
-            mt: 3,
+            mt: 2,
           }}
         >
           <Tabs value={loginType} onChange={handleTabChange} centered>
@@ -139,6 +153,7 @@ const LoginPage: React.FC = () => {
                 autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
               />
               <TextField
                 margin="normal"
@@ -146,11 +161,23 @@ const LoginPage: React.FC = () => {
                 fullWidth
                 name="password"
                 label="Password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
             </>
           ) : (
@@ -164,6 +191,7 @@ const LoginPage: React.FC = () => {
               autoFocus
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
+              sx={{ mb: 2 }}
             />
           )}
 
@@ -177,7 +205,16 @@ const LoginPage: React.FC = () => {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 4, mb: 2 }}
+            size="large"
+            sx={{
+              mt: 4,
+              mb: 2,
+              py: 1.5,
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              textTransform: "none",
+              borderRadius: 2,
+            }}
             disabled={loading}
           >
             {loading ? "Signing In..." : "Sign In"}
