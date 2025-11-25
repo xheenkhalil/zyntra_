@@ -16,10 +16,11 @@ import {
     FormControlLabel,
     Checkbox,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
+import {
+    CloudUpload as CloudUploadIcon,
+    CheckCircle as CheckCircleIcon,
+    Error as ErrorIcon
+} from '@mui/icons-material';
 import { bulkUploadStudents } from '../services/courseAdminService';
 
 interface BulkUploadDialogProps {

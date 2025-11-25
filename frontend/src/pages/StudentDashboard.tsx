@@ -1,5 +1,7 @@
 // /frontend/src/pages/StudentDashboard.tsx
 
+// /frontend/src/pages/StudentDashboard.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Alert, CircularProgress, Paper, Card, CardContent, CardActions } from '@mui/material';
@@ -10,6 +12,8 @@ interface Exam {
     id: string;
     title: string;
     duration_minutes: number;
+    total_questions: number;
+    question_types: string[];
 }
 
 const StudentDashboard: React.FC = () => {
@@ -48,7 +52,7 @@ const StudentDashboard: React.FC = () => {
                 setLoading(false);
             }
         };
-        
+
         fetchExams();
     }, []);
 
@@ -56,7 +60,7 @@ const StudentDashboard: React.FC = () => {
         console.log('Render blocked by loading state.');
         return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
     }
-    
+
     if (error) {
         console.log('Render blocked by error state.');
         return <Alert severity="error">{error}</Alert>;
@@ -71,10 +75,16 @@ const StudentDashboard: React.FC = () => {
                         <Card key={exam.id} sx={{ display: 'flex', flexDirection: 'column' }}>
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Typography variant="h5" component="div" gutterBottom>{exam.title}</Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 1 }}>
                                     <TimerIcon sx={{ mr: 1 }} />
                                     <Typography variant="body2">{exam.duration_minutes} minutes</Typography>
                                 </Box>
+                                <Typography variant="body2" color="text.secondary">
+                                    <strong>Total Questions:</strong> {exam.total_questions}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    <strong>Types:</strong> {exam.question_types.length > 0 ? exam.question_types.join(', ') : 'N/A'}
+                                </Typography>
                             </CardContent>
                             <CardActions>
                                 <Button size="large" variant="contained" fullWidth onClick={() => navigate(`/student/exam/${exam.id}`)}>

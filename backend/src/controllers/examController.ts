@@ -1,8 +1,7 @@
-// /backend/src/controllers/examController.ts
-
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middleware/authMiddleware'; // THE MISSING IMPORT
+import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
+import { encrypt } from '../services/encryptionService';
 
 // ---------------------------------------------------------
 // Create Exam
@@ -10,42 +9,88 @@ import pool from '../services/db';
 export const createExam = async (req: AuthRequest, res: Response) => {
     const { title } = req.body;
     const courseAdminId = req.user?.userId;
-    const organizationId = req.user?.organizationId;
+    let organizationId = req.user?.organizationId;
 
     if (!title) {
         return res.status(400).json({ message: 'Exam title is required' });
     }
 
     try {
+        // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
+        if (!organizationId) {
+            const userRes = await pool.query('SELECT organization_id FROM users WHERE id = $1', [courseAdminId]);
+            if (userRes.rows.length > 0) {
+                organizationId = userRes.rows[0].organization_id;
+            }
+        }
+
         const query = `
             INSERT INTO exams (title, course_admin_id, organization_id)
             VALUES ($1, $2, $3)
             RETURNING *;
         `;
-        const newExam = await pool.query(query, [title, courseAdminId, organizationId]);
+        // Ensure organizationId is null if undefined
+        const newExam = await pool.query(query, [title, courseAdminId, organizationId || null]);
         res.status(201).json(newExam.rows[0]);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating exam:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
 
 // ---------------------------------------------------------
-// Get All Exams for Course Admin
+// Get All Exams for Course Admin (UPDATED WITH STATS)
 // ---------------------------------------------------------
 export const getExamsForCourseAdmin = async (req: AuthRequest, res: Response) => {
     const courseAdminId = req.user?.userId;
+    let organizationId = req.user?.organizationId;
+
     try {
+        // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
+        if (!organizationId) {
+            const userRes = await pool.query('SELECT organization_id FROM users WHERE id = $1', [courseAdminId]);
+            if (userRes.rows.length > 0) {
+                organizationId = userRes.rows[0].organization_id;
+            }
+        }
+
         const query = `
-            SELECT * FROM exams 
+            SELECT 
+                e.*,
+                (SELECT COUNT(*) FROM users u WHERE u.organization_id = $2 AND u.role = 'student') as registered_count,
+                (SELECT COUNT(*) FROM exam_submissions es WHERE es.exam_id = e.id AND es.status = 'completed') as completed_count,
+                (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id) as total_questions
+            FROM exams e 
             WHERE course_admin_id = $1 
             ORDER BY created_at DESC;
         `;
-        const result = await pool.query(query, [courseAdminId]);
-        res.status(200).json(result.rows);
-    } catch (error) {
+        // Ensure organizationId is null if undefined
+        const result = await pool.query(query, [courseAdminId, organizationId || null]);
+
+        const exams = result.rows.map(row => {
+            const registered = parseInt(row.registered_count || '0');
+            const completed = parseInt(row.completed_count || '0');
+            const autoSubmitted = 0; // DB enum doesn't support 'submitted_auto' yet
+            // Pending = Registered - (Completed + AutoSubmitted)
+            const pending = Math.max(0, registered - (completed + autoSubmitted));
+
+            return {
+                ...row,
+                total_questions: parseInt(row.total_questions || '0'),
+                stats: {
+                    registered: registered,
+                    completed: completed,
+                    pending: pending,
+                    auto_submitted: autoSubmitted,
+                    proctoring_defaulters: 0
+                }
+            };
+        });
+
+        res.status(200).json(exams);
+    } catch (error: any) {
         console.error('Error fetching exams:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
 
@@ -88,7 +133,7 @@ export const getExamById = async (req: AuthRequest, res: Response) => {
 // ---------------------------------------------------------
 export const addQuestionToExam = async (req: AuthRequest, res: Response) => {
     const { examId } = req.params;
-    const { questionText, options } = req.body;
+    const { questionText, options, questionType } = req.body;
     const courseAdminId = req.user?.userId;
 
     if (!questionText || !options || !Array.isArray(options) || options.length === 0) {
@@ -97,6 +142,8 @@ export const addQuestionToExam = async (req: AuthRequest, res: Response) => {
     if (!options.some((opt: any) => opt.isCorrect === true)) {
         return res.status(400).json({ message: 'At least one option must be marked as correct.' });
     }
+
+    const type = questionType || 'MCQ';
 
     try {
         const examCheck = await pool.query(
@@ -108,12 +155,29 @@ export const addQuestionToExam = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: 'Forbidden: You do not own this exam or it does not exist.' });
         }
 
+        // Encrypt the question data for student view
+        const questionData = {
+            questionText,
+            questionType: type,
+            options,
+            questionInstructions: req.body.questionInstructions || null,
+            correctAnswer: null
+        };
+
+        const encryptedData = encrypt(JSON.stringify(questionData));
+
         const query = `
-            INSERT INTO questions (exam_id, question_text, options)
-            VALUES ($1, $2, $3)
+            INSERT INTO questions (exam_id, question_text, options, question_type, encrypted_data)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *;
         `;
-        const newQuestion = await pool.query(query, [examId, questionText, JSON.stringify(options)]);
+        const newQuestion = await pool.query(query, [
+            examId,
+            questionText,
+            JSON.stringify(options),
+            type,
+            encryptedData
+        ]);
         res.status(201).json(newQuestion.rows[0]);
     } catch (error) {
         console.error('Error adding question to exam:', error);
@@ -169,9 +233,44 @@ export const updateExamSettings = async (req: AuthRequest, res: Response) => {
 // ---------------------------------------------------------
 // Archive, Delete, Restore Exam
 // ---------------------------------------------------------
-export const archiveExam = async (req: AuthRequest, res: Response) => { /* ... (code from previous step) ... */ };
-export const deleteExam = async (req: AuthRequest, res: Response) => { /* ... (code from previous step) ... */ };
-export const restoreExam = async (req: AuthRequest, res: Response) => { /* ... (code from previous step) ... */ };
+export const archiveExam = async (req: AuthRequest, res: Response) => {
+    const { examId } = req.params;
+    const courseAdminId = req.user?.userId;
+    try {
+        const result = await pool.query(
+            'UPDATE exams SET status = \'archived\' WHERE id = $1 AND course_admin_id = $2 RETURNING *',
+            [examId, courseAdminId]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Exam not found' });
+        res.json({ message: 'Exam archived', exam: result.rows[0] });
+    } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
+export const deleteExam = async (req: AuthRequest, res: Response) => {
+    const { examId } = req.params;
+    const courseAdminId = req.user?.userId;
+    try {
+        const result = await pool.query(
+            'DELETE FROM exams WHERE id = $1 AND course_admin_id = $2 RETURNING *',
+            [examId, courseAdminId]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Exam not found' });
+        res.json({ message: 'Exam deleted' });
+    } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
+export const restoreExam = async (req: AuthRequest, res: Response) => {
+    const { examId } = req.params;
+    const courseAdminId = req.user?.userId;
+    try {
+        const result = await pool.query(
+            'UPDATE exams SET status = \'draft\' WHERE id = $1 AND course_admin_id = $2 RETURNING *',
+            [examId, courseAdminId]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Exam not found' });
+        res.json({ message: 'Exam restored', exam: result.rows[0] });
+    } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
 
 // ================== GET EXAM RESULTS (NEW FUNCTION) ==================
 export const getExamResults = async (req: AuthRequest, res: Response) => {

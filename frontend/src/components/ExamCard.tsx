@@ -61,15 +61,15 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'live':
-                return 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                return '#10b981';
             case 'draft':
-                return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                return '#f59e0b';
             case 'archived':
-                return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+                return '#6b7280';
             case 'completed':
-                return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                return '#3b82f6';
             default:
-                return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+                return '#6b7280';
         }
     };
 
@@ -81,7 +81,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
         <Box
             sx={{
                 position: 'relative',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7))',
+                background: 'rgba(255,255,255,0.9)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.3)',
@@ -137,9 +137,6 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                     color: '#1e293b',
                     mb: 2,
                     pr: 10, // Space for status badge
-                    background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
                 }}
             >
                 {exam.title}

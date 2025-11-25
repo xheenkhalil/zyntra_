@@ -36,15 +36,26 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
                 e.duration_minutes, 
                 e.created_at,
                 e.is_proctored,
-                es.status as submission_status
+                es.status as submission_status,
+                COUNT(q.id) as total_questions,
+                array_agg(DISTINCT q.question_type) as question_types
             FROM exams e
             LEFT JOIN exam_submissions es ON e.id = es.exam_id AND es.student_id = $1
+            LEFT JOIN questions q ON e.id = q.exam_id
             WHERE e.organization_id = $2
             AND e.status = 'live'
-            AND (es.status IS NULL OR es.status = 'in_progress');
+            AND (es.status IS NULL OR es.status = 'in_progress')
+            GROUP BY e.id, es.status;
         `;
         const result = await pool.query(query, [studentId, organizationId]);
-        res.status(200).json(result.rows);
+
+        const exams = result.rows.map(row => ({
+            ...row,
+            total_questions: parseInt(row.total_questions || '0'),
+            question_types: row.question_types || []
+        }));
+
+        res.status(200).json(exams);
     } catch (error) {
         console.error("Error fetching available exams:", error);
         res.status(500).json({ message: 'Internal server error' });

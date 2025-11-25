@@ -107,7 +107,7 @@ const CourseAdminStudents: React.FC = () => {
   }, [page, rowsPerPage]);
 
   // === Pagination Handlers ===
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 

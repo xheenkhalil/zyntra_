@@ -27,12 +27,13 @@ const logAudit = async (
 };
 
 // --- HELPER FUNCTION (Student Code Generation) ---
-// Generates a unique 10-character student access code prefixed with 'Z'.
+// Generates a unique student access code in the format 'ZYN-XXXXXX'.
 export const generateStudentCode = (): string => {
-    const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
-    const timestampComponent = (Date.now() % 100).toString().padStart(2, '0');
-    const suffix = (randomHex + timestampComponent).slice(0, 9);
-    return `Z${suffix}`;
+    // Generate 6 random digits
+    const min = 100000;
+    const max = 999999;
+    const randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+    return `ZYN-${randomNum}`;
 };
 
 // --- Type for incoming CSV row ---

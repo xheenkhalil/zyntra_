@@ -19,7 +19,7 @@ export const startOrResumeExam = async (examId: string) => {
     return response.data;
 };
 
-// --- THIS IS THE NEWLY ADDED FUNCTION ---
+// --- THIS IS NEWLY ADDED ---
 export const saveExamProgress = async (submissionId: string, data: { answers: object; time_remaining_seconds: number; last_question_index?: number }) => {
     const response = await apiClient.put(`/student/submissions/${submissionId}/progress`, data);
     return response.data;

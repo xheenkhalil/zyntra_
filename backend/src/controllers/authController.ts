@@ -88,6 +88,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
+                studentId: user.student_id, // Added studentId
             },
         });
     } catch (error) {
@@ -162,7 +163,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 
     try {
         const userResult = await pool.query(
-            'SELECT id, full_name, email, username, role, status, organization_id FROM users WHERE id = $1',
+            'SELECT id, full_name, email, username, role, status, organization_id, student_id FROM users WHERE id = $1',
             [userId]
         );
 
@@ -170,7 +171,20 @@ export const getMe = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.status(200).json({ user: userResult.rows[0] });
+        const user = userResult.rows[0];
+
+        res.status(200).json({
+            user: {
+                id: user.id,
+                fullName: user.full_name,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                status: user.status,
+                organizationId: user.organization_id,
+                studentId: user.student_id // Correctly mapped
+            }
+        });
     } catch (error) {
         res.status(401).json({ message: 'Not authenticated' });
     }

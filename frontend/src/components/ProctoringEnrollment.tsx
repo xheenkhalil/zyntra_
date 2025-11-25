@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, Button, Alert, CircularProgress, Paper } from '@mui/material';
-import { FaSave, FaCamera } from 'react-icons/fa';
+import { FaCamera } from 'react-icons/fa';
 import { enrollIdentity } from '../services/proctoringService';
 
 interface ProctoringEnrollmentProps {

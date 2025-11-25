@@ -1,8 +1,11 @@
+// frontend/src/context/authTypes.ts
+
 export interface User {
   id: string;
   fullName: string;
   email: string;
   role: string;
+  student_id?: string;
 }
 
 export interface LoginCredentials {

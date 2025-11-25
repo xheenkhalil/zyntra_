@@ -7,10 +7,11 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  username: string; 
+  username: string;
   role: string;
   status: string;
   organization_id?: string;
+  student_id?: string;
 }
 
 export interface IAuthContext {

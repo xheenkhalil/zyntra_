@@ -39,8 +39,8 @@ import {
     Timer as TimerIcon,
     Security as SecurityIcon,
     Close as CloseIcon,
-    // FIX: Restored DescriptionIcon
     Description as DescriptionIcon,
+    AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 
 // Import Services
@@ -51,6 +51,7 @@ import {
     deleteQuestion,
     updateExamSettings,
 } from '../services/courseAdminService';
+import { generateAiQuestions } from '../services/examService';
 
 // --- Types ---
 type QuestionType = 'MCQ' | 'MSQ' | 'TRUE_FALSE' | 'FILL_BLANK' | 'ESSAY';
@@ -344,6 +345,12 @@ const ExamBuilderPage: React.FC = () => {
     const [questionModalOpen, setQuestionModalOpen] = useState(false);
     const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
 
+    // AI Dialog State
+    const [aiDialogOpen, setAiDialogOpen] = useState(false);
+    const [aiTopic, setAiTopic] = useState('');
+    const [aiCount, setAiCount] = useState(5);
+    const [aiLoading, setAiLoading] = useState(false);
+
     // Settings Form State
     const [settingsForm, setSettingsForm] = useState({
         duration: 60,
@@ -409,6 +416,25 @@ const ExamBuilderPage: React.FC = () => {
         }
     };
 
+    const handleGenerateAi = async () => {
+        if (!aiTopic.trim()) return alert("Please enter a topic.");
+        setAiLoading(true);
+        try {
+            await generateAiQuestions({
+                topic: aiTopic,
+                count: aiCount,
+                examId: exam!.id
+            });
+            fetchExamData();
+            setAiDialogOpen(false);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to generate questions.");
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     if (loading) return <Box className="flex justify-center items-center h-screen"><CircularProgress /></Box>;
     if (error) return <Alert severity="error" className="m-4">{error}</Alert>;
     if (!exam) return <Alert severity="warning" className="m-4">Exam not found.</Alert>;
@@ -460,10 +486,18 @@ const ExamBuilderPage: React.FC = () => {
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                        className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => { setQuestionToEdit(null); setQuestionModalOpen(true); }}
                     >
                         Add Question
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        startIcon={<AutoAwesomeIcon />}
+                        onClick={() => setAiDialogOpen(true)}
+                        className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                    >
+                        Generate with AI
                     </Button>
                 </Box>
             </Box>
@@ -610,6 +644,44 @@ const ExamBuilderPage: React.FC = () => {
                         closeDialog={() => setQuestionModalOpen(false)}
                     />
                 </DialogContent>
+            </Dialog>
+
+            {/* --- AI GENERATION DIALOG --- */}
+            <Dialog open={aiDialogOpen} onClose={() => setAiDialogOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Generate Questions with AI</DialogTitle>
+                <DialogContent>
+                    <Box className="pt-4 flex flex-col gap-4">
+                        <TextField
+                            label="Topic or Content"
+                            multiline
+                            rows={3}
+                            fullWidth
+                            value={aiTopic}
+                            onChange={(e) => setAiTopic(e.target.value)}
+                            placeholder="e.g., 'Photosynthesis process', 'World War II', or paste text content..."
+                        />
+                        <TextField
+                            label="Number of Questions"
+                            type="number"
+                            fullWidth
+                            value={aiCount}
+                            onChange={(e) => setAiCount(Number(e.target.value))}
+                            inputProps={{ min: 1, max: 20 }}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAiDialogOpen(false)}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleGenerateAi}
+                        disabled={aiLoading}
+                        startIcon={aiLoading ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                        {aiLoading ? 'Generating...' : 'Generate'}
+                    </Button>
+                </DialogActions>
             </Dialog>
 
         </Box>
