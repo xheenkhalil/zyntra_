@@ -7,6 +7,9 @@ const router = (0, express_1.Router)();
 // =====================================
 // STUDENT ROUTES
 // =====================================
+// GET /api/proctoring/status
+// Checks if the student is enrolled
+router.get('/status', authMiddleware_1.protect, proctoringController_1.getProctoringStatus);
 // POST /api/proctoring/enroll-identity
 // Called before the exam to register face data
 router.post('/enroll-identity', authMiddleware_1.protect, proctoringController_1.enrollIdentity);
@@ -19,6 +22,9 @@ router.put('/register-violation', authMiddleware_1.protect, proctoringController
 // =====================================
 // TEACHER / ADMIN ROUTES
 // =====================================
+// GET /api/proctoring/organization-overview
+// Called by the Course Admin to see a list of their exams for proctoring
+router.get('/organization-overview', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('courseadmin', 'superadmin'), proctoringController_1.getOrganizationProctoringOverview);
 // GET /api/proctoring/dashboard-batch/:examId
 // Called by the Proctoring Dashboard to get the live feed
 router.get('/dashboard-batch/:examId', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('courseadmin', 'superadmin'), // Only admins can view the dashboard

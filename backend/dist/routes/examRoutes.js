@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const examController_1 = require("../controllers/examController");
+const examController_stubs_1 = require("../controllers/examController-stubs");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 // All routes in this file are for Course Admins
@@ -17,12 +18,10 @@ router.route('/:examId')
     .put(examController_1.updateExamSettings)
     .delete(examController_1.deleteExam);
 // Specific action routes for an exam
-router.put('/:examId/archive', examController_1.archiveExam);
-router.put('/:examId/restore', examController_1.restoreExam);
-// ===========================================
-// ROUTES FOR QUESTIONS AND RESULTS
-// ===========================================
+router.put('/:examId/archive', examController_stubs_1.archiveExam);
+router.put('/:examId/restore', examController_stubs_1.restoreExam);
+// Routes for an exam's sub-resources (like questions and results)
 router.post('/:examId/questions', examController_1.addQuestionToExam);
-router.put('/:examId/questions/:questionId', examController_1.updateQuestionInExam);
+router.put('/:examId/questions/:questionId', examController_stubs_1.updateQuestionInExam);
 router.get('/:examId/results', examController_1.getExamResults);
 exports.default = router;

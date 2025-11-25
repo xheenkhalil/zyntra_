@@ -13,6 +13,8 @@ const courseAdminController_1 = require("../controllers/courseAdminController");
 const courseAdminDashboardController_1 = require("../controllers/courseAdminDashboardController");
 // --- 3. Import Exam Controllers ---
 const examController_1 = require("../controllers/examController");
+// Import stubs for missing functions
+const examController_stubs_1 = require("../controllers/examController-stubs");
 const router = (0, express_1.Router)();
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 // =====================================================
@@ -58,11 +60,11 @@ router.route('/exams/:examId')
     .put(examController_1.updateExamSettings)
     .delete(examController_1.deleteExam);
 // Specific action routes
-router.put('/exams/:examId/archive', examController_1.archiveExam);
-router.put('/exams/:examId/restore', examController_1.restoreExam);
+router.put('/exams/:examId/archive', examController_stubs_1.archiveExam);
+router.put('/exams/:examId/restore', examController_stubs_1.restoreExam);
 // Question Management
 router.post('/exams/:examId/questions', examController_1.addQuestionToExam);
-router.put('/exams/:examId/questions/:questionId', examController_1.updateQuestionInExam);
+router.put('/exams/:examId/questions/:questionId', examController_stubs_1.updateQuestionInExam);
 // Exam Results
 router.get('/exams/:examId/results', examController_1.getExamResults);
 exports.default = router;

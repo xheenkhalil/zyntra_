@@ -26,7 +26,7 @@ import SuperAdminCreateGuestQuiz from './pages/SuperAdminCreateGuestQuiz';
 import SuperAdminEditGuestQuiz from './pages/SuperAdminEditGuestQuiz';
 import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions';
 // --- NEW: Added imports for the new pages ---
-import CourseAdminStudents from './pages/CourseAdminStudents';
+
 import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminOrganizations from './pages/SuperAdminOrganizations';
 import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
@@ -113,12 +113,12 @@ function App() {
                         <Route element={<ProtectedRoute allowedRoles={['courseadmin']} />}>
                             <Route path="/courseadmin" element={<CourseAdminLayout />}>
                                 <Route index element={<CourseAdminOverview />} />
-                                <Route path="students" element={<CourseAdminDashboard />} />
+
                                 <Route path="exams" element={<ExamBankPage />} />
                                 <Route path="exams/:examId" element={<ExamBuilderPage />} />
                                 <Route path="results" element={<ResultsPage />} />
                                 <Route path="proctoring" element={<ProctoringOverview />} />
-                                <Route path="students" element={<CourseAdminStudents />} />
+                                <Route path="students" element={<CourseAdminDashboard />} />
                                 <Route path="settings" element={<CourseAdminSettings />} />
                             </Route>
                         </Route>

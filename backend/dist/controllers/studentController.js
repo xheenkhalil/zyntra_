@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
-const encryptionService_1 = require("../services/encryptionService"); // NEW: For secure content
+const encryptionService_1 = require("../services/encryptionService");
 // Fetches all exams with 'live' status for the student's organization.
 const getAvailableExams = async (req, res) => {
     const studentId = req.user?.userId;
@@ -17,16 +17,25 @@ const getAvailableExams = async (req, res) => {
                 e.title, 
                 e.duration_minutes, 
                 e.created_at,
-                e.is_proctored, -- NEW: Fetch proctoring status
-                es.status as submission_status
+                e.is_proctored,
+                es.status as submission_status,
+                COUNT(q.id) as total_questions,
+                array_agg(DISTINCT q.question_type) as question_types
             FROM exams e
             LEFT JOIN exam_submissions es ON e.id = es.exam_id AND es.student_id = $1
+            LEFT JOIN questions q ON e.id = q.exam_id
             WHERE e.organization_id = $2
             AND e.status = 'live'
-            AND (es.status IS NULL OR es.status = 'in_progress');
+            AND (es.status IS NULL OR es.status = 'in_progress')
+            GROUP BY e.id, es.status;
         `;
         const result = await db_1.default.query(query, [studentId, organizationId]);
-        res.status(200).json(result.rows);
+        const exams = result.rows.map(row => ({
+            ...row,
+            total_questions: parseInt(row.total_questions || '0'),
+            question_types: row.question_types || []
+        }));
+        res.status(200).json(exams);
     }
     catch (error) {
         console.error("Error fetching available exams:", error);
@@ -56,16 +65,14 @@ const startOrResumeExam = async (req, res) => {
                 }
             }
             catch (err) {
-                // Graceful fallback: If table doesn't exist, skip check (dev mode safety)
                 if (err.code === '42P01') {
                     console.warn("⚠️ Proctoring table 'proctor_profiles' missing. Skipping proctor check.");
                 }
                 else {
-                    throw err; // Rethrow other errors to be caught by main catch
+                    throw err;
                 }
             }
         }
-        // --- END NEW PROCTORING CHECK ---
         // --- 2. Find or Create Submission ---
         let submission;
         const existingSubmissionQuery = 'SELECT * FROM exam_submissions WHERE exam_id = $1 AND student_id = $2';
@@ -81,7 +88,7 @@ const startOrResumeExam = async (req, res) => {
             const startTime = exam.duration_minutes * 60;
             const startQuery = `
                 INSERT INTO exam_submissions (exam_id, student_id, status, time_remaining_seconds, answers)
-                VALUES ($1, $2, $3, '{}') 
+                VALUES ($1, $2, 'in_progress', $3, '{}') 
                 RETURNING *;
             `;
             const newSubmissionResult = await client.query(startQuery, [examId, studentId, startTime]);
@@ -90,16 +97,25 @@ const startOrResumeExam = async (req, res) => {
         // --- 3. Fetch & Decrypt Questions for Student Runner ---
         const questionsResult = await client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
         const sanitizedQuestions = questionsResult.rows.map(q => {
-            const decryptedContent = JSON.parse((0, encryptionService_1.decrypt)(q.encrypted_data));
-            // Only send necessary fields to the student (never the correct answers)
-            return {
-                id: q.id,
-                question_text: decryptedContent.questionText,
-                question_type: decryptedContent.questionType,
-                question_instructions: decryptedContent.questionInstructions, // <-- FIX: This property is now defined
-                options: decryptedContent.options ? decryptedContent.options.map(opt => ({ text: opt.text })) : null,
-            };
-        });
+            try {
+                if (!q.encrypted_data) {
+                    console.warn(`Question ${q.id} has no encrypted data. Skipping.`);
+                    return null;
+                }
+                const decryptedContent = JSON.parse((0, encryptionService_1.decrypt)(q.encrypted_data));
+                return {
+                    id: q.id,
+                    question_text: decryptedContent.questionText,
+                    question_type: decryptedContent.questionType,
+                    question_instructions: decryptedContent.questionInstructions,
+                    options: decryptedContent.options ? decryptedContent.options.map(opt => ({ text: opt.text })) : null,
+                };
+            }
+            catch (err) {
+                console.error(`Failed to decrypt question ${q.id}:`, err);
+                return null;
+            }
+        }).filter(q => q !== null);
         return res.status(200).json({
             message: submissionResult.rows.length > 0 ? "Resuming exam." : "Starting new exam.",
             exam: {
@@ -112,6 +128,7 @@ const startOrResumeExam = async (req, res) => {
                 id: submission.id,
                 answers: submission.answers || {},
                 time_remaining_seconds: submission.time_remaining_seconds,
+                last_question_index: submission.last_question_index || 0 // Will be added in migration
             }
         });
     }
@@ -128,20 +145,36 @@ exports.startOrResumeExam = startOrResumeExam;
 const saveExamProgress = async (req, res) => {
     const { submissionId } = req.params;
     const studentId = req.user?.userId;
-    const { answers, time_remaining_seconds } = req.body;
+    const { answers, time_remaining_seconds, last_question_index } = req.body;
     try {
+        // Check if last_question_index column exists before trying to update it (for backward compatibility if migration fails)
+        // Actually, we'll assume migration runs.
         const query = `
             UPDATE exam_submissions
-            SET answers = $1, time_remaining_seconds = $2
-            WHERE id = $3 AND student_id = $4 AND status = 'in_progress';
+            SET answers = $1, time_remaining_seconds = $2, last_question_index = $3
+            WHERE id = $4 AND student_id = $5 AND status = 'in_progress';
         `;
-        const result = await db_1.default.query(query, [JSON.stringify(answers), time_remaining_seconds, submissionId, studentId]);
+        // Note: If last_question_index column doesn't exist yet, this will fail. 
+        // We should probably handle that or ensure migration runs first.
+        // For now, I'll use a safer query that only updates if the column exists? 
+        // No, I'll just assume the migration will be run immediately after this file update.
+        const result = await db_1.default.query(query, [JSON.stringify(answers), time_remaining_seconds, last_question_index || 0, submissionId, studentId]);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'In-progress submission not found.' });
         }
         res.status(200).json({ message: 'Progress saved.' });
     }
     catch (error) {
+        if (error.code === '42703') { // Undefined column
+            // Fallback for before migration
+            const fallbackQuery = `
+                UPDATE exam_submissions
+                SET answers = $1, time_remaining_seconds = $2
+                WHERE id = $3 AND student_id = $4 AND status = 'in_progress';
+            `;
+            await db_1.default.query(fallbackQuery, [JSON.stringify(answers), time_remaining_seconds, submissionId, studentId]);
+            return res.status(200).json({ message: 'Progress saved (legacy).' });
+        }
         console.error("Error saving exam progress:", error);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -194,10 +227,8 @@ const submitExam = async (req, res) => {
                     break;
                 }
                 case 'MSQ': {
-                    // Answer is expected to be an array of selected option texts
                     const correctAnswers = decryptedContent.options?.filter(opt => opt.isCorrect).map(opt => opt.text) || [];
                     const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
-                    // Logic: Score is only given if the student selected the EXACT same set of correct answers
                     const isCorrect = correctAnswers.length === studentAnswers.length &&
                         correctAnswers.every(ans => studentAnswers.includes(ans));
                     if (isCorrect) {
@@ -206,15 +237,12 @@ const submitExam = async (req, res) => {
                     break;
                 }
                 case 'FILL_BLANK': {
-                    // Simple case-insensitive match for the primary keyword
                     if (studentAnswer.toLowerCase().trim() === decryptedContent.correctAnswer?.toLowerCase().trim()) {
                         score++;
                     }
                     break;
                 }
                 case 'ESSAY': {
-                    // Essay questions are scored 0 automatically. The teacher must grade manually.
-                    // Score is tracked by the 'score' variable, so 0 is correct here.
                     break;
                 }
             }
@@ -245,7 +273,6 @@ const submitExam = async (req, res) => {
         res.status(201).json({
             message: 'Exam submitted successfully! Final grade calculated.',
             submission: finalResult.rows[0],
-            // Only send the grade/score, not the full answer set
         });
     }
     catch (error) {
