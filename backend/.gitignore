@@ -9,6 +9,7 @@ yarn-error.log
 # Build folders
 frontend/build
 backend/dist # If your backend has a build step (e.g., TypeScript to JS)
+src/scripts/
 
 # IDE files
 .vscode/
