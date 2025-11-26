@@ -10,6 +10,13 @@ yarn-error.log
 frontend/build
 backend/dist # If your backend has a build step (e.g., TypeScript to JS)
 src/scripts/
+backend/test-login.js
+backend/test-endpoint.ts
+backend/src/check_instructions.ts
+backend/src/create_blacklist_table.ts
+backend/src/create_student.ts
+backend/src/test_create_exam.ts
+backend/src/update_instructions.ts
 
 # IDE files
 .vscode/
