@@ -14,6 +14,11 @@ export const getAvailableExams = async () => {
     return response.data;
 };
 
+export const getExamInfo = async (examId: string) => {
+    const response = await apiClient.get(`/student/exams/${examId}/info`);
+    return response.data;
+};
+
 export const startOrResumeExam = async (examId: string) => {
     const response = await apiClient.post(`/student/exams/${examId}/start`);
     return response.data;

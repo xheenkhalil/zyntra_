@@ -62,6 +62,25 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// Fetches public exam info (instructions, title) without starting it
+export const getExamInfo = async (req: AuthRequest, res: Response) => {
+    const { examId } = req.params;
+
+    try {
+        const query = 'SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = \'live\'';
+        const result = await pool.query(query, [examId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Exam not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error fetching exam info:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // Starts an exam if not started, or resumes it if 'in_progress'
 export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
     const { examId } = req.params;
@@ -146,6 +165,7 @@ export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
             exam: {
                 id: exam.id,
                 title: exam.title,
+                instructions: exam.instructions,
                 duration_minutes: exam.duration_minutes,
                 questions: sanitizedQuestions,
             },
@@ -153,7 +173,7 @@ export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
                 id: submission.id,
                 answers: submission.answers || {},
                 time_remaining_seconds: submission.time_remaining_seconds,
-                last_question_index: submission.last_question_index || 0 // Will be added in migration
+                last_question_index: submission.last_question_index || 0
             }
         });
 

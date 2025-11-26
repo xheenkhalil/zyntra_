@@ -8,34 +8,40 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+// === Interceptor for 401 ===
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // If we get a 401, it means the token is invalid (expired or blacklisted)
+      // We should clear local storage and redirect to login
+      // Note: We can't use useNavigate here directly as it's not a React component
+      // But we can redirect using window.location
+      if (window.location.pathname !== '/login') {
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // === Utility: Safe error extraction ===
 const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'response' in error &&
-    typeof (error as { response?: unknown }).response === 'object' &&
-    (error as { response?: unknown }).response !== null
-  ) {
-    const response = (error as { response: { data?: unknown } }).response;
-    if (
-      'data' in response &&
-      typeof response.data === 'object' &&
-      response.data !== null &&
-      'message' in (response.data as { message?: unknown })
-    ) {
-      return (response.data as { message?: string }).message;
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data;
+    console.log('Auth Error Debug:', { status: error.response?.status, data }); // DEBUG LOG
+
+    if (data) {
+      if (typeof data === 'object' && data !== null && 'message' in data) {
+        return (data as any).message;
+      }
+      if (typeof data === 'string') {
+        return data;
+      }
     }
-    if (typeof response.data === 'string') return response.data;
   }
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as { message?: unknown }).message === 'string'
-  ) {
-    return (error as { message: string }).message;
-  }
+  if (error instanceof Error) return error.message;
   return fallback;
 };
 

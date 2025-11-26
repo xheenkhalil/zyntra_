@@ -1,11 +1,12 @@
 // /backend/src/routes/studentRoutes.ts
 
 import { Router } from 'express';
-import { 
-    getAvailableExams, 
+import {
+    getAvailableExams,
+    getExamInfo,
     startOrResumeExam,
     saveExamProgress,
-    submitExam 
+    submitExam
 } from '../controllers/studentController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
@@ -16,6 +17,9 @@ router.use(protect, authorize('student'));
 
 // Gets the list of exams for the dashboard
 router.get('/exams', getAvailableExams);
+
+// Gets public info about an exam (instructions, etc.)
+router.get('/exams/:examId/info', getExamInfo);
 
 // Starts or Resumes a specific exam
 router.post('/exams/:examId/start', startOrResumeExam);

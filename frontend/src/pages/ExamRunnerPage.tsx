@@ -6,9 +6,10 @@ import {
     Box, Typography, CircularProgress, Alert, Paper, Button,
     RadioGroup, FormControlLabel, Radio, LinearProgress, Checkbox, FormGroup, TextField
 } from '@mui/material';
-import { startOrResumeExam, saveExamProgress, submitExam } from '../services/studentService';
+import { startOrResumeExam, saveExamProgress, submitExam, getExamInfo } from '../services/studentService';
 import { checkEnrollmentStatus, analyzeImage } from '../services/proctoringService';
 import ProctoringEnrollment from '../components/ProctoringEnrollment';
+import ExamInstructionsDialog from '../components/ExamInstructionsDialog';
 
 // Interfaces
 interface Option { text: string; }
@@ -18,7 +19,12 @@ interface Question {
     question_type: 'MCQ' | 'MSQ' | 'TRUE_FALSE' | 'FILL_BLANK' | 'ESSAY';
     options: Option[] | null;
 }
-interface Exam { id: string; title: string; questions: Question[]; }
+interface Exam {
+    id: string;
+    title: string;
+    instructions?: string;
+    questions: Question[];
+}
 interface Submission {
     id: string;
     answers: { [key: string]: string | string[] }; // Support array for MSQ
@@ -26,15 +32,28 @@ interface Submission {
     last_question_index?: number;
 }
 
+interface ExamInfo {
+    id: string;
+    title: string;
+    instructions?: string;
+    duration_minutes: number;
+    is_proctored: boolean;
+}
+
 const ExamRunnerPage: React.FC = () => {
     const { examId } = useParams<{ examId: string }>();
     const navigate = useNavigate();
 
+    // State
+    const [examInfo, setExamInfo] = useState<ExamInfo | null>(null);
     const [exam, setExam] = useState<Exam | null>(null);
     const [submission, setSubmission] = useState<Submission | null>(null);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
     const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null);
+    const [instructionsAcknowledged, setInstructionsAcknowledged] = useState(false);
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
@@ -48,27 +67,48 @@ const ExamRunnerPage: React.FC = () => {
     const webcamVideoRef = useRef<HTMLVideoElement | null>(null);
     const proctoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // --- 1. Check Enrollment Status First ---
+    // --- 1. Initial Load: Get Info & Enrollment Status ---
     useEffect(() => {
-        const checkEnrollment = async () => {
+        if (!examId) return;
+
+        const init = async () => {
             try {
-                const status = await checkEnrollmentStatus();
-                setIsEnrolled(status.enrolled);
-            } catch (err) {
-                console.error("Failed to check enrollment:", err);
-                // Fallback: if check fails, assume not enrolled or show error
-                setIsEnrolled(false);
+                // Fetch exam info and enrollment status in parallel
+                const [info, enrollment] = await Promise.all([
+                    getExamInfo(examId),
+                    checkEnrollmentStatus()
+                ]);
+                setExamInfo(info);
+                setIsEnrolled(enrollment.enrolled);
+            } catch (err: any) {
+                console.error("Failed to load exam info:", err);
+                setError(err.response?.data?.message || 'Failed to load exam information.');
+            } finally {
+                setLoading(false);
             }
         };
-        checkEnrollment();
-    }, []);
+        init();
+    }, [examId]);
 
-    // --- 2. Data Fetching and Exam Start/Resume (Only if Enrolled) ---
+    // --- 2. Start Exam (After Instructions & Enrollment) ---
     useEffect(() => {
-        if (!examId || isEnrolled !== true) return;
+        // Only start if:
+        // 1. We have examId
+        // 2. Instructions are acknowledged (or don't exist)
+        // 3. User is enrolled
+        // 4. We haven't started yet (!exam)
 
-        const startExam = async () => {
+        if (!examId || !isEnrolled || !examInfo) return;
+
+        // If instructions exist but not acknowledged, wait.
+        if (examInfo.instructions && !instructionsAcknowledged) return;
+
+        // If already loaded exam, don't reload
+        if (exam) return;
+
+        const start = async () => {
             try {
+                setLoading(true); // Show loading while starting
                 const data = await startOrResumeExam(examId);
                 setExam(data.exam);
                 setSubmission(data.submission);
@@ -90,8 +130,8 @@ const ExamRunnerPage: React.FC = () => {
                 setLoading(false);
             }
         };
-        startExam();
-    }, [examId, isEnrolled]);
+        start();
+    }, [examId, isEnrolled, instructionsAcknowledged, examInfo, exam]);
 
     // --- Timer Logic ---
     useEffect(() => {
@@ -118,7 +158,7 @@ const ExamRunnerPage: React.FC = () => {
     useInterval(async () => {
         if (submission && timeLeft !== null) {
             try {
-                // @ts-ignore - answers type mismatch with service (object vs specific) but it's fine for JSON
+                // @ts-ignore
                 await saveExamProgress(submission.id, {
                     answers,
                     time_remaining_seconds: timeLeft,
@@ -129,9 +169,9 @@ const ExamRunnerPage: React.FC = () => {
                 console.error('Failed to save progress:', error);
             }
         }
-    }, 15000); // Autosave every 15 seconds
+    }, 15000);
 
-    // --- Final Submission (Manual or Auto) ---
+    // --- Final Submission ---
     const handleSubmit = useMemo(() => async () => {
         if (!submission) return;
         try {
@@ -177,11 +217,9 @@ const ExamRunnerPage: React.FC = () => {
         }
     };
 
-    // Set up 10-minute proctoring interval when exam starts
     useEffect(() => {
         if (!submission || !webcamVideoRef.current) return;
 
-        // Start webcam
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 if (webcamVideoRef.current) {
@@ -191,15 +229,11 @@ const ExamRunnerPage: React.FC = () => {
             })
             .catch(err => console.error('Failed to access webcam:', err));
 
-        // Capture first image immediately, then every 10 minutes
         captureAndAnalyzeImage();
         proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, 10 * 60 * 1000);
 
         return () => {
-            // Cleanup on unmount or exam end
-            if (proctoringIntervalRef.current) {
-                clearInterval(proctoringIntervalRef.current);
-            }
+            if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
             if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
                 const tracks = (webcamVideoRef.current.srcObject as MediaStream).getTracks();
                 tracks.forEach(track => track.stop());
@@ -214,27 +248,14 @@ const ExamRunnerPage: React.FC = () => {
                 const newCount = tabSwitchCount + 1;
                 setTabSwitchCount(newCount);
                 setShowTabWarning(true);
-
-                console.warn(`Tab switch detected! Count: ${newCount}/3`);
-
-                // Auto-hide warning after 5 seconds
                 setTimeout(() => setShowTabWarning(false), 5000);
-
-                // Auto-submit after 3 strikes
                 if (newCount >= 3) {
-                    console.error('3 tab switches detected. Auto-submitting exam...');
-                    setTimeout(() => {
-                        handleSubmit();
-                    }, 2000); // Give 2 seconds to show final warning
+                    setTimeout(() => handleSubmit(), 2000);
                 }
             }
         };
-
         document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, [submission, exam, tabSwitchCount, handleSubmit]);
 
     // --- UI Handlers ---
@@ -245,33 +266,20 @@ const ExamRunnerPage: React.FC = () => {
     const handleMultiSelectOption = (questionId: string, value: string, checked: boolean) => {
         setAnswers(prev => {
             const current = (prev[questionId] as string[]) || [];
-            if (checked) {
-                return { ...prev, [questionId]: [...current, value] };
-            } else {
-                return { ...prev, [questionId]: current.filter(v => v !== value) };
-            }
+            if (checked) return { ...prev, [questionId]: [...current, value] };
+            return { ...prev, [questionId]: current.filter(v => v !== value) };
         });
     };
 
     const renderQuestionInput = (question: Question) => {
         const answer = answers[question.id];
-
         switch (question.question_type) {
             case 'MCQ':
             case 'TRUE_FALSE':
                 return (
-                    <RadioGroup
-                        value={answer || ''}
-                        onChange={(e) => handleSelectOption(question.id, e.target.value)}
-                    >
+                    <RadioGroup value={answer || ''} onChange={(e) => handleSelectOption(question.id, e.target.value)}>
                         {question.options?.map((opt, index) => (
-                            <FormControlLabel
-                                key={index}
-                                value={opt.text}
-                                control={<Radio />}
-                                label={opt.text}
-                                sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }}
-                            />
+                            <FormControlLabel key={index} value={opt.text} control={<Radio />} label={opt.text} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }} />
                         ))}
                     </RadioGroup>
                 );
@@ -279,42 +287,14 @@ const ExamRunnerPage: React.FC = () => {
                 return (
                     <FormGroup>
                         {question.options?.map((opt, index) => (
-                            <FormControlLabel
-                                key={index}
-                                control={
-                                    <Checkbox
-                                        checked={Array.isArray(answer) && answer.includes(opt.text)}
-                                        onChange={(e) => handleMultiSelectOption(question.id, opt.text, e.target.checked)}
-                                    />
-                                }
-                                label={opt.text}
-                                sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }}
-                            />
+                            <FormControlLabel key={index} control={<Checkbox checked={Array.isArray(answer) && answer.includes(opt.text)} onChange={(e) => handleMultiSelectOption(question.id, opt.text, e.target.checked)} />} label={opt.text} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }} />
                         ))}
                     </FormGroup>
                 );
             case 'FILL_BLANK':
-                return (
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Type your answer here..."
-                        value={answer || ''}
-                        onChange={(e) => handleSelectOption(question.id, e.target.value)}
-                    />
-                );
+                return <TextField fullWidth variant="outlined" placeholder="Type your answer here..." value={answer || ''} onChange={(e) => handleSelectOption(question.id, e.target.value)} />;
             case 'ESSAY':
-                return (
-                    <TextField
-                        fullWidth
-                        multiline
-                        minRows={6}
-                        variant="outlined"
-                        placeholder="Type your essay here..."
-                        value={answer || ''}
-                        onChange={(e) => handleSelectOption(question.id, e.target.value)}
-                    />
-                );
+                return <TextField fullWidth multiline minRows={6} variant="outlined" placeholder="Type your essay here..." value={answer || ''} onChange={(e) => handleSelectOption(question.id, e.target.value)} />;
             default:
                 return <Typography color="error">Unknown question type</Typography>;
         }
@@ -322,81 +302,69 @@ const ExamRunnerPage: React.FC = () => {
 
     // --- Render Logic ---
 
-    // 1. Loading State (Checking enrollment)
-    if (isEnrolled === null) {
-        return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+    // 1. Initial Loading
+    if (loading && !exam) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+    if (error) return <Alert severity="error" sx={{ mt: 4, mx: 'auto', maxWidth: 600 }}>{error}</Alert>;
+
+    // 2. Instructions (First Step)
+    if (examInfo?.instructions && !instructionsAcknowledged) {
+        return (
+            <>
+                {/* Keep webcam hidden but present if we want to start it early, but here we don't need it yet until capture step */}
+                {/* Actually, user said "render instructions before capturing". So no capture yet. */}
+                <ExamInstructionsDialog
+                    open={true}
+                    instructions={examInfo.instructions}
+                    examTitle={examInfo.title}
+                    onContinue={() => setInstructionsAcknowledged(true)}
+                />
+            </>
+        );
     }
 
-    // 2. Enrollment Required State
+    // 3. Enrollment / Capture (Second Step)
     if (isEnrolled === false) {
         return <ProctoringEnrollment onComplete={() => setIsEnrolled(true)} />;
     }
 
-    // 3. Exam Loading State
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
-    if (error) return <Alert severity="error" sx={{ mt: 4, mx: 'auto', maxWidth: 600 }}>{error}</Alert>;
-    if (!exam || !submission || timeLeft === null) return <Alert severity="warning" sx={{ mt: 4, mx: 'auto', maxWidth: 600 }}>Could not load exam data.</Alert>;
+    // 4. Exam UI (Third Step)
+    if (!exam || !submission) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
 
     const currentQuestion = exam.questions[currentQuestionIndex];
     const progress = ((currentQuestionIndex + 1) / exam.questions.length) * 100;
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
+    const minutes = Math.floor((timeLeft || 0) / 60);
+    const seconds = (timeLeft || 0) % 60;
 
     return (
         <>
-            {/* Hidden webcam video for proctoring capture */}
             <video ref={webcamVideoRef} style={{ display: 'none' }} />
-
-            {/* Tab Switch Warning */}
             {showTabWarning && (
-                <Alert
-                    severity={tabSwitchCount >= 3 ? "error" : "warning"}
-                    sx={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, minWidth: 400 }}
-                    onClose={() => setShowTabWarning(false)}
-                >
-                    {tabSwitchCount >= 3
-                        ? `⚠️ CRITICAL: 3 tab switches detected (${tabSwitchCount}/3). Exam will be auto-submitted.`
-                        : `⚠️ Warning: Tab switching detected (${tabSwitchCount}/3). Do not leave this page.`
-                    }
+                <Alert severity={tabSwitchCount >= 3 ? "error" : "warning"} sx={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, minWidth: 400 }}>
+                    {tabSwitchCount >= 3 ? `⚠️ CRITICAL: 3 tab switches detected. Auto-submitting.` : `⚠️ Warning: Tab switching detected (${tabSwitchCount}/3).`}
                 </Alert>
             )}
-
             <Paper sx={{ p: 4, maxWidth: 900, margin: 'auto', mt: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Box>
                         <Typography variant="h5">{exam.title}</Typography>
-                        {tabSwitchCount > 0 && (
-                            <Typography variant="caption" color={tabSwitchCount >= 3 ? 'error' : 'warning.main'} sx={{ display: 'block', mt: 0.5 }}>
-                                ⚠️ Tab switches: {tabSwitchCount}/3
-                            </Typography>
-                        )}
+                        {tabSwitchCount > 0 && <Typography variant="caption" color="warning.main">⚠️ Tab switches: {tabSwitchCount}/3</Typography>}
                     </Box>
                     <Typography variant="h5" color={minutes < 5 ? 'error.main' : 'primary.main'}>
                         {`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}
                     </Typography>
                 </Box>
                 <LinearProgress variant="determinate" value={progress} sx={{ mb: 4 }} />
-
                 <Box>
                     <Typography variant="h6" sx={{ mb: 2 }}>Question {currentQuestionIndex + 1} of {exam.questions.length}</Typography>
                     <Typography variant="body1" sx={{ mb: 3, minHeight: '60px' }}>{currentQuestion.question_text}</Typography>
-
                     {renderQuestionInput(currentQuestion)}
-
                 </Box>
-
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                    <Button variant="outlined" onClick={() => setCurrentQuestionIndex(prev => prev - 1)} disabled={currentQuestionIndex === 0}>
-                        Previous
-                    </Button>
+                    <Button variant="outlined" onClick={() => setCurrentQuestionIndex(prev => prev - 1)} disabled={currentQuestionIndex === 0}>Previous</Button>
                     {currentQuestionIndex === exam.questions.length - 1 ? (
-                        <Button variant="contained" color="success" onClick={handleSubmit}>
-                            Submit Exam
-                        </Button>
+                        <Button variant="contained" color="success" onClick={handleSubmit}>Submit Exam</Button>
                     ) : (
-                        <Button variant="contained" onClick={() => setCurrentQuestionIndex(prev => prev + 1)}>
-                            Next
-                        </Button>
+                        <Button variant="contained" onClick={() => setCurrentQuestionIndex(prev => prev + 1)}>Next</Button>
                     )}
                 </Box>
             </Paper>

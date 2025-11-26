@@ -2,6 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import pool from '../services/db';
 import config from '../config';
 
 // Extend the Express Request type to include our user payload
@@ -9,7 +10,7 @@ export interface AuthRequest extends Request {
     user?: {
         userId: string;
         role: string;
-        organizationId?: string; // Add organizationId
+        organizationId?: string;
     }
 }
 
@@ -19,10 +20,16 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
 
     try {
+        // Check blacklist
+        const blacklistCheck = await pool.query('SELECT token FROM token_blacklist WHERE token = $1', [token]);
+        if (blacklistCheck.rows.length > 0) {
+            return res.status(401).json({ message: 'Not authorized, token revoked' });
+        }
+
         if (!config.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
-        
+
         const decoded = jwt.verify(token, config.JWT_SECRET) as any;
-        
+
         // Attach user payload to the request object
         req.user = {
             userId: decoded.userId,
@@ -35,7 +42,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 };
 
-// NEW: Reusable middleware to authorize specific roles
+// Reusable middleware to authorize specific roles
 export const authorize = (...roles: string[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {

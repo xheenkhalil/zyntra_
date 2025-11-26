@@ -24,7 +24,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 [studentId]
             );
             if (userResult.rows.length === 0) {
-                return res.status(401).json({ message: 'Invalid Student ID' });
+                return res.status(400).json({ message: 'Invalid Student ID' });
             }
             user = userResult.rows[0];
 
@@ -32,17 +32,17 @@ export const loginUser = async (req: Request, res: Response) => {
         } else if (email && password) {
             const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userResult.rows.length === 0) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(400).json({ message: 'Invalid credentials' });
             }
             user = userResult.rows[0];
 
             if (user.role !== 'student') {
                 if (!user.password_hash) {
-                    return res.status(401).json({ message: 'Invalid credentials' });
+                    return res.status(400).json({ message: 'Invalid credentials' });
                 }
                 const isPasswordValid = await argon2.verify(user.password_hash, password);
                 if (!isPasswordValid) {
-                    return res.status(401).json({ message: 'Invalid credentials' });
+                    return res.status(400).json({ message: 'Incorrect credentials' });
                 }
             } else {
                 return res.status(400).json({ message: 'Students must log in with Student ID.' });
@@ -77,7 +77,7 @@ export const loginUser = async (req: Request, res: Response) => {
             httpOnly: true,
             secure: true,
             sameSite: 'none',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.status(200).json({
@@ -88,7 +88,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
-                studentId: user.student_id, // Added studentId
+                studentId: user.student_id,
             },
         });
     } catch (error) {
@@ -182,7 +182,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
                 role: user.role,
                 status: user.status,
                 organizationId: user.organization_id,
-                studentId: user.student_id // Correctly mapped
+                studentId: user.student_id
             }
         });
     } catch (error) {
@@ -288,7 +288,24 @@ export const changeMyPassword = async (req: AuthRequest, res: Response) => {
 // ===========================================
 // LOGOUT CONTROLLER
 // ===========================================
-export const logoutUser = (req: Request, res: Response) => {
+export const logoutUser = async (req: Request, res: Response) => {
+    const token = req.cookies.token;
+
+    if (token) {
+        try {
+            const decoded = jwt.decode(token) as any;
+            if (decoded && decoded.exp) {
+                const expiresAt = new Date(decoded.exp * 1000);
+                await pool.query(
+                    'INSERT INTO token_blacklist (token, expires_at) VALUES ($1, $2)',
+                    [token, expiresAt]
+                );
+            }
+        } catch (error) {
+            console.error('Error blacklisting token:', error);
+        }
+    }
+
     res.cookie('token', '', {
         httpOnly: true,
         expires: new Date(0),

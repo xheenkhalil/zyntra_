@@ -1,12 +1,10 @@
-// frontend/src/context/AuthProvider.tsx
-
 import React, { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext, type IAuthContext, type User } from "./AuthContext";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL, // Use the env var
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true,
 });
 
@@ -17,14 +15,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // === HELPER: Normalize User Data ===
+  // This fixes the UUID display bug by ensuring student_id is caught
+  // regardless of how the backend sends it (snake_case vs camelCase).
+  const mapUser = (data: any): User => {
+    return {
+      ...data,
+      student_id: data.student_id || data.studentId || data.username || undefined
+    };
+  };
+
   // === Verify session on mount ===
   useEffect(() => {
     const verifySession = async () => {
       try {
         const res = await apiClient.get("/auth/me");
         if (res.data?.user) {
-          setUser(res.data.user);
-          localStorage.setItem("user", JSON.stringify(res.data.user));
+          const normalizedUser = mapUser(res.data.user);
+          setUser(normalizedUser);
+          localStorage.setItem("user", JSON.stringify(normalizedUser));
         } else {
           setUser(null);
           localStorage.removeItem("user");
@@ -56,13 +65,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
       }
 
+      // FIX 1: Normalize data before saving (Solves the "UUID in Header" bug)
       const { user } = response.data;
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-      return { user };
-    } catch (error) {
+      const normalizedUser = mapUser(user);
+
+      setUser(normalizedUser);
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
+
+      return { user: normalizedUser };
+    } catch (error: any) {
       console.error("Login failed:", error);
-      throw error;
+
+      // FIX 2: Proper Error Handling (Solves the "Status Code 400" message)
+      if (axios.isAxiosError(error) && error.response) {
+        // Extract the actual message from backend (e.g., "Invalid credentials")
+        const serverMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          "Login failed. Please check your credentials.";
+
+        // Throw a clean Error object with just the string
+        throw new Error(serverMessage);
+      }
+
+      // Fallback for network errors
+      throw new Error("Connection failed. Please check your internet.");
     }
   };
 
