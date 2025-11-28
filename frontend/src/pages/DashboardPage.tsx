@@ -1,7 +1,7 @@
 // /frontend/src/pages/DashboardPage.tsx
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
-import { useAuth } from "../context/useAuth"; // ✅ updated import path if we split context
+import { useAuth } from "../context/useAuth";
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();

@@ -1,7 +1,5 @@
 // /frontend/src/pages/StudentDashboard.tsx
 
-// /frontend/src/pages/StudentDashboard.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Alert, CircularProgress, Paper, Card, CardContent, CardActions } from '@mui/material';
@@ -72,22 +70,35 @@ const StudentDashboard: React.FC = () => {
             {exams.length > 0 ? (
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 3 }}>
                     {exams.map((exam) => (
-                        <Card key={exam.id} sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Card key={exam.id} className="exam-card">
                             <CardContent sx={{ flexGrow: 1 }}>
-                                <Typography variant="h5" component="div" gutterBottom>{exam.title}</Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 1 }}>
-                                    <TimerIcon sx={{ mr: 1 }} />
+                                <Typography variant="h5" component="div" gutterBottom sx={{ fontWeight: 'bold', color: '#1E1E49' }}>{exam.title}</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 2 }}>
+                                    <TimerIcon sx={{ mr: 1, color: '#3C4DCE' }} />
                                     <Typography variant="body2">{exam.duration_minutes} minutes</Typography>
                                 </Box>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                     <strong>Total Questions:</strong> {exam.total_questions}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     <strong>Types:</strong> {exam.question_types.length > 0 ? exam.question_types.join(', ') : 'N/A'}
                                 </Typography>
                             </CardContent>
-                            <CardActions>
-                                <Button size="large" variant="contained" fullWidth onClick={() => navigate(`/student/exam/${exam.id}`)}>
+                            <CardActions sx={{ p: 2, mt: 'auto' }}>
+                                <Button
+                                    size="large"
+                                    variant="contained"
+                                    fullWidth
+                                    onClick={() => navigate(`/student/exam/${exam.id}`)}
+                                    sx={{
+                                        bgcolor: '#2C31B9', // Dark Royal Blue
+                                        '&:hover': { bgcolor: '#1a1f91' },
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderRadius: '8px',
+                                        py: 1.5
+                                    }}
+                                >
                                     Start Exam
                                 </Button>
                             </CardActions>

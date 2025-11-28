@@ -28,6 +28,7 @@ import {
     Divider,
     Switch,
     Tooltip,
+    InputAdornment,
 } from '@mui/material';
 import {
     AddCircleOutline as AddIcon,
@@ -41,6 +42,7 @@ import {
     Close as CloseIcon,
     Description as DescriptionIcon,
     AutoAwesome as AutoAwesomeIcon,
+    Functions as FunctionsIcon,
 } from '@mui/icons-material';
 
 // Import Services
@@ -52,6 +54,8 @@ import {
     updateExamSettings,
 } from '../services/courseAdminService';
 import { generateAiQuestions } from '../services/examService';
+import MathInput from '../components/MathInput';
+import LatexRenderer from '../components/LatexRenderer';
 
 // --- Types ---
 type QuestionType = 'MCQ' | 'MSQ' | 'TRUE_FALSE' | 'FILL_BLANK' | 'ESSAY';
@@ -121,6 +125,11 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
 
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // --- Math Dialog State ---
+    const [mathDialogOpen, setMathDialogOpen] = useState(false);
+    const [mathLatex, setMathLatex] = useState('');
+    const [activeMathField, setActiveMathField] = useState<{ type: 'question' | 'option', index?: number }>({ type: 'question' });
 
     // --- Type Change Handler ---
     const handleTypeChange = (newType: QuestionType) => {
@@ -198,6 +207,40 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         }
     };
 
+    const openMathDialog = (type: 'question' | 'option', index?: number) => {
+        setActiveMathField({ type, index });
+        setMathDialogOpen(true);
+    };
+
+    const handleInsertMath = () => {
+        // Use inline delimiters \( ... \)
+        const formattedLatex = ` \\(${mathLatex}\\) `;
+
+        if (activeMathField.type === 'question') {
+            setQText(prev => prev + formattedLatex);
+        } else if (activeMathField.type === 'option' && activeMathField.index !== undefined) {
+            const newOptions = [...options];
+            newOptions[activeMathField.index].text = (newOptions[activeMathField.index].text || '') + formattedLatex;
+            setOptions(newOptions);
+        }
+
+        // Hide keyboard explicitly
+        if ((window as any).mathVirtualKeyboard) {
+            (window as any).mathVirtualKeyboard.hide();
+        }
+
+        setMathDialogOpen(false);
+        setMathLatex('');
+    };
+
+    const handleCloseMathDialog = () => {
+        // Hide keyboard explicitly
+        if ((window as any).mathVirtualKeyboard) {
+            (window as any).mathVirtualKeyboard.hide();
+        }
+        setMathDialogOpen(false);
+    };
+
     return (
         <Box className="pt-2">
             <FormControl fullWidth margin="normal">
@@ -215,15 +258,54 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 </Select>
             </FormControl>
 
-            <TextField
-                label="Question Text"
-                fullWidth
-                multiline
-                rows={3}
-                margin="normal"
-                value={qText}
-                onChange={(e) => setQText(e.target.value)}
-            />
+            <Box sx={{ position: 'relative' }}>
+                <TextField
+                    label="Question Text"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    margin="normal"
+                    value={qText}
+                    onChange={(e) => setQText(e.target.value)}
+                    helperText="You can insert math equations using the button on the right."
+                    sx={{
+                        '& .MuiInputBase-root': {
+                            paddingRight: '40px', // Make space for the button
+                        }
+                    }}
+                />
+                <Tooltip title="Insert Math Equation">
+                    <IconButton
+                        onClick={() => openMathDialog('question')}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 24, // Adjust based on label height + margin
+                            zIndex: 10,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 1)',
+                            }
+                        }}
+                        color="primary"
+                        size="small"
+                    >
+                        <FunctionsIcon />
+                    </IconButton>
+                </Tooltip>
+            </Box>
+
+            {/* Preview Area */}
+            {qText && (
+                <Box sx={{ mt: 1, mb: 2, p: 2, bgcolor: '#f8fafc', borderRadius: 2, border: '1px dashed #cbd5e1' }}>
+                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 'bold', mb: 1, display: 'block' }}>
+                        PREVIEW:
+                    </Typography>
+                    <Typography variant="body1">
+                        <LatexRenderer text={qText} />
+                    </Typography>
+                </Box>
+            )}
 
             <TextField
                 label="Instructions (Optional)"
@@ -245,38 +327,64 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     </Typography>
 
                     {options.map((opt, idx) => (
-                        <Box key={idx} className="flex items-center gap-2 mb-2">
-                            {qType === 'MSQ' ? (
-                                <Checkbox
-                                    checked={opt.isCorrect}
-                                    onChange={(e) => handleOptionChange(idx, 'isCorrect', e.target.checked)}
-                                    color="success"
-                                />
-                            ) : (
-                                <Radio
-                                    checked={opt.isCorrect}
-                                    onChange={() => handleOptionChange(idx, 'isCorrect', true)}
-                                    color="success"
-                                />
-                            )}
+                        <Box key={idx} className="flex flex-col mb-3">
+                            <Box className="flex items-center gap-2">
+                                {qType === 'MSQ' ? (
+                                    <Checkbox
+                                        checked={opt.isCorrect}
+                                        onChange={(e) => handleOptionChange(idx, 'isCorrect', e.target.checked)}
+                                        color="success"
+                                    />
+                                ) : (
+                                    <Radio
+                                        checked={opt.isCorrect}
+                                        onChange={() => handleOptionChange(idx, 'isCorrect', true)}
+                                        color="success"
+                                    />
+                                )}
 
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder={`Option ${idx + 1}`}
-                                value={opt.text}
-                                onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
-                                disabled={qType === 'TRUE_FALSE'}
-                            />
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder={`Option ${idx + 1}`}
+                                    value={opt.text}
+                                    onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
+                                    disabled={qType === 'TRUE_FALSE'}
+                                    InputProps={{
+                                        endAdornment: qType !== 'TRUE_FALSE' && (
+                                            <InputAdornment position="end">
+                                                <Tooltip title="Insert Math">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => openMathDialog('option', idx)}
+                                                        edge="end"
+                                                    >
+                                                        <FunctionsIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                />
 
-                            {qType !== 'TRUE_FALSE' && (
-                                <IconButton
-                                    onClick={() => removeOption(idx)}
-                                    disabled={options.length <= 2}
-                                    color="error"
-                                >
-                                    <CloseIcon />
-                                </IconButton>
+                                {qType !== 'TRUE_FALSE' && (
+                                    <IconButton
+                                        onClick={() => removeOption(idx)}
+                                        disabled={options.length <= 2}
+                                        color="error"
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                )}
+                            </Box>
+
+                            {/* Option Preview */}
+                            {opt.text && (opt.text.includes('$$') || opt.text.includes('\\(')) && (
+                                <Box sx={{ ml: 5, mt: 0.5 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Preview: <LatexRenderer text={opt.text} />
+                                    </Typography>
+                                </Box>
                             )}
                         </Box>
                     ))}
@@ -324,6 +432,32 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                     {loading ? 'Saving...' : 'Save Question'}
                 </Button>
             </DialogActions>
+
+            {/* Math Input Dialog */}
+            <Dialog
+                open={mathDialogOpen}
+                onClose={handleCloseMathDialog}
+                fullWidth
+                maxWidth="sm"
+                sx={{
+                    '& .MuiDialog-paper': {
+                        position: 'absolute',
+                        top: '40px',
+                        margin: 0
+                    }
+                }}
+            >
+                <DialogTitle>Insert Math Equation</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ mt: 2 }}>
+                        <MathInput value={mathLatex} onChange={setMathLatex} />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseMathDialog}>Cancel</Button>
+                    <Button variant="contained" onClick={handleInsertMath}>Insert</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

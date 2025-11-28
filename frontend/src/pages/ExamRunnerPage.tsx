@@ -10,6 +10,7 @@ import { startOrResumeExam, saveExamProgress, submitExam, getExamInfo } from '..
 import { checkEnrollmentStatus, analyzeImage } from '../services/proctoringService';
 import ProctoringEnrollment from '../components/ProctoringEnrollment';
 import ExamInstructionsDialog from '../components/ExamInstructionsDialog';
+import LatexRenderer from '../components/LatexRenderer';
 
 // Interfaces
 interface Option { text: string; }
@@ -279,7 +280,13 @@ const ExamRunnerPage: React.FC = () => {
                 return (
                     <RadioGroup value={answer || ''} onChange={(e) => handleSelectOption(question.id, e.target.value)}>
                         {question.options?.map((opt, index) => (
-                            <FormControlLabel key={index} value={opt.text} control={<Radio />} label={opt.text} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }} />
+                            <FormControlLabel
+                                key={index}
+                                value={opt.text}
+                                control={<Radio />}
+                                label={<LatexRenderer text={opt.text} />}
+                                sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }}
+                            />
                         ))}
                     </RadioGroup>
                 );
@@ -287,7 +294,12 @@ const ExamRunnerPage: React.FC = () => {
                 return (
                     <FormGroup>
                         {question.options?.map((opt, index) => (
-                            <FormControlLabel key={index} control={<Checkbox checked={Array.isArray(answer) && answer.includes(opt.text)} onChange={(e) => handleMultiSelectOption(question.id, opt.text, e.target.checked)} />} label={opt.text} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }} />
+                            <FormControlLabel
+                                key={index}
+                                control={<Checkbox checked={Array.isArray(answer) && answer.includes(opt.text)} onChange={(e) => handleMultiSelectOption(question.id, opt.text, e.target.checked)} />}
+                                label={<LatexRenderer text={opt.text} />}
+                                sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, ml: 0, width: '100%' }}
+                            />
                         ))}
                     </FormGroup>
                 );
@@ -356,7 +368,9 @@ const ExamRunnerPage: React.FC = () => {
                 <LinearProgress variant="determinate" value={progress} sx={{ mb: 4 }} />
                 <Box>
                     <Typography variant="h6" sx={{ mb: 2 }}>Question {currentQuestionIndex + 1} of {exam.questions.length}</Typography>
-                    <Typography variant="body1" sx={{ mb: 3, minHeight: '60px' }}>{currentQuestion.question_text}</Typography>
+                    <Box sx={{ mb: 3, minHeight: '60px', fontSize: '1.1rem' }}>
+                        <LatexRenderer text={currentQuestion.question_text} />
+                    </Box>
                     {renderQuestionInput(currentQuestion)}
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>

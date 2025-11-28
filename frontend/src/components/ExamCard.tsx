@@ -31,6 +31,7 @@ interface ExamCardProps {
         // Extended properties for stats (to be fetched)
         total_questions?: number;
         question_types?: string[];
+        duration_minutes?: number; // Added this
         time_limit?: number; // in minutes
         stats?: {
             registered?: number;
@@ -74,7 +75,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
     };
 
     const questionTypes = exam.question_types || ['MCQ'];
-    const timeLimit = exam.time_limit || 60;
+    const timeLimit = exam.duration_minutes || exam.time_limit || 60;
     const totalQuestions = exam.total_questions || 0;
 
     return (

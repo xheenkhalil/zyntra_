@@ -334,7 +334,7 @@ const getExamProctoringStats = async (examId: string) => {
         SELECT COUNT(id)
         FROM proctor_flags 
         WHERE submission_id IN (
-            SELECT id FROM exam_submissions WHERE examId = $1
+            SELECT id FROM exam_submissions WHERE exam_id = $1
         );
     `;
     const alertsResult = await pool.query(alertsQuery, [examId]);
@@ -383,22 +383,42 @@ const getProctorAlerts = async (examId: string) => {
 };
 
 const getLiveProctorCandidates = async (examId: string) => {
+    // Optimized query to get the LATEST image and flag for each student
     const candidatesQuery = `
-        SELECT es.id AS submission_id, u.full_name, u.email, u.student_id, 
-               es.warning_count, es.time_remaining_seconds, 
-               pf.image_url AS latest_image_url, pf.type AS latest_flag_type
+        SELECT 
+            es.id AS submission_id, 
+            u.full_name, 
+            u.email, 
+            u.student_id, 
+            es.warning_count, 
+            es.time_remaining_seconds,
+            (
+                SELECT image_url 
+                FROM proctor_flags pf 
+                WHERE pf.submission_id = es.id AND pf.image_url IS NOT NULL
+                ORDER BY pf.created_at DESC 
+                LIMIT 1
+            ) AS latest_image_url,
+            (
+                SELECT type 
+                FROM proctor_flags pf 
+                WHERE pf.submission_id = es.id 
+                ORDER BY pf.created_at DESC 
+                LIMIT 1
+            ) AS latest_flag_type
         FROM exam_submissions es
         JOIN users u ON es.student_id = u.id
-        LEFT JOIN proctor_flags pf ON pf.submission_id = es.id
         WHERE es.exam_id = $1 AND es.status = 'in_progress'
-        GROUP BY es.id, u.id, pf.image_url, pf.type 
         ORDER BY es.warning_count DESC, es.time_remaining_seconds DESC;
     `;
-    const candidatesResult = await pool.query(candidatesQuery, [examId]);
 
-    const uniqueCandidates = Array.from(new Map(candidatesResult.rows.map(item => [item.student_id, item])).values());
-
-    return uniqueCandidates;
+    try {
+        const candidatesResult = await pool.query(candidatesQuery, [examId]);
+        return candidatesResult.rows;
+    } catch (err) {
+        console.error("Error in getLiveProctorCandidates:", err);
+        throw err;
+    }
 };
 
 export const getExamProctoringBatch = async (req: AuthRequest, res: Response) => {
