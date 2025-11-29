@@ -20,21 +20,21 @@ interface QuizOption {
  * Logs an action to the audit_log table.
  */
 const logAudit = async (
-  action: string, 
-  details: string, 
-  userId: string | null | undefined, 
-  organizationId: string | null | undefined
+    action: string,
+    details: string,
+    userId: string | null | undefined,
+    organizationId: string | null | undefined
 ) => {
-  try {
-    const query = `
+    try {
+        const query = `
       INSERT INTO audit_log (action, details, user_id, organization_id)
       VALUES ($1, $2, $3, $4)
     `;
-    // Fire-and-forget
-    pool.query(query, [action, details, userId, organizationId]);
-  } catch (err) {
-    console.error('Failed to write to audit log:', err);
-  }
+        // Fire-and-forget
+        pool.query(query, [action, details, userId, organizationId]);
+    } catch (err) {
+        console.error('Failed to write to audit log:', err);
+    }
 };
 
 
@@ -61,10 +61,10 @@ export const createGuestQuiz = async (req: AuthRequest, res: Response) => {
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_quiz_created',
-          `Created guest quiz: ${newQuiz.title}`,
-          adminUserId,
-          null // Guest quizzes are not tied to an org
+            'guest_quiz_created',
+            `Created guest quiz: ${newQuiz.title}`,
+            adminUserId,
+            null // Guest quizzes are not tied to an org
         );
         // -----------------
 
@@ -86,7 +86,7 @@ export const getAllGuestQuizzes = async (req: AuthRequest, res: Response) => {
                 gq.status,
                 gq.created_at,
                 gq.updated_at,
-                COALESCE(gq.average_rating, 0.0) AS average_rating, 
+                COALESCE(ROUND(AVG(gs.rating), 1), 0.0) AS average_rating, 
                 COALESCE(CAST(COUNT(DISTINCT gs.id) AS INTEGER), 0) AS participant_count
             FROM guest_quizzes gq
             LEFT JOIN guest_submissions gs ON gq.id = gs.quiz_id
@@ -96,8 +96,7 @@ export const getAllGuestQuizzes = async (req: AuthRequest, res: Response) => {
                 gq.category, 
                 gq.status, 
                 gq.created_at, 
-                gq.updated_at, 
-                gq.average_rating
+                gq.updated_at
             ORDER BY gq.created_at DESC;
         `;
         const result = await pool.query(query);
@@ -118,7 +117,7 @@ export const getGuestQuizById = async (req: AuthRequest, res: Response) => {
         }
 
         const questionsResult = await pool.query('SELECT id, question_text, options FROM guest_questions WHERE quiz_id = $1 ORDER BY created_at', [quizId]);
-        
+
         res.status(200).json({
             ...quizResult.rows[0],
             questions: questionsResult.rows
@@ -146,10 +145,10 @@ export const updateGuestQuiz = async (req: AuthRequest, res: Response) => {
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_quiz_updated',
-          `Updated guest quiz: ${updatedQuiz.title} (Status: ${updatedQuiz.status})`,
-          adminUserId,
-          null
+            'guest_quiz_updated',
+            `Updated guest quiz: ${updatedQuiz.title} (Status: ${updatedQuiz.status})`,
+            adminUserId,
+            null
         );
         // -----------------
 
@@ -172,16 +171,16 @@ export const deleteGuestQuiz = async (req: AuthRequest, res: Response) => {
         // 1. Get quiz title for logging before deleting
         const titleResult = await client.query('SELECT title FROM guest_quizzes WHERE id = $1', [quizId]);
         if (titleResult.rows.length === 0) {
-          throw new Error('Quiz not found');
+            throw new Error('Quiz not found');
         }
         const quizTitle = titleResult.rows[0].title;
 
         // 2. Delete all questions associated with the quiz
         await client.query('DELETE FROM guest_questions WHERE quiz_id = $1', [quizId]);
-        
+
         // 3. Delete all submissions associated with the quiz
         await client.query('DELETE FROM guest_submissions WHERE quiz_id = $1', [quizId]);
-        
+
         // 4. Finally, delete the quiz itself
         const result = await client.query('DELETE FROM guest_quizzes WHERE id = $1', [quizId]);
 
@@ -192,17 +191,17 @@ export const deleteGuestQuiz = async (req: AuthRequest, res: Response) => {
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_quiz_deleted',
-          `Deleted guest quiz: ${quizTitle} (ID: ${quizId})`,
-          adminUserId,
-          null
+            'guest_quiz_deleted',
+            `Deleted guest quiz: ${quizTitle} (ID: ${quizId})`,
+            adminUserId,
+            null
         );
         // -----------------
-        
+
         await client.query('COMMIT');
-        
+
         res.status(200).json({ message: 'Guest quiz and all associated questions/submissions deleted successfully.' });
-    
+
     } catch (error: any) {
         await client.query('ROLLBACK');
         console.error("Error deleting guest quiz:", error);
@@ -239,10 +238,10 @@ export const addGuestQuizQuestion = async (req: AuthRequest, res: Response) => {
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_question_created',
-          `New question added to quiz ${quizId}: ${newQuestion.question_text.substring(0, 50)}...`,
-          adminUserId,
-          null
+            'guest_question_created',
+            `New question added to quiz ${quizId}: ${newQuestion.question_text.substring(0, 50)}...`,
+            adminUserId,
+            null
         );
         // -----------------
 
@@ -277,10 +276,10 @@ export const updateGuestQuizQuestion = async (req: AuthRequest, res: Response) =
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_question_updated',
-          `Updated question ${questionId}`,
-          adminUserId,
-          null
+            'guest_question_updated',
+            `Updated question ${questionId}`,
+            adminUserId,
+            null
         );
         // -----------------
 
@@ -303,10 +302,10 @@ export const deleteGuestQuizQuestion = async (req: AuthRequest, res: Response) =
 
         // --- AUDIT LOG ---
         logAudit(
-          'guest_question_deleted',
-          `Deleted question: ${result.rows[0].question_text.substring(0, 50)}... from quiz ${result.rows[0].quiz_id}`,
-          adminUserId,
-          null
+            'guest_question_deleted',
+            `Deleted question: ${result.rows[0].question_text.substring(0, 50)}... from quiz ${result.rows[0].quiz_id}`,
+            adminUserId,
+            null
         );
         // -----------------
 

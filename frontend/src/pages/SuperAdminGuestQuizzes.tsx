@@ -39,7 +39,7 @@ const SuperAdminGuestQuizzes: React.FC = () => {
   const [quizzes, setQuizzes] = useState<GuestQuiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // --- NEW: State for Menus and Dialogs ---
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedQuiz, setSelectedQuiz] = useState<GuestQuiz | null>(null);
@@ -54,7 +54,6 @@ const SuperAdminGuestQuizzes: React.FC = () => {
       const data = await getAllGuestQuizzes();
       setQuizzes(data);
     } catch (err: unknown) {
-      // (Your existing error handling is good)
       setError('Failed to fetch guest quizzes.');
       console.error(err);
     } finally {
@@ -75,7 +74,12 @@ const SuperAdminGuestQuizzes: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedQuiz(null);
+    // Do NOT clear selectedQuiz here, as it is needed for the dialogs
+  };
+
+  const handleDialogClose = () => {
+    setConfirmOpen(false);
+    setSelectedQuiz(null); // Clear it when dialog closes
   };
 
   // --- Navigation Handlers ---
@@ -104,7 +108,7 @@ const SuperAdminGuestQuizzes: React.FC = () => {
   };
 
   const handleCloseDeleteConfirm = () => {
-    setConfirmOpen(false);
+    handleDialogClose();
   };
 
   const handleDeleteQuiz = async () => {
@@ -116,12 +120,35 @@ const SuperAdminGuestQuizzes: React.FC = () => {
       setSnackbar({ open: true, message: 'Quiz deleted successfully.' });
       await fetchQuizzes(); // Refresh the list
     } catch (err: unknown) {
-      // (Your existing error handling is good)
       setSnackbar({ open: true, message: 'Failed to delete quiz.' });
       console.error(err);
     } finally {
       setDeleteLoading(false);
       handleCloseDeleteConfirm();
+    }
+  };
+
+  // --- NEW: Handle Publish/Unpublish ---
+  const handleToggleStatus = async () => {
+    if (!selectedQuiz) return;
+
+    const newStatus = selectedQuiz.status === 'draft' ? 'published' : 'draft';
+    try {
+      // We need to pass title and category as well, so we use the existing values
+      await import('../services/superAdminGuestQuizService').then(mod =>
+        mod.updateGuestQuiz(selectedQuiz.id, {
+          title: selectedQuiz.title,
+          category: selectedQuiz.category,
+          status: newStatus
+        })
+      );
+      setSnackbar({ open: true, message: `Quiz ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.` });
+      await fetchQuizzes();
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: 'Failed to update quiz status.' });
+    } finally {
+      handleMenuClose();
     }
   };
 
@@ -197,8 +224,8 @@ const SuperAdminGuestQuizzes: React.FC = () => {
                     </TableCell>
                     <TableCell align="right">{quiz.participant_count}</TableCell>
                     <TableCell align="right">
-                      {typeof quiz.average_rating === 'number'
-                        ? quiz.average_rating.toFixed(1)
+                      {quiz.average_rating !== null && quiz.average_rating !== undefined
+                        ? Number(quiz.average_rating).toFixed(1)
                         : 'N/A'}
                     </TableCell>
                     {/* --- UI UPGRADE: "..." Menu for Actions --- */}
@@ -228,6 +255,17 @@ const SuperAdminGuestQuizzes: React.FC = () => {
         <MenuItem onClick={handleManageQuestions}>
           <VisibilityIcon className="mr-3" fontSize="small" />
           Manage Questions
+        </MenuItem>
+        <MenuItem onClick={handleToggleStatus}>
+          {selectedQuiz?.status === 'draft' ? (
+            <>
+              <span className="mr-3 text-green-600 font-bold">↑</span> Publish Quiz
+            </>
+          ) : (
+            <>
+              <span className="mr-3 text-yellow-600 font-bold">↓</span> Unpublish Quiz
+            </>
+          )}
         </MenuItem>
         <MenuItem onClick={handleOpenDeleteConfirm} sx={{ color: 'error.main' }}>
           <DeleteIcon className="mr-3" fontSize="small" />

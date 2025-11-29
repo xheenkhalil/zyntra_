@@ -1,9 +1,12 @@
 // /frontend/src/services/superAdminGuestQuizService.ts
 
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
 
-const GUEST_QUIZ_API_URL = `${API_BASE_URL}/superadmin/guest-quizzes`;
+// Use the same environment variable as other services
+const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api',
+    withCredentials: true,
+});
 
 // Helper interface for quiz data structure expected from backend
 export interface GuestQuiz {
@@ -12,7 +15,7 @@ export interface GuestQuiz {
     category: string;
     status: 'draft' | 'published';
     participant_count: number;
-    average_rating: number | null; 
+    average_rating: number | null;
     updated_at: string;
 }
 
@@ -27,39 +30,38 @@ export interface GuestQuestion {
 }
 
 // Full Quiz details for editing (includes questions and correct answers)
-export interface FullGuestQuizDetails extends GuestQuiz { 
+export interface FullGuestQuizDetails extends GuestQuiz {
     questions: GuestQuestion[];
 }
 
 // --- API Calls for Guest Quiz Management ---
 
 export const getAllGuestQuizzes = async (): Promise<GuestQuiz[]> => {
-    const response = await axios.get(GUEST_QUIZ_API_URL, { withCredentials: true });
+    const response = await apiClient.get('/superadmin/guest-quizzes');
     return response.data;
 };
 
 export const getGuestQuizById = async (quizId: string): Promise<FullGuestQuizDetails> => {
-    const response = await axios.get(`${GUEST_QUIZ_API_URL}/${quizId}`, { withCredentials: true });
+    const response = await apiClient.get(`/superadmin/guest-quizzes/${quizId}`);
     return response.data;
 };
 
 export const createGuestQuiz = async (title: string, category: string): Promise<GuestQuiz> => {
-    // Backend expects { title, category }
-    const response = await axios.post(GUEST_QUIZ_API_URL, { title, category }, { withCredentials: true });
+    const response = await apiClient.post('/superadmin/guest-quizzes', { title, category });
     return response.data;
 };
 
 // Update quiz metadata (title, category, status)
 export const updateGuestQuiz = async (
-    quizId: string, 
+    quizId: string,
     data: { title: string; category: string; status: 'draft' | 'published' }
 ): Promise<GuestQuiz> => {
-    const response = await axios.put(`${GUEST_QUIZ_API_URL}/${quizId}`, data, { withCredentials: true });
+    const response = await apiClient.put(`/superadmin/guest-quizzes/${quizId}`, data);
     return response.data;
 };
 
 export const deleteGuestQuiz = async (quizId: string): Promise<{ message: string }> => {
-    const response = await axios.delete(`${GUEST_QUIZ_API_URL}/${quizId}`, { withCredentials: true });
+    const response = await apiClient.delete(`/superadmin/guest-quizzes/${quizId}`);
     return response.data;
 };
 
@@ -69,7 +71,7 @@ interface AddQuestionPayload {
     options: { text: string; isCorrect: boolean }[];
 }
 export const addGuestQuizQuestion = async (quizId: string, questionData: AddQuestionPayload): Promise<GuestQuestion> => {
-    const response = await axios.post(`${GUEST_QUIZ_API_URL}/${quizId}/questions`, questionData, { withCredentials: true });
+    const response = await apiClient.post(`/superadmin/guest-quizzes/${quizId}/questions`, questionData);
     return response.data;
 };
 // Update question text and options
@@ -80,11 +82,11 @@ interface UpdateQuestionPayload {
 }
 export const updateGuestQuizQuestion = async (questionId: string, questionData: UpdateQuestionPayload): Promise<GuestQuestion> => {
 
-    const response = await axios.put(`${GUEST_QUIZ_API_URL}/questions/${questionId}`, questionData, { withCredentials: true });
+    const response = await apiClient.put(`/superadmin/guest-quizzes/questions/${questionId}`, questionData);
     return response.data;
 };
 
 export const deleteGuestQuizQuestion = async (questionId: string): Promise<{ message: string }> => {
-    const response = await axios.delete(`${GUEST_QUIZ_API_URL}/questions/${questionId}`, { withCredentials: true });
+    const response = await apiClient.delete(`/superadmin/guest-quizzes/questions/${questionId}`);
     return response.data;
 };
