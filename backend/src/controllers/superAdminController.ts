@@ -1,11 +1,10 @@
-// /backend/src/controllers/superAdminController.ts
-
 import { Request, Response } from 'express';
 import pool from '../services/db';
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import { AuthRequest } from '../middleware/authMiddleware';
+import * as emailService from '../services/emailService';
 
 /**
  * =====================================
@@ -170,7 +169,7 @@ export const createOrganization = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
       'INSERT INTO organizations (name, status) VALUES ($1, $2) RETURNING *',
-      [name, 'active']
+      [name, 'pending']
     );
     const newOrg = result.rows[0];
 
@@ -258,22 +257,34 @@ export const deleteOrganization = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const adminUserId = req.user?.userId;
 
+  const client = await pool.connect();
+
   try {
-    // Check if users exist in this org
-    const userCheck = await pool.query('SELECT COUNT(*) FROM users WHERE organization_id = $1', [id]);
-    if (parseInt(userCheck.rows[0].count) > 0) {
-      return res.status(400).json({ message: 'Cannot delete organization with existing users. Archive it instead.' });
+    await client.query('BEGIN');
+
+    // 1. Delete all users associated with this organization
+    await client.query('DELETE FROM users WHERE organization_id = $1', [id]);
+
+    // 2. Delete the organization
+    const result = await client.query('DELETE FROM organizations WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Organization not found' });
     }
 
-    const result = await pool.query('DELETE FROM organizations WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Organization not found' });
+    await client.query('COMMIT');
 
-    await logAudit('delete_organization', `Deleted organization: ${result.rows[0].name}`, adminUserId, id);
+    // Log the action (using the main pool, or we could use client)
+    await logAudit('delete_organization', `Deleted organization: ${result.rows[0].name} and all associated users`, adminUserId, null);
 
-    res.json({ message: 'Organization deleted successfully' });
+    res.json({ message: 'Organization and all associated users deleted successfully' });
   } catch (error: any) {
+    await client.query('ROLLBACK');
     console.error('Error deleting organization:', error);
     res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
   }
 };
 
@@ -281,49 +292,61 @@ export const createCentralAdmin = async (req: AuthRequest, res: Response) => {
   const { fullName, email, username, organizationId } = req.body;
   const adminUserId = req.user?.userId;
 
+  console.log('START: createCentralAdmin', { fullName, email, username, organizationId });
+
   // Validate inputs
   if (!fullName || !email || !username || !organizationId) {
+    console.log('FAIL: Missing fields');
     return res.status(400).json({ message: 'All fields (fullName, email, username, organizationId) are required.' });
   }
 
   try {
     // 1. Check if user exists
+    console.log('STEP 1: Checking user existence...');
     const userCheck = await pool.query('SELECT id FROM users WHERE email = $1 OR username = $2', [email, username]);
     if (userCheck.rows.length > 0) {
+      console.log('FAIL: User already exists');
       return res.status(400).json({ message: 'User with this email or username already exists' });
     }
 
     // 2. Generate Setup Token (instead of temp password)
-    const setupToken = crypto.randomBytes(32).toString('hex');
+    console.log('STEP 2: Generating token...');
+    const setupToken = crypto.randomUUID();
     const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // 3. Create user with 'pending_setup' status
+    console.log('STEP 3: Inserting user into DB...');
     const query = `
       INSERT INTO users (full_name, email, username, role, organization_id, status, account_setup_token, account_setup_expires)
-      VALUES ($1, $2, $3, 'clientadmin', $4, 'pending_setup', $5, $6)
+      VALUES ($1, $2, $3, 'centraladmin', $4, 'pending_setup', $5, $6)
       RETURNING id, full_name, email, role, organization_id;
     `;
     const result = await pool.query(query, [fullName, email, username, organizationId, setupToken, tokenExpires]);
     const newUser = result.rows[0];
+    console.log('SUCCESS: User inserted', newUser.id);
 
     await logAudit('create_central_admin', `Created central admin: ${fullName} for org ${organizationId}`, adminUserId, organizationId);
 
     // 4. Send Invite Email (using Resend)
     const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
 
-    // NOTE: In a real app, you would use the Resend SDK here.
-    // For now, we will log it and return it in the response for testing.
-    console.log(`[EMAIL MOCK] Sending invite to ${email} with link: ${inviteLink}`);
+    console.log('STEP 4: Sending invite email to:', email);
+    try {
+      await emailService.sendAdminInviteEmail(email, fullName, inviteLink);
+      console.log('SUCCESS: Email sent (or attempted)');
+    } catch (emailErr) {
+      console.error('WARNING: Email sending failed, but continuing:', emailErr);
+    }
 
+    console.log('STEP 5: Sending response');
     res.status(201).json({
       message: 'Central Admin created and invite sent.',
       user: newUser,
-      // Returning link for testing purposes since we might not have real email sending configured
-      debugInviteLink: inviteLink
+      setupLink: inviteLink
     });
   } catch (error: any) {
-    console.error('Error creating central admin:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('CRITICAL ERROR in createCentralAdmin:', error);
+    res.status(500).json({ message: 'Internal server error: ' + error.message, error: error });
   }
 };
 
@@ -331,26 +354,23 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
   const { userId } = req.body;
 
   try {
-    // 1. Get user
     const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     if (userResult.rows.length === 0) return res.status(404).json({ message: 'User not found' });
     const user = userResult.rows[0];
 
-    // 2. Generate new token
-    const setupToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const setupToken = crypto.randomUUID();
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // 3. Update user
     await pool.query(
       'UPDATE users SET account_setup_token = $1, account_setup_expires = $2, status = $3 WHERE id = $4',
       [setupToken, tokenExpires, 'pending_setup', userId]
     );
 
-    // 4. Send Email
     const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
-    console.log(`[EMAIL MOCK] Resending invite to ${user.email} with link: ${inviteLink}`);
 
-    res.json({ message: 'Invite email resent successfully', debugInviteLink: inviteLink });
+    await emailService.sendAdminInviteEmail(user.email, user.full_name, inviteLink);
+
+    res.json({ message: 'Invite email resent successfully', setupLink: inviteLink });
   } catch (error: any) {
     console.error('Error sending invite email:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -494,7 +514,7 @@ export const updateUserRole = async (req: AuthRequest, res: Response) => {
   const { role } = req.body;
   const adminUserId = req.user?.userId;
 
-  const validRoles = ['student', 'teacher', 'clientadmin', 'superadmin'];
+  const validRoles = ['student', 'teacher', 'centraladmin', 'superadmin'];
   if (!role || !validRoles.includes(role)) {
     return res.status(400).json({ message: 'Invalid role provided.' });
   }

@@ -26,13 +26,11 @@ import {
   Snackbar,
   Container,
 } from '@mui/material';
-// --- FIX: Added all missing MUI Icon imports ---
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EmailIcon from '@mui/icons-material/Email';
 
-// --- FIX: Added all missing service function imports ---
 import {
   getOrganizations,
   createOrganization,
@@ -43,9 +41,6 @@ import {
   createCentralAdmin,
   sendInviteEmail,
 } from '../services/superAdminService';
-
-// --- FIX: Removed unused import ---
-// import { useAuth } from '../context/useAuth'; 
 
 // ========================
 // INTERFACES
@@ -62,12 +57,8 @@ interface Organization {
 // COMPONENT
 // ========================
 const SuperAdminOrganizations: React.FC = () => {
-  // --- FIX: Removed unused 'user' variable ---
-  // const { user } = useAuth(); 
-
   // === State Definitions ===
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  // ... (rest of state definitions are unchanged)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
@@ -99,10 +90,11 @@ const SuperAdminOrganizations: React.FC = () => {
 
   // for email sending
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false); // Added loading state
   const [newlyCreatedAdminId, setNewlyCreatedAdminId] = useState<string | null>(
     null
   );
-  
+
   // ========================
   // FETCH ORGANIZATIONS
   // ========================
@@ -110,7 +102,6 @@ const SuperAdminOrganizations: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      // This function is now correctly imported
       const data = await getOrganizations();
       setOrganizations(data || []);
     } catch (err: unknown) {
@@ -186,9 +177,9 @@ const SuperAdminOrganizations: React.FC = () => {
     if (!newOrgName.trim())
       return setDialogError('Organization name is required.');
     try {
-      // This function is now correctly imported
       const data = await createOrganization(newOrgName.trim());
-      setNewlyCreatedOrg(data.organization);
+      // FIX: Backend returns the org object directly, not wrapped in 'organization'
+      setNewlyCreatedOrg(data);
       setModalStep(2);
     } catch (err: unknown) {
       interface AxiosError {
@@ -221,8 +212,8 @@ const SuperAdminOrganizations: React.FC = () => {
       ...centralAdminForm,
       organizationId: newlyCreatedOrg.id,
     };
+    setIsCreatingAdmin(true); // Start loading
     try {
-      // This function is now correctly imported
       const data = await createCentralAdmin(adminData);
       setSetupLink(data.setupLink);
       setNewlyCreatedAdminId(data.user.id);
@@ -243,6 +234,8 @@ const SuperAdminOrganizations: React.FC = () => {
       } else {
         setDialogError('Failed to create central admin.');
       }
+    } finally {
+      setIsCreatingAdmin(false); // Stop loading
     }
   };
 
@@ -250,7 +243,6 @@ const SuperAdminOrganizations: React.FC = () => {
     if (!newlyCreatedAdminId) return;
     setIsSendingEmail(true);
     try {
-      // This function is now correctly imported
       const data = await sendInviteEmail(newlyCreatedAdminId);
       setSnackbar({ open: true, message: data.message });
     } catch (err: unknown) {
@@ -281,7 +273,6 @@ const SuperAdminOrganizations: React.FC = () => {
     if (!selectedOrg || !editedName.trim()) return;
     setDialogError('');
     try {
-      // This function is now correctly imported
       await updateOrganization(selectedOrg.id, editedName.trim());
       setEditOpen(false);
       setSnackbar({ open: true, message: 'Organization updated successfully!' });
@@ -310,13 +301,10 @@ const SuperAdminOrganizations: React.FC = () => {
     try {
       let res;
       if (actionToConfirm === 'archive') {
-        // This function is now correctly imported
         res = await archiveOrganization(selectedOrg.id);
       } else if (actionToConfirm === 'unarchive') {
-        // This function is now correctly imported
         res = await unarchiveOrganization(selectedOrg.id);
       } else if (actionToConfirm === 'delete') {
-        // This function is now correctly imported
         res = await deleteOrganization(selectedOrg.id);
       }
       setSnackbar({
@@ -373,19 +361,18 @@ const SuperAdminOrganizations: React.FC = () => {
         <Typography variant="h5" className="font-bold text-gray-900">
           Organization Management
         </Typography>
-        {/* --- STYLING FIX: This button now matches the new design --- */}
         <Button
-          color="inherit" // Stop MUI from overriding color
+          color="inherit"
           onClick={handleOpenCreateModal}
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          startIcon={<AddIcon />} // This icon is now imported
+          startIcon={<AddIcon />}
           sx={{ border: 'none' }}
         >
           Create Organization
         </Button>
       </Box>
 
-      {/* --- STYLING FIX: Table is wrapped in the new Paper style --- */}
+      {/* --- Table --- */}
       <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
         <TableContainer>
           <Table>
@@ -444,7 +431,7 @@ const SuperAdminOrganizations: React.FC = () => {
         </TableContainer>
       </Paper>
 
-      {/* --- DIALOGS AND MENUS (Unchanged, they are functional) --- */}
+      {/* --- DIALOGS AND MENUS --- */}
 
       {/* Menu */}
       <Menu
@@ -633,8 +620,13 @@ const SuperAdminOrganizations: React.FC = () => {
             </Button>
           )}
           {modalStep === 2 && (
-            <Button onClick={handleCreateCentralAdmin} variant="contained">
-              Create Admin & Generate Link
+            <Button
+              onClick={handleCreateCentralAdmin}
+              variant="contained"
+              disabled={isCreatingAdmin}
+              startIcon={isCreatingAdmin ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {isCreatingAdmin ? 'Creating...' : 'Create Admin & Generate Link'}
             </Button>
           )}
           {modalStep === 3 && (
@@ -642,7 +634,7 @@ const SuperAdminOrganizations: React.FC = () => {
               <Button
                 onClick={handleCopyLink}
                 variant="outlined"
-                startIcon={<ContentCopyIcon />} // This icon is now imported
+                startIcon={<ContentCopyIcon />}
               >
                 Copy Link
               </Button>
@@ -653,7 +645,7 @@ const SuperAdminOrganizations: React.FC = () => {
                   isSendingEmail ? (
                     <CircularProgress size={20} />
                   ) : (
-                    <EmailIcon /> // This icon is now imported
+                    <EmailIcon />
                   )
                 }
                 disabled={isSendingEmail}

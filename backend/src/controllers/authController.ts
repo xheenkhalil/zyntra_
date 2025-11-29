@@ -137,13 +137,22 @@ export const setupAccount = async (req: Request, res: Response) => {
                 status = 'active',
                 updated_at = NOW()
             WHERE id = $2
-            RETURNING id, full_name, email, role, status;
+            RETURNING id, full_name, email, role, status, organization_id;
         `;
-        const updatedUser = await pool.query(updateQuery, [passwordHash, user.id]);
+        const updatedUserResult = await pool.query(updateQuery, [passwordHash, user.id]);
+        const updatedUser = updatedUserResult.rows[0];
+
+        // If the user is a central admin, activate their organization
+        if (updatedUser.role === 'centraladmin' && updatedUser.organization_id) {
+            await pool.query(
+                "UPDATE organizations SET status = 'active', updated_at = NOW() WHERE id = $1",
+                [updatedUser.organization_id]
+            );
+        }
 
         res.status(200).json({
             message: 'Account setup successful. You can now log in.',
-            user: updatedUser.rows[0],
+            user: updatedUser,
         });
     } catch (error) {
         console.error('Account setup error:', error);

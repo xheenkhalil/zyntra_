@@ -20,6 +20,7 @@ const SetupAccountPage: React.FC = () => {
     const passwordRules = {
         length: password.length >= 8,
         uppercase: /[A-Z]/.test(password),
+        
         lowercase: /[a-z]/.test(password),
         number: /\d/.test(password),
         special: /[@$!%*?&]/.test(password),

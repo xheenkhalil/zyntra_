@@ -53,7 +53,7 @@ interface User {
   id: string;
   full_name: string;
   email: string;
-  role: 'student' | 'teacher' | 'clientadmin' | 'superadmin';
+  role: 'student' | 'teacher' | 'centraladmin' | 'superadmin';
   status: 'active' | 'archived' | 'pending_setup';
   created_at: string;
   organization_name: string;
@@ -91,7 +91,7 @@ const SuperAdminUsers: React.FC = () => {
     totalUsers: 0,
     limit: 10,
   });
-  
+
   // Debounce the search term to avoid spamming the API
   const debouncedSearch = useDebounce(filters.search, 500);
 
@@ -117,7 +117,7 @@ const SuperAdminUsers: React.FC = () => {
       if (currentFilters.role !== 'all') apiFilters.role = currentFilters.role;
 
       const data = await getAllUsers(apiFilters);
-      
+
       setUsers(data.users || []);
       setPagination({
         currentPage: data.pagination.currentPage,
@@ -317,7 +317,7 @@ const SuperAdminUsers: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          
+
           {/* --- Pagination --- */}
           <TablePagination
             rowsPerPageOptions={[10, 25, 50]}
@@ -364,7 +364,7 @@ const SuperAdminUsers: React.FC = () => {
             >
               <MenuItem value="student">Student</MenuItem>
               <MenuItem value="teacher">Teacher</MenuItem>
-              <MenuItem value="clientadmin">Client Admin</MenuItem>
+              <MenuItem value="centraladmin">Central Admin</MenuItem>
               <MenuItem value="superadmin">Super Admin</MenuItem>
             </Select>
           </FormControl>

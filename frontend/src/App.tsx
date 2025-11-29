@@ -7,7 +7,6 @@ import './index.css';
 // Import Layouts
 import CourseAdminLayout from './layouts/CourseAdminLayout';
 import StudentLayout from './layouts/StudentLayout';
-// --- FIX: Corrected import path ---
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 // Import Pages (ALL DIRECTLY FROM ./pages/)
@@ -25,7 +24,6 @@ import SuperAdminGuestQuizzes from './pages/SuperAdminGuestQuizzes';
 import SuperAdminCreateGuestQuiz from './pages/SuperAdminCreateGuestQuiz';
 import SuperAdminEditGuestQuiz from './pages/SuperAdminEditGuestQuiz';
 import SuperAdminManageQuizQuestions from './pages/SuperAdminManageQuizQuestions';
-// --- NEW: Added imports for the new pages ---
 
 import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminOrganizations from './pages/SuperAdminOrganizations';
@@ -105,7 +103,7 @@ function App() {
                         </Route>
 
                         {/* --- Protected Central Admin Routes --- */}
-                        <Route element={<ProtectedRoute allowedRoles={['clientadmin']} />}>
+                        <Route element={<ProtectedRoute allowedRoles={['centraladmin']} />}>
                             <Route path="/centraladmin" element={<CentralAdminDashboard />} />
                         </Route>
 
