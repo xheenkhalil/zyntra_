@@ -10,7 +10,7 @@ const encryptionService_1 = require("../services/encryptionService");
 // Create Exam
 // ---------------------------------------------------------
 const createExam = async (req, res) => {
-    const { title } = req.body;
+    const { title, instructions, duration_minutes, is_proctored } = req.body;
     const courseAdminId = req.user?.userId;
     let organizationId = req.user?.organizationId;
     if (!title) {
@@ -25,12 +25,19 @@ const createExam = async (req, res) => {
             }
         }
         const query = `
-            INSERT INTO exams (title, course_admin_id, organization_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO exams (title, instructions, duration_minutes, is_proctored, course_admin_id, organization_id)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *;
         `;
         // Ensure organizationId is null if undefined
-        const newExam = await db_1.default.query(query, [title, courseAdminId, organizationId || null]);
+        const newExam = await db_1.default.query(query, [
+            title,
+            instructions || null,
+            duration_minutes || 60,
+            is_proctored || false,
+            courseAdminId,
+            organizationId || null
+        ]);
         res.status(201).json(newExam.rows[0]);
     }
     catch (error) {
@@ -103,9 +110,16 @@ const getExamById = async (req, res) => {
             return res.status(404).json({ message: 'Exam not found or you do not have permission to view it.' });
         }
         const questionsResult = await db_1.default.query('SELECT * FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
+        // Transform questions to include correct_answer for FILL_BLANK
+        const questions = questionsResult.rows.map(q => {
+            if (q.question_type === 'FILL_BLANK' && q.options && q.options.length > 0) {
+                return { ...q, correct_answer: q.options[0].text };
+            }
+            return q;
+        });
         const examData = {
             ...examResult.rows[0],
-            questions: questionsResult.rows || [],
+            questions: questions || [],
         };
         res.status(200).json(examData);
     }
@@ -120,15 +134,33 @@ exports.getExamById = getExamById;
 // ---------------------------------------------------------
 const addQuestionToExam = async (req, res) => {
     const { examId } = req.params;
-    const { questionText, options, questionType } = req.body;
+    const { questionText, options, questionType, correctAnswer } = req.body;
     const courseAdminId = req.user?.userId;
-    if (!questionText || !options || !Array.isArray(options) || options.length === 0) {
-        return res.status(400).json({ message: 'Question text and an array of options are required.' });
-    }
-    if (!options.some((opt) => opt.isCorrect === true)) {
-        return res.status(400).json({ message: 'At least one option must be marked as correct.' });
+    if (!questionText) {
+        return res.status(400).json({ message: 'Question text is required.' });
     }
     const type = questionType || 'MCQ';
+    let finalOptions = options;
+    // Type-specific validation and data preparation
+    if (type === 'MCQ' || type === 'MSQ' || type === 'TRUE_FALSE') {
+        if (!options || !Array.isArray(options) || options.length < 2) {
+            return res.status(400).json({ message: 'At least two options are required for this question type.' });
+        }
+        if (!options.some((opt) => opt.isCorrect === true)) {
+            return res.status(400).json({ message: 'At least one option must be marked as correct.' });
+        }
+    }
+    else if (type === 'FILL_BLANK') {
+        if (!correctAnswer) {
+            return res.status(400).json({ message: 'Correct answer is required for Fill in the Blank.' });
+        }
+        // Store correct answer as a single option
+        finalOptions = [{ text: correctAnswer, isCorrect: true }];
+    }
+    else if (type === 'ESSAY') {
+        // Essay questions don't strictly need options
+        finalOptions = [];
+    }
     try {
         const examCheck = await db_1.default.query('SELECT id FROM exams WHERE id = $1 AND course_admin_id = $2', [examId, courseAdminId]);
         if (examCheck.rows.length === 0) {
@@ -138,9 +170,9 @@ const addQuestionToExam = async (req, res) => {
         const questionData = {
             questionText,
             questionType: type,
-            options,
+            options: finalOptions,
             questionInstructions: req.body.questionInstructions || null,
-            correctAnswer: null
+            correctAnswer: type === 'FILL_BLANK' ? correctAnswer : null
         };
         const encryptedData = (0, encryptionService_1.encrypt)(JSON.stringify(questionData));
         const query = `
@@ -151,11 +183,16 @@ const addQuestionToExam = async (req, res) => {
         const newQuestion = await db_1.default.query(query, [
             examId,
             questionText,
-            JSON.stringify(options),
+            JSON.stringify(finalOptions),
             type,
             encryptedData
         ]);
-        res.status(201).json(newQuestion.rows[0]);
+        // If it's FILL_BLANK, append correct_answer to response so frontend sees it immediately
+        const responseQuestion = newQuestion.rows[0];
+        if (type === 'FILL_BLANK') {
+            responseQuestion.correct_answer = correctAnswer;
+        }
+        res.status(201).json(responseQuestion);
     }
     catch (error) {
         console.error('Error adding question to exam:', error);
@@ -168,9 +205,9 @@ exports.addQuestionToExam = addQuestionToExam;
 // ---------------------------------------------------------
 const updateExamSettings = async (req, res) => {
     const { examId } = req.params;
-    const { status, grading_scale, duration_minutes } = req.body;
+    const { status, grading_scale, duration_minutes, instructions, is_proctored } = req.body;
     const courseAdminId = req.user?.userId;
-    if (!status && !grading_scale && !duration_minutes) {
+    if (!status && !grading_scale && !duration_minutes && !instructions && is_proctored === undefined) {
         return res.status(400).json({ message: 'No settings provided to update.' });
     }
     try {
@@ -188,6 +225,14 @@ const updateExamSettings = async (req, res) => {
         if (duration_minutes) {
             query += `, duration_minutes = $${paramIndex++}`;
             queryParams.push(duration_minutes);
+        }
+        if (instructions !== undefined) {
+            query += `, instructions = $${paramIndex++}`;
+            queryParams.push(instructions);
+        }
+        if (is_proctored !== undefined) {
+            query += `, is_proctored = $${paramIndex++}`;
+            queryParams.push(is_proctored);
         }
         query += ` WHERE id = $${paramIndex++} AND course_admin_id = $${paramIndex++} RETURNING *`;
         queryParams.push(examId, courseAdminId);

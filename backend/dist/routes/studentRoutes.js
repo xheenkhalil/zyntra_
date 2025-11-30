@@ -9,6 +9,8 @@ const router = (0, express_1.Router)();
 router.use(authMiddleware_1.protect, (0, authMiddleware_1.authorize)('student'));
 // Gets the list of exams for the dashboard
 router.get('/exams', studentController_1.getAvailableExams);
+// Gets public info about an exam (instructions, etc.)
+router.get('/exams/:examId/info', studentController_1.getExamInfo);
 // Starts or Resumes a specific exam
 router.post('/exams/:examId/start', studentController_1.startOrResumeExam);
 // Periodically saves the progress of an in-progress submission

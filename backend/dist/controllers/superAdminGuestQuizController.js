@@ -66,7 +66,7 @@ const getAllGuestQuizzes = async (req, res) => {
                 gq.status,
                 gq.created_at,
                 gq.updated_at,
-                COALESCE(gq.average_rating, 0.0) AS average_rating, 
+                COALESCE(ROUND(AVG(gs.rating), 1), 0.0) AS average_rating, 
                 COALESCE(CAST(COUNT(DISTINCT gs.id) AS INTEGER), 0) AS participant_count
             FROM guest_quizzes gq
             LEFT JOIN guest_submissions gs ON gq.id = gs.quiz_id
@@ -76,8 +76,7 @@ const getAllGuestQuizzes = async (req, res) => {
                 gq.category, 
                 gq.status, 
                 gq.created_at, 
-                gq.updated_at, 
-                gq.average_rating
+                gq.updated_at
             ORDER BY gq.created_at DESC;
         `;
         const result = await db_1.default.query(query);

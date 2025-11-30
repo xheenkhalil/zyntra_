@@ -322,8 +322,9 @@ export const registerViolation = async (req: AuthRequest, res: Response) => {
  * =====================================
  */
 const getExamProctoringStats = async (examId: string) => {
+    console.log(`[Proctoring] Fetching stats for exam ${examId}`);
     const activeCandidatesQuery = `
-        SELECT COUNT(es.student_id)
+        SELECT COUNT(es.student_id) AS count
         FROM exam_submissions es
         WHERE es.exam_id = $1 AND es.status = 'in_progress';
     `;
@@ -331,7 +332,7 @@ const getExamProctoringStats = async (examId: string) => {
     const activeCandidates = parseInt(activeCandidatesResult.rows[0].count, 10);
 
     const alertsQuery = `
-        SELECT COUNT(id)
+        SELECT COUNT(id) AS count
         FROM proctor_flags 
         WHERE submission_id IN (
             SELECT id FROM exam_submissions WHERE exam_id = $1
@@ -341,7 +342,7 @@ const getExamProctoringStats = async (examId: string) => {
     const totalAlerts = parseInt(alertsResult.rows[0].count, 10);
 
     const verifiedSessionsQuery = `
-        SELECT COUNT(id)
+        SELECT COUNT(id) AS count
         FROM exam_submissions
         WHERE exam_id = $1 AND status = 'in_progress' AND warning_count = 0;
     `;
@@ -349,7 +350,7 @@ const getExamProctoringStats = async (examId: string) => {
     const verifiedSessions = parseInt(verifiedSessionsResult.rows[0].count, 10);
 
     const aiDetectionsQuery = `
-        SELECT COUNT(id)
+        SELECT COUNT(id) AS count
         FROM proctor_flags 
         WHERE submission_id IN (
             SELECT id FROM exam_submissions WHERE exam_id = $1
@@ -367,6 +368,7 @@ const getExamProctoringStats = async (examId: string) => {
 };
 
 const getProctorAlerts = async (examId: string) => {
+    console.log(`[Proctoring] Fetching alerts for exam ${examId}`);
     const alertsQuery = `
         SELECT pf.type, pf.created_at, pf.analysis_data, 
                u.full_name, u.email, u.student_id, 
@@ -383,6 +385,7 @@ const getProctorAlerts = async (examId: string) => {
 };
 
 const getLiveProctorCandidates = async (examId: string) => {
+    console.log(`[Proctoring] Fetching live candidates for exam ${examId}`);
     // Optimized query to get the LATEST image and flag for each student
     const candidatesQuery = `
         SELECT 
@@ -426,6 +429,8 @@ export const getExamProctoringBatch = async (req: AuthRequest, res: Response) =>
     const adminOrgId = req.user?.organizationId;
     const adminUserId = req.user?.userId;
     const userRole = req.user?.role;
+
+    console.log(`[Proctoring] getExamProctoringBatch called for exam ${examId} by user ${adminUserId}`);
 
     try {
         // Fetch exam with both organization_id and course_admin_id
@@ -479,9 +484,10 @@ export const getExamProctoringBatch = async (req: AuthRequest, res: Response) =>
             }
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error fetching proctoring dashboard data:", error);
-        res.status(500).json({ message: 'Internal server error while loading dashboard data.' });
+        console.error("Stack trace:", error.stack);
+        res.status(500).json({ message: 'Internal server error while loading dashboard data.', error: error.message });
     }
 };
 

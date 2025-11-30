@@ -6,6 +6,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.protect = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const db_1 = __importDefault(require("../services/db"));
 const config_1 = __importDefault(require("../config"));
 // Middleware to check if a user is authenticated
 const protect = async (req, res, next) => {
@@ -13,6 +14,11 @@ const protect = async (req, res, next) => {
     if (!token)
         return res.status(401).json({ message: 'Not authorized, no token' });
     try {
+        // Check blacklist
+        const blacklistCheck = await db_1.default.query('SELECT token FROM token_blacklist WHERE token = $1', [token]);
+        if (blacklistCheck.rows.length > 0) {
+            return res.status(401).json({ message: 'Not authorized, token revoked' });
+        }
         if (!config_1.default.JWT_SECRET)
             throw new Error('JWT_SECRET is not defined');
         const decoded = jsonwebtoken_1.default.verify(token, config_1.default.JWT_SECRET);
@@ -29,7 +35,7 @@ const protect = async (req, res, next) => {
     }
 };
 exports.protect = protect;
-// NEW: Reusable middleware to authorize specific roles
+// Reusable middleware to authorize specific roles
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {

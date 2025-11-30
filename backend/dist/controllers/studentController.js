@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getAvailableExams = void 0;
+exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getExamInfo = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
 const encryptionService_1 = require("../services/encryptionService");
 // Fetches all exams with 'live' status for the student's organization.
@@ -43,6 +43,23 @@ const getAvailableExams = async (req, res) => {
     }
 };
 exports.getAvailableExams = getAvailableExams;
+// Fetches public exam info (instructions, title) without starting it
+const getExamInfo = async (req, res) => {
+    const { examId } = req.params;
+    try {
+        const query = 'SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = \'live\'';
+        const result = await db_1.default.query(query, [examId]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Exam not found' });
+        }
+        res.status(200).json(result.rows[0]);
+    }
+    catch (error) {
+        console.error("Error fetching exam info:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.getExamInfo = getExamInfo;
 // Starts an exam if not started, or resumes it if 'in_progress'
 const startOrResumeExam = async (req, res) => {
     const { examId } = req.params;
@@ -121,6 +138,7 @@ const startOrResumeExam = async (req, res) => {
             exam: {
                 id: exam.id,
                 title: exam.title,
+                instructions: exam.instructions,
                 duration_minutes: exam.duration_minutes,
                 questions: sanitizedQuestions,
             },
@@ -128,7 +146,7 @@ const startOrResumeExam = async (req, res) => {
                 id: submission.id,
                 answers: submission.answers || {},
                 time_remaining_seconds: submission.time_remaining_seconds,
-                last_question_index: submission.last_question_index || 0 // Will be added in migration
+                last_question_index: submission.last_question_index || 0
             }
         });
     }

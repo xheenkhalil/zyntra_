@@ -21,7 +21,7 @@ const loginUser = async (req, res) => {
         if (studentId) {
             const userResult = await db_1.default.query("SELECT * FROM users WHERE student_id = $1 AND role = 'student'", [studentId]);
             if (userResult.rows.length === 0) {
-                return res.status(401).json({ message: 'Invalid Student ID' });
+                return res.status(400).json({ message: 'Invalid Student ID' });
             }
             user = userResult.rows[0];
             // --- Admin Login ---
@@ -29,16 +29,16 @@ const loginUser = async (req, res) => {
         else if (email && password) {
             const userResult = await db_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
             if (userResult.rows.length === 0) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(400).json({ message: 'Invalid credentials' });
             }
             user = userResult.rows[0];
             if (user.role !== 'student') {
                 if (!user.password_hash) {
-                    return res.status(401).json({ message: 'Invalid credentials' });
+                    return res.status(400).json({ message: 'Invalid credentials' });
                 }
                 const isPasswordValid = await argon2_1.default.verify(user.password_hash, password);
                 if (!isPasswordValid) {
-                    return res.status(401).json({ message: 'Invalid credentials' });
+                    return res.status(400).json({ message: 'Incorrect credentials' });
                 }
             }
             else {
@@ -67,9 +67,9 @@ const loginUser = async (req, res) => {
         const token = jsonwebtoken_1.default.sign(tokenPayload, config_1.default.JWT_SECRET, { expiresIn: '7d' });
         res.cookie('token', token, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            secure: process.env.NODE_ENV === 'production', // False in dev (HTTP)
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Lax in dev
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         res.status(200).json({
             message: 'Login successful!',
@@ -79,7 +79,7 @@ const loginUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
-                studentId: user.student_id, // Added studentId
+                studentId: user.student_id,
             },
         });
     }
@@ -120,12 +120,17 @@ const setupAccount = async (req, res) => {
                 status = 'active',
                 updated_at = NOW()
             WHERE id = $2
-            RETURNING id, full_name, email, role, status;
+            RETURNING id, full_name, email, role, status, organization_id;
         `;
-        const updatedUser = await db_1.default.query(updateQuery, [passwordHash, user.id]);
+        const updatedUserResult = await db_1.default.query(updateQuery, [passwordHash, user.id]);
+        const updatedUser = updatedUserResult.rows[0];
+        // If the user is a central admin, activate their organization
+        if (updatedUser.role === 'centraladmin' && updatedUser.organization_id) {
+            await db_1.default.query("UPDATE organizations SET status = 'active', updated_at = NOW() WHERE id = $1", [updatedUser.organization_id]);
+        }
         res.status(200).json({
             message: 'Account setup successful. You can now log in.',
-            user: updatedUser.rows[0],
+            user: updatedUser,
         });
     }
     catch (error) {
@@ -157,7 +162,7 @@ const getMe = async (req, res) => {
                 role: user.role,
                 status: user.status,
                 organizationId: user.organization_id,
-                studentId: user.student_id // Correctly mapped
+                studentId: user.student_id
             }
         });
     }
@@ -246,7 +251,20 @@ exports.changeMyPassword = changeMyPassword;
 // ===========================================
 // LOGOUT CONTROLLER
 // ===========================================
-const logoutUser = (req, res) => {
+const logoutUser = async (req, res) => {
+    const token = req.cookies.token;
+    if (token) {
+        try {
+            const decoded = jsonwebtoken_1.default.decode(token);
+            if (decoded && decoded.exp) {
+                const expiresAt = new Date(decoded.exp * 1000);
+                await db_1.default.query('INSERT INTO token_blacklist (token, expires_at) VALUES ($1, $2)', [token, expiresAt]);
+            }
+        }
+        catch (error) {
+            console.error('Error blacklisting token:', error);
+        }
+    }
     res.cookie('token', '', {
         httpOnly: true,
         expires: new Date(0),

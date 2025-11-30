@@ -19,4 +19,9 @@ router.put('/course-admins/:userId/archive', centralAdminController_1.archiveCou
 router.put('/course-admins/:userId/unarchive', centralAdminController_1.unarchiveCourseAdmin);
 // === Invitation Route ===
 router.post('/send-invite/:userId', centralAdminController_1.sendInviteEmail);
+// === NEW: Organization Data Routes ===
+router.get('/stats', centralAdminController_1.getOrganizationStats);
+router.get('/logs', centralAdminController_1.getOrganizationLogs);
+router.get('/exams', centralAdminController_1.getOrganizationExams);
+router.get('/users', centralAdminController_1.getOrganizationUsers);
 exports.default = router;
