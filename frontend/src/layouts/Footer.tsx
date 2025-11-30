@@ -201,7 +201,9 @@ const Footer: React.FC = () => {
               <li>
                 {/* --- FIX: Added 'no-underline' --- */}
                 <a
-                  href="#"
+                  href="http://localhost:5000/api-docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-2 text-sm sm:text-base no-underline"
                 >
                   <FaCode className="text-xs" />

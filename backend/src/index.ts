@@ -15,10 +15,14 @@ import examRoutes from "./routes/examRoutes";
 import questionRoutes from "./routes/questionRoutes";
 import studentRoutes from "./routes/studentRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
-import guestRoutes from "./routes/guestRoutes"; // Public routes
-import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes"; // Admin-only routes
+import guestRoutes from "./routes/guestRoutes";
+import superAdminGuestQuizRoutes from "./routes/superAdminGuestQuizRoutes";
 import systemRoutes from './routes/systemRoutes';
 import proctoringRoutes from './routes/proctoringRoutes';
+
+// Swagger Imports
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './swagger';
 
 
 const app = express();
@@ -30,7 +34,7 @@ const PORT = config.PORT;
 app.use(helmet());
 app.use(compression()); // Gzip compression
 
-// Rate Limiting (1000 requests per 15 minutes)
+// Global Rate Limiting (1000 requests per 15 minutes)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -40,12 +44,20 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// STRICT limit for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: "Too many authentication attempts. Please try again later.",
+});
+
 // =====================================================
 //  CORS CONFIGURATION
 // =====================================================
 const allowedOrigins: string[] = [
   "https://zyntraexams.vercel.app",
   "http://localhost:5173",
+  "http://localhost:5000",
 ];
 
 app.use(
@@ -64,12 +76,19 @@ app.use(
 );
 
 // =====================================================
-//  MIDDLEWARE SETUP (FIXED LIMITS)
+//  MIDDLEWARE SETUP
 // =====================================================
-// FIX: Increased limit to 50mb to handle Base64 image uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// =====================================================
+//  SWAGGER API DOCS
+// =====================================================
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
+app.use("/api/auth", authLimiter);
+app.use("/api/auth", authRoutes);
 
 // =====================================================
 //  ROUTES

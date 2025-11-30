@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
 import { decrypt } from '../services/encryptionService';
 
-// --- Define the shape of our data for TypeScript ---
+// --- define the shape of our data for TypeScript ---
 interface Option {
     text: string;
     isCorrect: boolean;
@@ -23,7 +23,7 @@ interface QuestionFromDB {
     question_type: string;
 }
 
-// Fetches all exams with 'live' status for the student's organization.
+// fetches all exams with 'live' status for the student's organization.
 export const getAvailableExams = async (req: AuthRequest, res: Response) => {
     const studentId = req.user?.userId;
     const organizationId = req.user?.organizationId;

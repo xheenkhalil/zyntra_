@@ -6,7 +6,7 @@ import Footer from "../layouts/Footer";
 import HeroSection from "../components/home/HeroSection";
 import FeaturesPreview from "../components/home/FeaturesPreview";
 import GuestRegistrationModal from "../components/modals/GuestRegistrationModal";
-import LoadingSpinner from "../components/common/LoadingSpinner"; // A simple fallback
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // --- Lazy-Loaded Component Imports ---
 type GuestQuizProps = {

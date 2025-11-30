@@ -34,7 +34,9 @@
     "openai": "^6.2.0",
     "pdf-parse": "^2.2.1",
     "pg": "^8.16.3",
-    "resend": "^6.1.2"
+    "resend": "^6.1.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
@@ -44,6 +46,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.6.2",
     "@types/pg": "^8.15.5",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

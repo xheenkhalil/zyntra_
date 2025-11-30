@@ -60,7 +60,7 @@ const Chatbot: React.FC = () => {
     {
       id: 1,
       sender: "bot",
-      text: "Hi! I'm your ZYNTRA assistant. How can I help you today?",
+      text: "Hi! I'm Naomi, your AI assistant. How can I help you today?",
       quickReplies: [
         "AI Proctoring",
         "Pricing",
@@ -178,7 +178,7 @@ const Chatbot: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* --- APPLY THE FIX HERE --- */}
           {/* This button now only calls handleClose, not toggleChatbot */}
           <button
