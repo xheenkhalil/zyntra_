@@ -1,4 +1,3 @@
-// /frontend/src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { zyntraTheme } from './theme';
@@ -8,6 +7,7 @@ import './index.css';
 import CourseAdminLayout from './layouts/CourseAdminLayout';
 import StudentLayout from './layouts/StudentLayout';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
+import CentralAdminLayout from './layouts/CentralAdminLayout';
 
 // Import Pages (ALL DIRECTLY FROM ./pages/)
 import HomePage from './pages/HomePage';
@@ -29,11 +29,15 @@ import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminOrganizations from './pages/SuperAdminOrganizations';
 import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
 import SuperAdminSystemStatus from './pages/SuperAdminSystemStatus';
-import SuperAdminSettings from './pages/SuperAdminSettings';
 import EnrollmentTestPage from './pages/EnrollmentTestPage';
 
 // --- Client Admin Pages ---
-import CentralAdminDashboard from './pages/CentralAdminDashboard';
+import CentralAdminOverview from './pages/CentralAdminOverview';
+import CentralAdminCourseAdmins from './pages/CentralAdminCourseAdmins';
+import CentralAdminUsers from './pages/CentralAdminUsers';
+import CentralAdminExams from './pages/CentralAdminExams';
+import CentralAdminLogs from './pages/CentralAdminLogs';
+import CentralAdminSettings from './pages/CentralAdminSettings';
 
 // --- Course Admin (Teacher) Pages ---
 import CourseAdminDashboard from './pages/CourseAdminDashboard';
@@ -97,26 +101,38 @@ function App() {
                                 <Route path="analytics" element={<SuperAdminAnalytics />} />
                                 <Route path="organizations" element={<SuperAdminOrganizations />} />
                                 <Route path="system-status" element={<SuperAdminSystemStatus />} />
-                                <Route path="settings" element={<SuperAdminSettings />} />
-
-                            </Route>
-                        </Route>
-
-                        {/* --- Protected Central Admin Routes --- */}
-                        <Route element={<ProtectedRoute allowedRoles={['centraladmin']} />}>
-                            <Route path="/centraladmin" element={<CentralAdminDashboard />} />
-                        </Route>
-
-                        {/* --- Protected Course Admin Routes --- */}
-                        <Route element={<ProtectedRoute allowedRoles={['courseadmin']} />}>
-                            <Route path="/courseadmin" element={<CourseAdminLayout />}>
-                                <Route index element={<CourseAdminOverview />} />
 
                                 <Route path="exams" element={<ExamBankPage />} />
                                 <Route path="exams/:examId" element={<ExamBuilderPage />} />
                                 <Route path="results" element={<ResultsPage />} />
                                 <Route path="proctoring" element={<ProctoringOverview />} />
                                 <Route path="students" element={<CourseAdminDashboard />} />
+                                <Route path="settings" element={<CourseAdminSettings />} />
+                            </Route>
+                        </Route>
+
+                        {/* --- Protected Client Admin Routes --- */}
+                        <Route element={<ProtectedRoute allowedRoles={['centraladmin']} />}>
+                            <Route path="/centraladmin" element={<CentralAdminLayout />}>
+                                <Route index element={<CentralAdminOverview />} />
+                                <Route path="admins" element={<CentralAdminCourseAdmins />} />
+                                <Route path="users" element={<CentralAdminUsers />} />
+                                <Route path="exams" element={<CentralAdminExams />} />
+                                <Route path="logs" element={<CentralAdminLogs />} />
+                                <Route path="settings" element={<CentralAdminSettings />} />
+                            </Route>
+                        </Route>
+
+                        {/* --- Protected Course Admin Routes --- */}
+                        <Route element={<ProtectedRoute allowedRoles={['courseadmin']} />}>
+                            <Route path="/courseadmin" element={<CourseAdminLayout />}>
+                                <Route index element={<CourseAdminOverview />} />
+                                <Route path="students" element={<CourseAdminDashboard />} />
+                                <Route path="exams" element={<ExamBankPage />} />
+                                <Route path="exams/create" element={<ExamBuilderPage />} />
+                                <Route path="exams/:examId/edit" element={<ExamBuilderPage />} />
+                                <Route path="results" element={<ResultsPage />} />
+                                <Route path="proctoring" element={<ProctoringOverview />} />
                                 <Route path="settings" element={<CourseAdminSettings />} />
                             </Route>
                         </Route>

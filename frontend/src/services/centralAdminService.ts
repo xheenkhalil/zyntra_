@@ -1,9 +1,18 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL, // <--- USE ENVIRONMENT VARIABLE
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true,
 });
+
+export interface CourseAdmin {
+  id: string;
+  full_name: string;
+  email: string;
+  username: string;
+  status: 'active' | 'archived' | 'pending_setup';
+  created_at: string;
+}
 
 export interface CourseAdminData {
   fullName: string;
@@ -25,12 +34,13 @@ const handleError = (error: unknown, defaultMsg: string) => {
 };
 
 // === READ ===
-export const getCourseAdmins = async () => {
+export const getCourseAdmins = async (): Promise<CourseAdmin[]> => {
   try {
     const response = await apiClient.get('/centraladmin/course-admins');
     return response.data;
   } catch (error) {
     handleError(error, 'Failed to fetch course admins.');
+    return [];
   }
 };
 
@@ -98,5 +108,58 @@ export const sendInviteEmail = async (userId: string) => {
     return response.data || { message: 'Invite email sent successfully.' };
   } catch (error) {
     handleError(error, 'Failed to send invite email.');
+  }
+};
+
+export const getOrganizationStats = async () => {
+  try {
+    const response = await apiClient.get('/centraladmin/stats');
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch organization stats.');
+    // Return safe defaults on error to prevent UI crash
+    return {
+      totalTeachers: 0,
+      totalStudents: 0,
+      totalExams: 0,
+      activeSessions: 0,
+      teacherGrowth: "0%",
+      studentGrowth: "0%",
+      examGrowth: "0%"
+    };
+  }
+};
+
+export const getOrganizationLogs = async () => {
+  try {
+    const response = await apiClient.get('/centraladmin/logs');
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch organization logs.');
+    return [];
+  }
+};
+
+export const getOrganizationExams = async () => {
+  try {
+    const response = await apiClient.get('/centraladmin/exams');
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch organization exams.');
+    return [];
+  }
+};
+
+export const getOrganizationUsers = async (role?: string) => {
+  try {
+    let url = '/centraladmin/users';
+    if (role) {
+      url += `?role=${role}`;
+    }
+    const response = await apiClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching org users:', error);
+    return null;
   }
 };

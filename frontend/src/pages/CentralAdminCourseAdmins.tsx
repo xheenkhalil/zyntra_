@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
   Box,
   Typography,
   Button,
-  Alert,
-  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -13,27 +10,31 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Snackbar,
   IconButton,
   Menu,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  CircularProgress,
+  Alert,
+  Snackbar,
   Chip,
-  Select,
+  InputAdornment,
   FormControl,
   InputLabel,
-  InputAdornment,
+  Select,
+  Container
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EmailIcon from "@mui/icons-material/Email";
-import LogoutIcon from "@mui/icons-material/Logout";
 import SearchIcon from "@mui/icons-material/Search";
+
+
 import {
   getCourseAdmins,
   createCourseAdmin,
@@ -43,25 +44,15 @@ import {
   deleteCourseAdmin,
   sendInviteEmail,
 } from "../services/centralAdminService";
-import type { CourseAdminData } from "../services/centralAdminService";
-import { useAuth } from "../context/useAuth";
-
-interface CourseAdmin {
-  id: string;
-  full_name: string;
-  email: string;
-  username: string;
-  status: "active" | "archived" | "pending_setup";
-  created_at: string;
-}
+import type { CourseAdmin, CourseAdminData } from "../services/centralAdminService";
 
 interface SnackbarState {
   open: boolean;
   message: string;
 }
 
-const CentralAdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+const CentralAdminCourseAdmins: React.FC = () => {
+
 
   const [courseAdmins, setCourseAdmins] = useState<CourseAdmin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -258,43 +249,40 @@ const CentralAdminDashboard: React.FC = () => {
     );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 0, mb: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
-          <Typography variant="h4" gutterBottom>
-            Central Admin Dashboard
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Manage Course Admins
           </Typography>
-          <Typography>Welcome, {user?.fullName || "Central Admin"}!</Typography>
+          <Typography variant="body2" color="textSecondary">
+            Create and manage teachers/admins for your organization.
+          </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Invite Course Admin
           </Button>
-          <Button variant="outlined" startIcon={<LogoutIcon />} onClick={logout}>
-            Logout
-          </Button>
         </Box>
       </Box>
 
-      <Box
+      {/* Search and Filter Bar */}
+      <Paper
         sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 5,
-          backgroundColor: "#fff",
-          py: 1.5,
-          mb: 2,
+          p: 2,
+          mb: 3,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          borderBottom: "1px solid #e0e0e0",
+          gap: 2,
+          flexWrap: 'wrap'
         }}
       >
         <TextField
           variant="outlined"
-          placeholder="Search Course Admins..."
+          placeholder="Search by name, email, or username..."
           size="small"
-          sx={{ width: 300 }}
+          sx={{ width: 300, flexGrow: 1 }}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -305,35 +293,32 @@ const CentralAdminDashboard: React.FC = () => {
             ),
           }}
         />
-        <FormControl size="small" sx={{ width: 180 }}>
+        <FormControl size="small" sx={{ width: 200 }}>
           <InputLabel>Status Filter</InputLabel>
           <Select
             label="Status Filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
           >
-            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="all">All Statuses</MenuItem>
             <MenuItem value="active">Active</MenuItem>
             <MenuItem value="pending_setup">Pending Setup</MenuItem>
             <MenuItem value="archived">Archived</MenuItem>
           </Select>
         </FormControl>
-      </Box>
+      </Paper>
 
-      <Typography variant="h6" gutterBottom>
-        Managed Course Admins
-      </Typography>
-
-      <TableContainer component={Paper}>
+      {/* Table */}
+      <TableContainer component={Paper} elevation={2}>
         <Table>
-          <TableHead>
+          <TableHead sx={{ bgcolor: 'grey.50' }}>
             <TableRow>
-              <TableCell>Full Name</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Date Created</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Full Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Date Created</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -350,10 +335,11 @@ const CentralAdminDashboard: React.FC = () => {
                         admin.status === "active"
                           ? "success"
                           : admin.status === "pending_setup"
-                          ? "warning"
-                          : "default"
+                            ? "warning"
+                            : "default"
                       }
                       size="small"
+                      variant="outlined"
                     />
                   </TableCell>
                   <TableCell>{new Date(admin.created_at).toLocaleDateString()}</TableCell>
@@ -366,8 +352,8 @@ const CentralAdminDashboard: React.FC = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No course admins found.
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography color="textSecondary">No course admins found matching your criteria.</Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -375,15 +361,16 @@ const CentralAdminDashboard: React.FC = () => {
         </Table>
       </TableContainer>
 
+      {/* ... Menus and Dialogs remain mostly the same ... */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        <MenuItem onClick={() => handleAction("edit")}>Edit</MenuItem>
+        <MenuItem onClick={() => handleAction("edit")}>Edit Details</MenuItem>
         {selectedUser?.status === "archived" ? (
-          <MenuItem onClick={() => handleAction("unarchive")}>Restore</MenuItem>
+          <MenuItem onClick={() => handleAction("unarchive")}>Restore Access</MenuItem>
         ) : (
-          <MenuItem onClick={() => handleAction("archive")}>Archive</MenuItem>
+          <MenuItem onClick={() => handleAction("archive")}>Archive User</MenuItem>
         )}
         <MenuItem onClick={() => handleAction("delete")} sx={{ color: "error.main" }}>
-          Delete
+          Delete Permanently
         </MenuItem>
       </Menu>
 
@@ -400,11 +387,11 @@ const CentralAdminDashboard: React.FC = () => {
             </Box>
           ) : (
             <>
-              <TextField margin="dense" label="Full Name" fullWidth variant="standard" value={createForm.fullName}
-                onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })} />
-              <TextField margin="dense" label="Email Address" type="email" fullWidth variant="standard" value={createForm.email}
-                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
-              <TextField margin="dense" label="Username" fullWidth variant="standard" value={createForm.username}
+              <TextField margin="dense" label="Full Name" fullWidth variant="outlined" value={createForm.fullName}
+                onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })} sx={{ mb: 2, mt: 1 }} />
+              <TextField margin="dense" label="Email Address" type="email" fullWidth variant="outlined" value={createForm.email}
+                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} sx={{ mb: 2 }} />
+              <TextField margin="dense" label="Username" fullWidth variant="outlined" value={createForm.username}
                 onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })} />
             </>
           )}
@@ -457,4 +444,4 @@ const CentralAdminDashboard: React.FC = () => {
   );
 };
 
-export default CentralAdminDashboard;
+export default CentralAdminCourseAdmins;
