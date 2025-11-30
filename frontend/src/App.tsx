@@ -1,3 +1,4 @@
+// frontend/src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { zyntraTheme } from './theme';
