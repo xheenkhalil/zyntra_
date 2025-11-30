@@ -254,24 +254,24 @@ const Footer: React.FC = () => {
               © {new Date().getFullYear()} ZYNTRA. All rights reserved.
             </div>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm">
-              <a
-                href="#"
+              <Link
+                to="/privacy-policy"
                 className="text-gray-400 hover:text-white transition-colors duration-200 no-underline"
               >
                 Privacy Policy
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/terms-of-service"
                 className="text-gray-400 hover:text-white transition-colors duration-200 no-underline"
               >
                 Terms of Service
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/cookie-policy"
                 className="text-gray-400 hover:text-white transition-colors duration-200 no-underline"
               >
                 Cookie Policy
-              </a>
+              </Link>
               <a
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors duration-200 no-underline"

@@ -18,6 +18,9 @@ import GuestQuizRunner from './pages/GuestQuizRunner';
 import AboutPage from './pages/AboutPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
 
 // --- Super Admin Pages ---
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
@@ -74,6 +77,9 @@ function App() {
                         <Route path="/about" element={<AboutPage />} />
                         <Route path="/pricing" element={<PricingPage />} />
                         <Route path="/contact" element={<ContactPage />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
 
                         {/* --- TEST ROUTE (For AWS Enrollment Testing) --- */}
                         {/* Temporarily public for easy testing. Later move to Student Routes. */}
