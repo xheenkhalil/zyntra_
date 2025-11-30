@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import pool from '../services/db';
+import CacheService from '../services/cacheService';
 
 // ============================================================
 // Type definitions
@@ -14,6 +15,14 @@ interface QuizOption {
 // ============================================================
 export const getPublicQuizzes = async (req: Request, res: Response) => {
     try {
+        const cacheKey = 'public_quizzes';
+        const cachedData = await CacheService.get(cacheKey);
+
+        if (cachedData) {
+            console.log('⚡ Cache Hit: public_quizzes');
+            return res.status(200).json(cachedData);
+        }
+
         const query = `
             SELECT
                 gq.id,
@@ -28,6 +37,10 @@ export const getPublicQuizzes = async (req: Request, res: Response) => {
             ORDER BY gq.created_at;
         `;
         const result = await pool.query(query);
+
+        // Cache for 5 minutes
+        await CacheService.set(cacheKey, result.rows, 300);
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error("Error fetching public quizzes:", error);
@@ -40,8 +53,15 @@ export const getPublicQuizzes = async (req: Request, res: Response) => {
 // ============================================================
 export const getPublicQuizById = async (req: Request, res: Response) => {
     const { quizId } = req.params;
+    const cacheKey = `public_quiz_${quizId}`;
 
     try {
+        const cachedData = await CacheService.get(cacheKey);
+        if (cachedData) {
+            console.log(`⚡ Cache Hit: ${cacheKey}`);
+            return res.status(200).json(cachedData);
+        }
+
         const quizResult = await pool.query(
             "SELECT id, title FROM guest_quizzes WHERE id = $1 AND status = 'published'",
             [quizId]
@@ -61,11 +81,16 @@ export const getPublicQuizById = async (req: Request, res: Response) => {
             options: (q.options as QuizOption[]).map(opt => ({ text: opt.text })),
         }));
 
-        res.status(200).json({
+        const responseData = {
             ...quizResult.rows[0],
             duration_minutes: 30,
             questions: sanitizedQuestions,
-        });
+        };
+
+        // Cache for 10 minutes
+        await CacheService.set(cacheKey, responseData, 600);
+
+        res.status(200).json(responseData);
     } catch (error) {
         console.error("Error fetching public quiz:", error);
         res.status(500).json({ message: 'Internal server error' });
@@ -116,6 +141,11 @@ export const submitPublicQuiz = async (req: Request, res: Response) => {
         console.log(
             `✅ Submission inserted for quiz ${quizId}. Score: ${scorePercentage.toFixed(1)}%, Rating stored: ${rating || 'null'}`
         );
+
+        // Invalidate cache since participant count or rating might have changed
+        await CacheService.del('public_quizzes');
+        // We don't necessarily need to invalidate the individual quiz cache unless we show stats there, but let's be safe if we add that later
+        // await CacheService.del(`public_quiz_${quizId}`); 
 
         res.status(201).json({
             message: 'Quiz submitted successfully!',
@@ -168,6 +198,9 @@ export const updateQuizRating = async (req: Request, res: Response) => {
         const newAvg = updateResult.rows[0]?.average_rating || rating;
 
         console.log(`✅ Quiz ${quizId} rating updated successfully. New average: ${newAvg}`);
+
+        // Invalidate cache
+        await CacheService.del('public_quizzes');
 
         res.status(200).json({
             message: 'Rating updated successfully.',

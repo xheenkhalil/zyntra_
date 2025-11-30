@@ -1,10 +1,10 @@
-// backend/src/index.ts
-
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import config from "./config";
 import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 
 // === Route Imports ===
 import authRoutes from "./routes/authRoutes";
@@ -25,9 +25,20 @@ const app = express();
 const PORT = config.PORT;
 
 // =====================================================
-//  SECURITY MIDDLEWARE (HELMET)
+//  SECURITY MIDDLEWARE (HELMET) & PERFORMANCE
 // =====================================================
 app.use(helmet());
+app.use(compression()); // Gzip compression
+
+// Rate Limiting (1000 requests per 15 minutes)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many requests from this IP, please try again later."
+});
+app.use(limiter);
 
 // =====================================================
 //  CORS CONFIGURATION
