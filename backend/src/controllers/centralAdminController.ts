@@ -45,7 +45,8 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     ]);
 
     const user = result.rows[0];
-    const setupLink = `http://localhost:5173/setup-account?token=${setupToken}`;
+    const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+
 
     return res.status(201).json({
       message: 'Course Admin created successfully. Send them this link to set up their account.',
@@ -230,7 +231,8 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
     }
 
     const { email, account_setup_token } = userResult.rows[0];
-    const setupLink = `http://localhost:5173/setup-account?token=${account_setup_token}`;
+    const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${account_setup_token}`;
+
 
     // TODO: integrate actual email service (Nodemailer, SendGrid, etc.)
     console.log(`Mock email sent to ${email}: ${setupLink}`);
