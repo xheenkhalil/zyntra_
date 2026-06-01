@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { 
-    getPublicQuizzes, 
-    getPublicQuizById, 
-    submitPublicQuiz, 
-    updateQuizRating // ✅ newly added controller import
+import {
+  getPublicQuizzes,
+  getPublicQuizById,
+  submitPublicQuiz,
+  updateQuizRating, // ✅ newly added controller import
 } from '../controllers/guestController';
 
 const router = Router();

@@ -1,28 +1,27 @@
 // /backend/src/routes/superAdminRoutes.ts
 
 import { Router } from 'express';
-import { 
-    // Existing Org/Admin functions
-    getAllOrganizations, 
-    createOrganization, 
-    updateOrganization, 
-    archiveOrganization,
-    unarchiveOrganization,
-    deleteOrganization,
-    createCentralAdmin,
-    sendInviteEmail,
+import {
+  // Existing Org/Admin functions
+  getAllOrganizations,
+  createOrganization,
+  updateOrganization,
+  archiveOrganization,
+  unarchiveOrganization,
+  deleteOrganization,
+  createCentralAdmin,
+  sendInviteEmail,
 
-    // Dashboard Analytics functions
-    getDashboardStats,
-    getUserGrowthChart,
-    getSystemPerformanceChart,
-    getActivityFeed,
+  // Dashboard Analytics functions
+  getDashboardStats,
+  getUserGrowthChart,
+  getSystemPerformanceChart,
+  getActivityFeed,
 
-    // --- NEW: Importing User Management functions (Task 5) ---
-    getAllUsers,
-    updateUserStatus,
-    updateUserRole
-
+  // --- NEW: Importing User Management functions (Task 5) ---
+  getAllUsers,
+  updateUserStatus,
+  updateUserRole,
 } from '../controllers/superAdminController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
@@ -30,7 +29,6 @@ const router = Router();
 
 // This middleware protects all routes in this file and ensures only a 'superadmin' can access them
 router.use(protect, authorize('superadmin'));
-
 
 // =====================================
 // DASHBOARD ANALYTICS ROUTES (TASK 3)
@@ -48,22 +46,17 @@ router.get('/charts/performance', getSystemPerformanceChart);
 // GET /api/superadmin/activity-feed
 router.get('/activity-feed', getActivityFeed);
 
-
 // =====================================
 // ORGANIZATION & ADMIN ROUTES (TASK 4)
 // =====================================
 
 // Routes for the organization collection
 // POST | GET /api/superadmin/organizations
-router.route('/organizations')
-    .get(getAllOrganizations)
-    .post(createOrganization);
+router.route('/organizations').get(getAllOrganizations).post(createOrganization);
 
 // Routes for a specific organization by ID
 // PUT | DELETE /api/superadmin/organizations/:id
-router.route('/organizations/:id')
-    .put(updateOrganization)
-    .delete(deleteOrganization);
+router.route('/organizations/:id').put(updateOrganization).delete(deleteOrganization);
 
 // Specific action routes for an organization
 // PUT /api/superadmin/organizations/:id/archive
@@ -79,7 +72,6 @@ router.post('/central-admins', createCentralAdmin);
 // POST /api/superadmin/central-admins/send-invite
 router.post('/central-admins/send-invite', sendInviteEmail);
 
-
 // =====================================
 // NEW: USER MANAGEMENT ROUTES (TASK 5)
 // =====================================
@@ -92,6 +84,5 @@ router.put('/users/:id/status', updateUserStatus);
 
 // PUT /api/superadmin/users/:id/role
 router.put('/users/:id/role', updateUserRole);
-
 
 export default router;

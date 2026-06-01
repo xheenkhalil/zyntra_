@@ -47,7 +47,6 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     const user = result.rows[0];
     const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
 
-
     return res.status(201).json({
       message: 'Course Admin created successfully. Send them this link to set up their account.',
       user,
@@ -56,7 +55,9 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     console.error('Error creating course admin:', error);
     if (error.code === '23505') {
-      return res.status(409).json({ message: 'A user with that email or username already exists.' });
+      return res
+        .status(409)
+        .json({ message: 'A user with that email or username already exists.' });
     }
     res.status(500).json({ message: 'Internal server error.' });
   }
@@ -233,7 +234,6 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
     const { email, account_setup_token } = userResult.rows[0];
     const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${account_setup_token}`;
 
-
     // TODO: integrate actual email service (Nodemailer, SendGrid, etc.)
     console.log(`Mock email sent to ${email}: ${setupLink}`);
 
@@ -252,7 +252,7 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
 
 // Helper to calculate percentage change
 const calculatePercentChange = (current: number, previous: number): string => {
-  if (previous === 0) return current > 0 ? "+100%" : "0%";
+  if (previous === 0) return current > 0 ? '+100%' : '0%';
   const change = ((current - previous) / previous) * 100;
   return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
 };
@@ -268,7 +268,7 @@ export const getOrganizationStats = async (req: AuthRequest, res: Response) => {
     console.log('Fetching teachers count...');
     const teachersCount = await pool.query(
       "SELECT COUNT(*) FROM users WHERE organization_id = $1 AND role = 'courseadmin'",
-      [organizationId]
+      [organizationId],
     );
     console.log('Teachers count result:', teachersCount.rows[0]);
     const totalTeachers = parseInt(teachersCount.rows[0].count);
@@ -277,17 +277,16 @@ export const getOrganizationStats = async (req: AuthRequest, res: Response) => {
     console.log('Fetching students count...');
     const studentsCount = await pool.query(
       "SELECT COUNT(*) FROM users WHERE organization_id = $1 AND role = 'student'",
-      [organizationId]
+      [organizationId],
     );
     console.log('Students count result:', studentsCount.rows[0]);
     const totalStudents = parseInt(studentsCount.rows[0].count);
 
     // 3. Total Exams
     console.log('Fetching exams count...');
-    const examsCount = await pool.query(
-      "SELECT COUNT(*) FROM exams WHERE organization_id = $1",
-      [organizationId]
-    );
+    const examsCount = await pool.query('SELECT COUNT(*) FROM exams WHERE organization_id = $1', [
+      organizationId,
+    ]);
     console.log('Exams count result:', examsCount.rows[0]);
     const totalExams = parseInt(examsCount.rows[0].count);
 
@@ -295,7 +294,7 @@ export const getOrganizationStats = async (req: AuthRequest, res: Response) => {
     console.log('Fetching active sessions count...');
     const activeSessionsCount = await pool.query(
       "SELECT COUNT(*) FROM exams WHERE organization_id = $1 AND status::text = 'published'",
-      [organizationId]
+      [organizationId],
     );
     console.log('Active sessions result:', activeSessionsCount.rows[0]);
     const activeSessions = parseInt(activeSessionsCount.rows[0].count);
@@ -318,7 +317,7 @@ export const getOrganizationStats = async (req: AuthRequest, res: Response) => {
       const current = parseInt(currentResult.rows[0].count);
       const previous = parseInt(previousResult.rows[0].count);
 
-      if (previous === 0) return current > 0 ? "+100%" : "0%";
+      if (previous === 0) return current > 0 ? '+100%' : '0%';
       const change = ((current - previous) / previous) * 100;
       return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
     };
@@ -369,9 +368,9 @@ export const getOrganizationStats = async (req: AuthRequest, res: Response) => {
         examStatus: {
           completed: parseInt(examStatusCounts.completed || '0'),
           inProgress: parseInt(examStatusCounts.in_progress || '0'),
-          notStarted: parseInt(examStatusCounts.not_started || '0')
-        }
-      }
+          notStarted: parseInt(examStatusCounts.not_started || '0'),
+        },
+      },
     });
   } catch (error) {
     console.error('Error fetching org stats:', error);

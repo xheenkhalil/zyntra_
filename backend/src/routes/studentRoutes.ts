@@ -2,11 +2,11 @@
 
 import { Router } from 'express';
 import {
-    getAvailableExams,
-    getExamInfo,
-    startOrResumeExam,
-    saveExamProgress,
-    submitExam
+  getAvailableExams,
+  getExamInfo,
+  startOrResumeExam,
+  saveExamProgress,
+  submitExam,
 } from '../controllers/studentController';
 import { protect, authorize } from '../middleware/authMiddleware';
 

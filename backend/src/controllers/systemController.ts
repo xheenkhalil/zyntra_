@@ -1,6 +1,6 @@
 // backend/src/controllers/systemController.ts
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import pool from '../services/db'; // Your database service
 import { AuthRequest } from '../middleware/authMiddleware';
 
@@ -21,17 +21,16 @@ export const getSystemStatus = async (req: AuthRequest, res: Response) => {
   try {
     // 'SELECT 1' is the fastest, lightest query to check DB liveness.
     await pool.query('SELECT 1;');
-    
+
     // If we get here, the query was successful
     dbStatus = 'Operational';
-    
+
     // Calculate latency
     const endTime = process.hrtime.bigint();
     const latencyMs = Number(endTime - startTime) / 1_000_000; // Convert nanoseconds to ms
     dbLatency = `${latencyMs.toFixed(2)} ms`;
-
   } catch (dbError: any) {
-    console.error("System Status DB Check FAILED:", dbError.message);
+    console.error('System Status DB Check FAILED:', dbError.message);
     dbStatus = 'Error';
     dbLatency = null;
   }
@@ -41,8 +40,6 @@ export const getSystemStatus = async (req: AuthRequest, res: Response) => {
   const apiStatus = dbStatus === 'Operational' ? 'Operational' : 'Degraded';
   const proctoringStatus = 'Operational'; // Mock status
   const paymentStatus = 'Maintenance'; // Mock status from your HTML
-  const emailStatus = 'Operational'; // Mock status
-  const storageStatus = 'Operational'; // Mock status
 
   // 3. Compile Full Status Report
   // This JSON structure matches the needs of your new dashboard.

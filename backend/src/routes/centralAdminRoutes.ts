@@ -16,19 +16,12 @@ import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
-
 router.use(protect, authorize('centraladmin'));
 
 // === Base CRUD Routes ===
-router
-  .route('/course-admins')
-  .post(createCourseAdmin)
-  .get(getCourseAdminsForOrg);
+router.route('/course-admins').post(createCourseAdmin).get(getCourseAdminsForOrg);
 
-router
-  .route('/course-admins/:userId')
-  .put(updateCourseAdmin)
-  .delete(deleteCourseAdmin);
+router.route('/course-admins/:userId').put(updateCourseAdmin).delete(deleteCourseAdmin);
 
 // === Status Management Routes ===
 router.put('/course-admins/:userId/archive', archiveCourseAdmin);

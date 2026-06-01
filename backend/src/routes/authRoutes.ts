@@ -2,12 +2,12 @@
 
 import { Router } from 'express';
 import {
-    loginUser,
-    getMe,
-    setupAccount,
-    logoutUser,
-    updateMyProfile,
-    changeMyPassword
+  loginUser,
+  getMe,
+  setupAccount,
+  logoutUser,
+  updateMyProfile,
+  changeMyPassword,
 } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
@@ -152,6 +152,5 @@ router.put('/profile', protect, updateMyProfile);
  *         description: Password changed
  */
 router.put('/change-password', protect, changeMyPassword);
-
 
 export default router;

@@ -2,18 +2,18 @@
 
 import { Router } from 'express';
 import {
-    createExam,
-    getExamsForCourseAdmin,
-    addQuestionToExam,
-    getExamById,
-    updateExamSettings,
-    deleteExam,
-    getExamResults
+  createExam,
+  getExamsForCourseAdmin,
+  addQuestionToExam,
+  getExamById,
+  updateExamSettings,
+  deleteExam,
+  getExamResults,
 } from '../controllers/examController';
 import {
-    archiveExam,
-    restoreExam,
-    updateQuestionInExam
+  archiveExam,
+  restoreExam,
+  updateQuestionInExam,
 } from '../controllers/examController-stubs';
 import { protect, authorize } from '../middleware/authMiddleware';
 
@@ -23,15 +23,10 @@ const router = Router();
 router.use(protect, authorize('courseadmin'));
 
 // Routes for the main exam collection
-router.route('/')
-    .post(createExam)
-    .get(getExamsForCourseAdmin);
+router.route('/').post(createExam).get(getExamsForCourseAdmin);
 
 // Routes for a specific exam by its ID
-router.route('/:examId')
-    .get(getExamById)
-    .put(updateExamSettings)
-    .delete(deleteExam);
+router.route('/:examId').get(getExamById).put(updateExamSettings).delete(deleteExam);
 
 // Specific action routes for an exam
 router.put('/:examId/archive', archiveExam);

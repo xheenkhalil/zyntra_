@@ -78,6 +78,39 @@ export const zyntraTheme = createTheme({
                     fontWeight: 600,
                 }
             }
+        },
+        MuiTableHead: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: zyntraPalette.backgroundLight, // #F8F9FC
+                }
+            }
+        },
+        MuiTableCell: {
+            styleOverrides: {
+                head: {
+                    fontWeight: 700,
+                    color: zyntraPalette.textDark,
+                    borderBottom: `2px solid ${zyntraPalette.borderLight}`,
+                },
+                body: {
+                    borderBottom: `1px solid ${zyntraPalette.borderLight}`,
+                    padding: '16px',
+                }
+            }
+        },
+        MuiTableRow: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: zyntraPalette.surfaceWhite, // #FFFFFF
+                    '&:hover': {
+                        backgroundColor: '#F0F2F9 !important', // Subtle hover
+                    },
+                    '&:nth-of-type(even)': {
+                        backgroundColor: '#FCFDFE', // Very subtle zebra striping
+                    }
+                }
+            }
         }
     }
 });

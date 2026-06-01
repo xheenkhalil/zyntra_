@@ -3,25 +3,29 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
-    try {
-        const data = await resend.emails.send({
-            from: 'Zyntra Exams <onboarding@resend.dev>', // Update this with your verified domain
-            to: [to],
-            subject: subject,
-            html: html,
-        });
-        console.log(`Email sent to ${to}:`, data);
-        return data;
-    } catch (error) {
-        console.error(`Failed to send email to ${to}:`, error);
-        // Don't throw error to prevent blocking the main flow, just log it
-        return null;
-    }
+  try {
+    const data = await resend.emails.send({
+      from: 'Zyntra Exams <onboarding@resend.dev>', // Update this with your verified domain
+      to: [to],
+      subject: subject,
+      html: html,
+    });
+    console.log(`Email sent to ${to}:`, data);
+    return data;
+  } catch (error) {
+    console.error(`Failed to send email to ${to}:`, error);
+    // Don't throw error to prevent blocking the main flow, just log it
+    return null;
+  }
 };
 
-export const sendStudentCredentials = async (email: string, fullName: string, studentId: string) => {
-    const subject = 'Welcome to Zyntra Exams - Your Student Credentials';
-    const html = `
+export const sendStudentCredentials = async (
+  email: string,
+  fullName: string,
+  studentId: string,
+) => {
+  const subject = 'Welcome to Zyntra Exams - Your Student Credentials';
+  const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Welcome to Zyntra Exams!</h2>
       <p>Hello ${fullName},</p>
@@ -33,12 +37,12 @@ export const sendStudentCredentials = async (email: string, fullName: string, st
       <p>Best regards,<br>The Zyntra Team</p>
     </div>
   `;
-    return sendEmail(email, subject, html);
+  return sendEmail(email, subject, html);
 };
 
 export const sendAdminInviteEmail = async (email: string, fullName: string, inviteLink: string) => {
-    const subject = 'Welcome to Zyntra Exams - Set Up Your Admin Account';
-    const html = `
+  const subject = 'Welcome to Zyntra Exams - Set Up Your Admin Account';
+  const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Welcome to Zyntra Exams!</h2>
       <p>Hello ${fullName},</p>
@@ -53,5 +57,5 @@ export const sendAdminInviteEmail = async (email: string, fullName: string, invi
       <p>Best regards,<br>The Zyntra Team</p>
     </div>
   `;
-    return sendEmail(email, subject, html);
+  return sendEmail(email, subject, html);
 };
