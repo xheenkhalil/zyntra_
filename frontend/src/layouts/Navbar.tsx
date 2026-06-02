@@ -173,10 +173,10 @@ const MobileSolutionsMenu: React.FC = () => (
     <div>
       <h4 className="font-semibold text-gray-900 mb-2">For Institutions</h4>
       <div className="space-y-2 ml-4">
-        <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
           Schools & Universities
         </a>
-        <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
           Corporate Training
         </a>
       </div>
@@ -184,10 +184,10 @@ const MobileSolutionsMenu: React.FC = () => (
     <div>
       <h4 className="font-semibold text-gray-900 mb-2">For Individuals</h4>
       <div className="space-y-2 ml-4">
-        <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
           Guest Quizzes
         </a>
-        <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
           Earn Badges
         </a>
       </div>
@@ -197,22 +197,22 @@ const MobileSolutionsMenu: React.FC = () => (
 
 const MobileFeaturesMenu: React.FC = () => (
   <div className="space-y-2">
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       AI Proctoring
     </a>
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       Smart Analytics
     </a>
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       Biometric Verification
     </a>
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       Mobile Compatible
     </a>
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       Cloud Integration
     </a>
-    <a href="#" className="block text-gray-600 hover:text-blue-600 py-1">
+    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
       Auto-Grading
     </a>
   </div>
@@ -272,7 +272,7 @@ const Navbar: React.FC = () => {
           <Box className="hidden lg:flex items-center space-x-8">
             {/* === 1:1 STYLING FIX: Use a simple <span> for menu triggers, not <Button> --- */}
             <Box className="nav-item relative group">
-              <span className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 cursor-pointer">
+              <span className="flex items-center space-x-1 text-gray-700 hover:text-[#111A50] font-medium transition-colors duration-200 cursor-pointer">
                 <FaCogs className="text-sm" />
                 <span>Solutions</span>
                 <FaChevronDown className="text-xs" />
@@ -281,7 +281,7 @@ const Navbar: React.FC = () => {
             </Box>
 
             <Box className="nav-item relative group">
-              <span className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 cursor-pointer">
+              <span className="flex items-center space-x-1 text-gray-700 hover:text-[#111A50] font-medium transition-colors duration-200 cursor-pointer">
                 <FaStar className="text-sm" />
                 <span>Features</span>
                 <FaChevronDown className="text-xs" />
@@ -290,7 +290,7 @@ const Navbar: React.FC = () => {
             </Box>
 
             <Link to="/pricing"
-              className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 no-underline"
+              className="flex items-center space-x-1 text-gray-700 hover:text-[#111A50] font-medium transition-colors duration-200 no-underline"
             >
               <FaTag className="text-sm" />
               <span>Pricing</span>
@@ -323,7 +323,7 @@ const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <Box className="lg:hidden">
             <IconButton
-              className="text-gray-700 hover:text-blue-600 p-2"
+              className="text-gray-700 hover:text-[#111A50] p-2"
               onClick={toggleMobileMenu}
             >
               {isMobileMenuOpen ? (
@@ -342,7 +342,7 @@ const Navbar: React.FC = () => {
           {/* Solutions Mobile */}
           <div>
             <div
-              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-blue-600 py-2 cursor-pointer"
+              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
               onClick={() => toggleAccordion("solutions")}
             >
               <div className="flex items-center space-x-2">
@@ -366,7 +366,7 @@ const Navbar: React.FC = () => {
           {/* Features Mobile */}
           <div>
             <div
-              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-blue-600 py-2 cursor-pointer"
+              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
               onClick={() => toggleAccordion("features")}
             >
               <div className="flex items-center space-x-2">
@@ -390,7 +390,7 @@ const Navbar: React.FC = () => {
           {/* Pricing */}
           <a
             href="#"
-            className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 py-2"
+            className="flex items-center space-x-2 text-gray-700 hover:text-[#111A50] py-2"
           >
             <FaTag className="text-sm" />
             <span>Pricing</span>
