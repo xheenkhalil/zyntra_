@@ -339,7 +339,7 @@ nav .nav-item:hover .mega-menu {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: #3C4DCE;
+  background: #1A1F91;
   color: white;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
@@ -384,7 +384,7 @@ nav .nav-item:hover .mega-menu {
 }
 
 .chatbot-header {
-  background: #3C4DCE;
+  background: #1A1F91;
   color: white;
   padding: 16px;
   display: flex;
@@ -477,7 +477,7 @@ nav .nav-item:hover .mega-menu {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #3C4DCE;
+  background: #1A1F91;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -498,7 +498,7 @@ nav .nav-item:hover .mega-menu {
 }
 
 .message.user .message-content {
-  background: #3C4DCE;
+  background: #1A1F91;
   color: white;
 }
 
@@ -574,6 +574,21 @@ nav .nav-item:hover .mega-menu {
     transform: translateY(-10px);
     opacity: 1;
   }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased overflow-x-hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Global mobile-friendly Table styling */
+  .MuiTableContainer-root {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .MuiTableCell-root {
+    white-space: nowrap !important;
+  }
 }
 
 .chatbot-input {
@@ -606,7 +621,7 @@ nav .nav-item:hover .mega-menu {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #3C4DCE;
+  background: #1A1F91;
   color: white;
   border: none;
   cursor: pointer;

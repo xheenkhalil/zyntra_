@@ -265,7 +265,7 @@ const PricingPage: React.FC = () => {
       </Container>
 
       {/* 4. CUSTOMIZATION (ENTERPRISE) TIER */}
-      <Box className="bg-[#3C4DCE] py-16 md:py-24">
+      <Box className="bg-[#1A1F91] py-16 md:py-24">
         <Container maxWidth="lg">
           <Paper
             elevation={0}
@@ -318,7 +318,7 @@ const PricingPage: React.FC = () => {
                 <Button
                   color="inherit"
                   onClick={() => navigate("/login")} // Or a /contact-sales page
-                  className="px-8 py-3 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="px-8 py-3 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   sx={{ border: "none" }}
                 >
                   Contact Sales

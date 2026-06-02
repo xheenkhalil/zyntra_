@@ -22,12 +22,14 @@ import {
   IconButton,
   Checkbox,
   TablePagination,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
   getStudents,
@@ -74,6 +76,10 @@ const CourseAdminStudents: React.FC = () => {
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  // Menu State
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuStudent, setMenuStudent] = useState<Student | null>(null);
 
   // Form/Action States
   const [isEditing, setIsEditing] = useState(false);
@@ -180,6 +186,25 @@ const CourseAdminStudents: React.FC = () => {
 
   const handleCloseBulkDelete = (): void => {
     setBulkDeleteDialogOpen(false);
+  };
+
+  // === Menu Handlers ===
+  const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, student: Student) => {
+    setAnchorEl(event.currentTarget);
+    setMenuStudent(student);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+    setMenuStudent(null);
+  };
+
+  const handleMenuAction = (action: 'edit' | 'delete') => {
+    if (menuStudent) {
+      if (action === 'edit') handleOpenEdit(menuStudent);
+      if (action === 'delete') handleOpenDelete(menuStudent);
+    }
+    handleCloseMenu();
   };
 
   // === Form Handlers ===
@@ -322,7 +347,7 @@ const CourseAdminStudents: React.FC = () => {
             color="inherit"
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             sx={{ border: 'none' }}
           >
             Add Student
@@ -391,16 +416,9 @@ const CourseAdminStudents: React.FC = () => {
                       <TableCell>{student.email}</TableCell>
                       <TableCell>{new Date(student.created_at).toLocaleDateString()}</TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Edit">
-                          <IconButton onClick={() => handleOpenEdit(student)} size="small" color="primary">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton onClick={() => handleOpenDelete(student)} size="small" color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
+                        <IconButton onClick={(e) => handleOpenMenu(e, student)}>
+                          <MoreVertIcon />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   );
@@ -420,6 +438,20 @@ const CourseAdminStudents: React.FC = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+
+      {/* --- Action Menu --- */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleCloseMenu}
+      >
+        <MenuItem onClick={() => handleMenuAction('edit')}>
+          Edit Student
+        </MenuItem>
+        <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
+          Delete Student
+        </MenuItem>
+      </Menu>
 
       {/* --- Create/Edit Student Dialog --- */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">

@@ -198,7 +198,7 @@ const CourseAdminStudents: React.FC = () => {
                         color="inherit"
                         startIcon={<AddIcon />}
                         onClick={handleOpen}
-                        className="flex items-center space-x-2 px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         sx={{ border: 'none' }}
                         disabled={uploading}
                     >

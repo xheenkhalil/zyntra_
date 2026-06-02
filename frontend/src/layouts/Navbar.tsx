@@ -259,10 +259,10 @@ const Navbar: React.FC = () => {
             onClick={() => handleNavigate("/")}
           >
             <Box className="flex items-center space-x-2">
-              <Box className="w-8 h-8 md:w-10 md:h-10 bg-[#3C4DCE] rounded-lg flex items-center justify-center">
+              <Box className="w-8 h-8 md:w-10 md:h-10 bg-[#1A1F91] rounded-lg flex items-center justify-center">
                 <FaGraduationCap className="text-white text-lg md:text-xl" />
               </Box>
-              <span className="text-xl md:text-2xl font-bold bg-[#3C4DCE] text-[#3C4DCE]">
+              <span className="text-xl md:text-2xl font-bold bg-[#1A1F91] text-[#1A1F91]">
                 ZYNTRA
               </span>
             </Box>
@@ -312,7 +312,7 @@ const Navbar: React.FC = () => {
             <Button
               color="inherit" // This stops MUI from overriding Tailwind
               onClick={() => handleNavigate("/login")}
-              className="flex items-center space-x-2 px-3 md:px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 px-3 md:px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               startIcon={<FaUserPlus className="text-sm" />}
             >
               <span className="hidden sm:inline">Create Account</span>
@@ -409,7 +409,7 @@ const Navbar: React.FC = () => {
             <Button
               color="inherit"
               onClick={() => handleNavigate("/login")}
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium"
               startIcon={<FaUserPlus className="text-sm" />}
             >
               Create Account

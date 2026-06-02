@@ -303,7 +303,7 @@ const MetricCard: React.FC<{ title: string; value: number | string; growth: stri
                             {growth}
                         </div>
                     </Box>
-                    <div className={`p-3 rounded-xl bg-[#3C4DCE] text-white shadow-md group-hover:shadow-lg group-hover:rotate-12 transition-all duration-300`}>
+                    <div className={`p-3 rounded-xl bg-[#1A1F91] text-white shadow-md group-hover:shadow-lg group-hover:rotate-12 transition-all duration-300`}>
                         <div className="text-xl">
                             {icon}
                         </div>

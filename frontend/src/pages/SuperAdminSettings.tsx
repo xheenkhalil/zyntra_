@@ -164,7 +164,7 @@ const SuperAdminSettings: React.FC = () => {
                   type="submit"
                   color="inherit"
                   disabled={profileLoading}
-                  className="flex items-center space-x-2 px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium"
+                  className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium"
                   sx={{ border: 'none' }}
                   startIcon={profileLoading ? <CircularProgress size={20} color="inherit" /> : <FaSave />}
                 >
@@ -211,7 +211,7 @@ const SuperAdminSettings: React.FC = () => {
                   type="submit"
                   color="inherit"
                   disabled={passwordLoading}
-                  className="flex items-center space-x-2 px-4 py-2 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium"
+                  className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium"
                   sx={{ border: 'none' }}
                   startIcon={passwordLoading ? <CircularProgress size={20} color="inherit" /> : <FaLock />}
                 >

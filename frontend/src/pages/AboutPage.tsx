@@ -48,7 +48,7 @@ const AboutPage: React.FC = () => {
       <Navbar />
 
       {/* 2. HERO SECTION */}
-      <Box className="relative bg-[#3C4DCE] text-white py-20 md:py-32 text-center overflow-hidden">
+      <Box className="relative bg-[#1A1F91] text-white py-20 md:py-32 text-center overflow-hidden">
         {/* Re-using the floating glass elements from HeroSection for consistency */}
         <Box className="absolute inset-0 overflow-hidden opacity-30">
           <Box className="floating-element absolute top-10 sm:top-20 left-5 sm:left-10 w-12 sm:w-16 h-12 sm:h-16 glass-effect rounded-full"></Box>
@@ -250,7 +250,7 @@ const AboutPage: React.FC = () => {
       </Container>
 
       {/* 6. FINAL CTA (JOIN US) */}
-      <Box className="bg-[#3C4DCE] py-16 md:py-24">
+      <Box className="bg-[#1A1F91] py-16 md:py-24">
         <Container maxWidth="md" className="text-center">
           <Typography
             variant="h3"
@@ -268,7 +268,7 @@ const AboutPage: React.FC = () => {
             <Button
               color="inherit"
               onClick={() => navigate("/login")}
-              className="flex items-center space-x-2 px-6 py-3 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 px-6 py-3 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               sx={{ border: "none" }}
             >
               <span>Request a Demo</span>

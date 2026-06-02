@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4 sm:mb-6">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-[#3C4DCE] rounded-lg flex items-center justify-center">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-[#1A1F91] rounded-lg flex items-center justify-center">
                 <FaGraduationCap className="text-white text-lg sm:text-xl" />
               </div>
               <span className="text-xl sm:text-2xl font-bold">ZYNTRA</span>

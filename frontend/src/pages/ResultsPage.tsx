@@ -150,7 +150,7 @@ const ResultsPage: React.FC = () => {
             mb: 4,
             borderRadius: 3,
             background:
-              "#3C4DCE, rgba(156,39,176,0.1))",
+              "#1A1F91, rgba(156,39,176,0.1))",
             backdropFilter: "blur(10px)",
           }}
         >

@@ -293,7 +293,7 @@ const ContactPage: React.FC = () => {
                 color="inherit"
                 size="large"
                 disabled={isSubmitting}
-                className="w-full flex items-center space-x-2 px-6 py-3 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full flex items-center space-x-2 px-6 py-3 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 sx={{ border: "none" }}
                 startIcon={
                   isSubmitting ? (
