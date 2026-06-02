@@ -33,7 +33,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -104,7 +104,7 @@ const BiometricVerification: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -152,7 +152,7 @@ const BiometricVerification: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">99.7% Accuracy:</strong>{" "}
                   Our facial recognition engine achieves industry-leading
@@ -160,7 +160,7 @@ const BiometricVerification: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Sub-30s Verification:</strong>{" "}
                   The entire identity verification process completes in under
@@ -168,7 +168,7 @@ const BiometricVerification: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">GDPR Compliant:</strong>{" "}
                   All biometric data is encrypted, processed locally where
@@ -176,7 +176,7 @@ const BiometricVerification: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Anti-Spoofing:</strong>{" "}
                   Advanced 3D depth analysis and texture mapping defeat
@@ -357,7 +357,7 @@ const BiometricVerification: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Beyond the Login
             </Typography>
@@ -370,25 +370,25 @@ const BiometricVerification: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaUserCheck className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUserCheck className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Periodic facial re-verification at configurable intervals
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaUserShield className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUserShield className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Instant detection if a different person appears on camera
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCamera className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCamera className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Timestamped verification snapshots for audit trail
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaShieldAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaShieldAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Seamless background checks that don't interrupt the exam
                 </span>
@@ -418,8 +418,8 @@ const BiometricVerification: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaEye className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaEye className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   AI Proctoring
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -433,8 +433,8 @@ const BiometricVerification: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaChartBar className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaChartBar className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Smart Analytics
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -448,8 +448,8 @@ const BiometricVerification: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaCloud className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaCloud className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Cloud Integration
                 </Typography>
                 <Typography className="text-gray-600 text-sm">

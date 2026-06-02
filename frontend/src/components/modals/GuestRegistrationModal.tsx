@@ -130,7 +130,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
           </h4>
           <p className="text-gray-600 mb-4">
             You scored{" "}
-            <span id="quiz-score" className="font-bold text-blue-600">
+            <span id="quiz-score" className="font-bold text-[#111A50]">
               {score}
             </span>{" "}
             on your{" "}
@@ -241,17 +241,17 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
             <input
               type="checkbox"
               id="guest-terms"
-              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="mt-1 w-4 h-4 text-[#111A50] border-gray-300 rounded focus:ring-blue-500"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
             />
             <label htmlFor="guest-terms" className="text-sm text-gray-600">
               I agree to the{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 underline">
+              <a href="#" className="text-[#111A50] hover:text-blue-700 underline">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 underline">
+              <a href="#" className="text-[#111A50] hover:text-blue-700 underline">
                 Privacy Policy
               </a>
             </label>
@@ -281,7 +281,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
                 onClose();
                 navigate("/login");
               }}
-              className="text-blue-600 hover:text-blue-700 underline font-medium"
+              className="text-[#111A50] hover:text-blue-700 underline font-medium"
             >
               Sign in here
             </button>

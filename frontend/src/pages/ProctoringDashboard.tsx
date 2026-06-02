@@ -162,7 +162,7 @@ const ProctoringDashboard: React.FC = () => {
                 {/* Header */}
                 <Box component="header" className="bg-white h-16 border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
                     <Typography variant="h6" className="font-bold text-gray-800 flex items-center">
-                        <span className="mr-2 text-blue-600"><FaVideo /></span> Proctoring Dashboard
+                        <span className="mr-2 text-[#111A50]"><FaVideo /></span> Proctoring Dashboard
                     </Typography>
 
                     <Box className="flex items-center space-x-4">
@@ -190,7 +190,7 @@ const ProctoringDashboard: React.FC = () => {
 
                     {/* 1. METRICS ROW */}
                     <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <MetricCard title="Active Candidates" value={data.metrics.activeCandidates} icon={<FaUsers />} color="text-blue-600" bg="bg-blue-100" />
+                        <MetricCard title="Active Candidates" value={data.metrics.activeCandidates} icon={<FaUsers />} color="text-[#111A50]" bg="bg-blue-100" />
                         <MetricCard title="Security Alerts" value={data.metrics.totalAlerts} icon={<FaExclamationTriangle />} color="text-red-600" bg="bg-red-100" isAlert />
                         <MetricCard title="Verified Sessions" value={data.metrics.verifiedSessions} icon={<FaCheckCircle />} color="text-green-600" bg="bg-green-100" />
                         <MetricCard title="AI Detections" value={data.metrics.aiDetections} icon={<FaBrain />} color="text-purple-600" bg="bg-purple-100" />

@@ -79,7 +79,7 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
                                 <Typography variant="subtitle2" className="font-bold text-gray-900">
                                     {student?.name || 'Student'}
                                 </Typography>
-                                <Typography variant="caption" className="text-blue-600 font-medium block">
+                                <Typography variant="caption" className="text-[#111A50] font-medium block">
                                     {student?.studentId || student?.email || ''}
                                 </Typography>
                             </Box>

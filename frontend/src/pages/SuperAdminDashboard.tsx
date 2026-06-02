@@ -233,7 +233,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   // --- Render Functions ---
   const renderActivityIcon = (action: string) => {
-    if (action.includes('org_')) return <FaBuilding className="text-blue-600" />;
+    if (action.includes('org_')) return <FaBuilding className="text-[#111A50]" />;
     if (action.includes('admin_')) return <FaUserPlus className="text-green-600" />;
     if (action.includes('exam_')) return <FaFileAlt className="text-purple-600" />;
     return <FaCog className="text-gray-600" />;
@@ -264,7 +264,7 @@ const SuperAdminDashboard: React.FC = () => {
             <Typography variant="h6" className="font-semibold text-gray-900">System Status Overview</Typography>
             <Box className="flex items-center space-x-2">
               <IconButton
-                className="text-gray-600 hover:text-blue-600 p-2"
+                className="text-gray-600 hover:text-[#111A50] p-2"
                 onClick={fetchData}
                 disabled={loading}
               >
@@ -315,7 +315,7 @@ const SuperAdminDashboard: React.FC = () => {
             change={stats.totalUsers.change}
             icon={<FaUsers />}
             iconBg="bg-blue-100"
-            iconColor="text-blue-600"
+            iconColor="text-[#111A50]"
           />
           <MetricCard
             title="Active Exams"

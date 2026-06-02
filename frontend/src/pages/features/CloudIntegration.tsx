@@ -35,7 +35,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -106,7 +106,7 @@ const CloudIntegration: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -155,7 +155,7 @@ const CloudIntegration: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">99.9% Uptime SLA:</strong>{" "}
                   Guaranteed availability with redundant infrastructure across
@@ -163,7 +163,7 @@ const CloudIntegration: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Global CDN:</strong>{" "}
                   Content delivery network with edge nodes worldwide ensures
@@ -171,7 +171,7 @@ const CloudIntegration: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Auto-Scaling:</strong>{" "}
                   Infrastructure automatically scales to handle exam surges —
@@ -179,7 +179,7 @@ const CloudIntegration: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">SOC 2 Type II:</strong>{" "}
                   All infrastructure is hosted in SOC 2 Type II certified
@@ -292,22 +292,22 @@ const CloudIntegration: React.FC = () => {
           <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                icon: <FaLock className="text-2xl text-blue-600" />,
+                icon: <FaLock className="text-2xl text-[#111A50]" />,
                 title: "End-to-End Encryption",
                 desc: "All data is encrypted in transit (TLS 1.3) and at rest (AES-256). Key management through HSM modules ensures cryptographic keys are never exposed.",
               },
               {
-                icon: <FaDatabase className="text-2xl text-blue-600" />,
+                icon: <FaDatabase className="text-2xl text-[#111A50]" />,
                 title: "Distributed Database",
                 desc: "Multi-region database replication with automatic failover ensures data durability and availability. RPO of zero and RTO under 30 seconds.",
               },
               {
-                icon: <FaCodeBranch className="text-2xl text-blue-600" />,
+                icon: <FaCodeBranch className="text-2xl text-[#111A50]" />,
                 title: "CI/CD Pipeline",
                 desc: "Automated deployment pipeline with blue-green deployments ensures zero-downtime updates. Rollback capabilities provide safety for every release.",
               },
               {
-                icon: <FaNetworkWired className="text-2xl text-blue-600" />,
+                icon: <FaNetworkWired className="text-2xl text-[#111A50]" />,
                 title: "Microservices",
                 desc: "Loosely coupled microservices architecture enables independent scaling, fault isolation, and rapid feature development without system-wide risk.",
               },
@@ -340,7 +340,7 @@ const CloudIntegration: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Ecosystem
             </Typography>
@@ -427,8 +427,8 @@ const CloudIntegration: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaEye className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaEye className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   AI Proctoring
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -442,8 +442,8 @@ const CloudIntegration: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaChartBar className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaChartBar className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Smart Analytics
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -457,8 +457,8 @@ const CloudIntegration: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaFingerprint className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaFingerprint className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Biometric Verification
                 </Typography>
                 <Typography className="text-gray-600 text-sm">

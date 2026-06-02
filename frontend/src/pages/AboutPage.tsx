@@ -27,7 +27,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -81,7 +81,7 @@ const AboutPage: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Our Mission
             </Typography>
@@ -120,7 +120,7 @@ const AboutPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaShieldAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaShieldAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Unmatched Integrity:</strong>{" "}
                   To be the global standard for secure, AI-proctored online
@@ -128,7 +128,7 @@ const AboutPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaBrain className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaBrain className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Actionable Insights:</strong>{" "}
                   To turn assessment data into meaningful analytics that drive
@@ -136,7 +136,7 @@ const AboutPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaUsers className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUsers className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Universal Access:</strong>{" "}
                   To empower every individual and organization with tools to
@@ -161,7 +161,7 @@ const AboutPage: React.FC = () => {
           <Box className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* B2B Card */}
             <Box className="bg-white p-8 rounded-2xl shadow-lg border h-full flex flex-col">
-              <FaBuilding className="text-5xl text-blue-600 mb-4" />
+              <FaBuilding className="text-5xl text-[#111A50] mb-4" />
               <Typography
                 variant="h4"
                 component="h3"
@@ -187,7 +187,7 @@ const AboutPage: React.FC = () => {
             </Box>
             {/* B2C Card */}
             <Box className="bg-white p-8 rounded-2xl shadow-lg border h-full flex flex-col">
-              <FaUserGraduate className="text-5xl text-blue-600 mb-4" />
+              <FaUserGraduate className="text-5xl text-[#111A50] mb-4" />
               <Typography
                 variant="h4"
                 component="h3"
@@ -276,7 +276,7 @@ const AboutPage: React.FC = () => {
             <Button
               variant="text"
               onClick={() => navigate("/")} // Or to quiz page
-              className="px-6 py-3 text-blue-600 hover:bg-blue-50"
+              className="px-6 py-3 text-[#111A50] hover:bg-blue-50"
             >
               Take a Free Quiz
             </Button>

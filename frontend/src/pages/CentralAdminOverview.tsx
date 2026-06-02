@@ -296,7 +296,7 @@ const MetricCard: React.FC<{ title: string; value: number | string; growth: stri
                         <Typography variant="body2" className="text-gray-500 font-medium tracking-wide uppercase text-xs">
                             {title}
                         </Typography>
-                        <Typography variant="h4" className="font-bold my-2 text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                        <Typography variant="h4" className="font-bold my-2 text-gray-800 group-hover:text-[#111A50] transition-colors duration-300">
                             {value}
                         </Typography>
                         <div className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${growth.includes('+') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>

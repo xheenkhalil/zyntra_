@@ -40,7 +40,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -158,7 +158,7 @@ const EarnBadgesPage: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Digital Badges
             </Typography>
@@ -205,7 +205,7 @@ const EarnBadgesPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Cryptographic Verification:</strong>{" "}
                   Every badge includes a unique verification hash. Anyone can
@@ -213,7 +213,7 @@ const EarnBadgesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaGlobe className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaGlobe className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Open Badges Standard:</strong>{" "}
                   Built on Open Badges 3.0 for maximum portability across
@@ -221,7 +221,7 @@ const EarnBadgesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaChartLine className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaChartLine className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Evidence-Based:</strong>{" "}
                   Each badge links to the specific assessments and criteria
@@ -229,7 +229,7 @@ const EarnBadgesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCertificate className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCertificate className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Expiry & Renewal:</strong>{" "}
                   Time-sensitive badges include expiry dates with automated
@@ -247,7 +247,7 @@ const EarnBadgesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Achievement Milestones
             </Typography>
@@ -312,7 +312,7 @@ const EarnBadgesPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaGlobe className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaGlobe className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Public Profile:</strong>{" "}
                   Create a shareable public profile page showcasing all your
@@ -321,7 +321,7 @@ const EarnBadgesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaChartLine className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaChartLine className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Skills Radar:</strong>{" "}
                   A visual radar chart displays your competency across different
@@ -330,7 +330,7 @@ const EarnBadgesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCertificate className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCertificate className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Downloadable Certificates:</strong>{" "}
                   Generate professional PDF certificates for each badge with
@@ -343,7 +343,7 @@ const EarnBadgesPage: React.FC = () => {
           <Box className="order-1 md:order-2">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Portfolio Building
             </Typography>
@@ -380,7 +380,7 @@ const EarnBadgesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Sharing & Recognition
             </Typography>
@@ -426,7 +426,7 @@ const EarnBadgesPage: React.FC = () => {
         <Box className="text-center mb-12">
           <Typography
             component="h2"
-            className="text-sm font-semibold text-blue-600 uppercase mb-2"
+            className="text-sm font-semibold text-[#111A50] uppercase mb-2"
           >
             Badge Categories
           </Typography>
@@ -446,64 +446,64 @@ const EarnBadgesPage: React.FC = () => {
         </Box>
         <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaLaptopCode className="text-3xl text-blue-600 mb-3" />
+            <FaLaptopCode className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Technology & Programming</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               Python, JavaScript, cloud computing, cybersecurity, data
               structures, DevOps, and more. Prove your technical chops with
               badges that developers and engineers respect.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">45+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">45+ badges available</Typography>
           </Box>
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaFlask className="text-3xl text-blue-600 mb-3" />
+            <FaFlask className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Science & Research</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               Biology, chemistry, physics, environmental science, and research
               methodology. Academic badges that complement your degree and
               demonstrate interdisciplinary breadth.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">30+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">30+ badges available</Typography>
           </Box>
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaBriefcase className="text-3xl text-blue-600 mb-3" />
+            <FaBriefcase className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Business & Management</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               Marketing, finance, leadership, strategy, operations, and
               entrepreneurship. Business badges that validate your commercial
               acumen and management skills.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">35+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">35+ badges available</Typography>
           </Box>
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaBook className="text-3xl text-blue-600 mb-3" />
+            <FaBook className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Humanities & Languages</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               History, philosophy, creative writing, foreign languages, and
               cultural studies. Broaden your intellectual profile with badges
               that showcase analytical and communication skills.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">20+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">20+ badges available</Typography>
           </Box>
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaCode className="text-3xl text-blue-600 mb-3" />
+            <FaCode className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Data & Analytics</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               SQL, machine learning, statistical analysis, data visualisation,
               and business intelligence. Data badges for the data-driven
               professional building an analytics career.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">25+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">25+ badges available</Typography>
           </Box>
           <Box className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-            <FaLightbulb className="text-3xl text-blue-600 mb-3" />
+            <FaLightbulb className="text-3xl text-[#111A50] mb-3" />
             <Typography className="font-semibold text-gray-900 mb-2">Professional Skills</Typography>
             <Typography className="text-gray-600 text-sm mb-3">
               Communication, critical thinking, problem solving, teamwork,
               and project management. Soft-skill badges that round out your
               professional credentials.
             </Typography>
-            <Typography className="text-blue-600 text-sm font-medium">20+ badges available</Typography>
+            <Typography className="text-[#111A50] text-sm font-medium">20+ badges available</Typography>
           </Box>
         </Box>
       </Container>
@@ -528,7 +528,7 @@ const EarnBadgesPage: React.FC = () => {
               to="/solutions/schools-universities"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaUniversity className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaUniversity className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Schools & Universities
               </Typography>
@@ -540,7 +540,7 @@ const EarnBadgesPage: React.FC = () => {
               to="/solutions/corporate-training"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaBriefcase className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaBriefcase className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Corporate Training
               </Typography>
@@ -552,7 +552,7 @@ const EarnBadgesPage: React.FC = () => {
               to="/solutions/guest-quizzes"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaPlay className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaPlay className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Guest Quizzes
               </Typography>

@@ -35,7 +35,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -132,7 +132,7 @@ const CorporateTrainingPage: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Assessment & Certification
             </Typography>
@@ -178,7 +178,7 @@ const CorporateTrainingPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Custom Certification Paths:</strong>{" "}
                   Design multi-level certification programmes with prerequisites,
@@ -186,7 +186,7 @@ const CorporateTrainingPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaSyncAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaSyncAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Renewal Management:</strong>{" "}
                   Automated reminders and streamlined recertification workflows
@@ -194,7 +194,7 @@ const CorporateTrainingPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaShieldAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaShieldAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Verified Credentials:</strong>{" "}
                   Blockchain-backed digital certificates that employers and
@@ -202,7 +202,7 @@ const CorporateTrainingPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaUserGraduate className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUserGraduate className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Learning Pathways:</strong>{" "}
                   Integrate assessments into broader learning journeys with
@@ -220,7 +220,7 @@ const CorporateTrainingPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Compliance Training
             </Typography>
@@ -276,7 +276,7 @@ const CorporateTrainingPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaChartBar className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaChartBar className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Competency Mapping:</strong>{" "}
                   Define competency frameworks for every role and map assessment
@@ -285,7 +285,7 @@ const CorporateTrainingPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaChartLine className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaChartLine className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Gap Identification:</strong>{" "}
                   AI-powered analysis highlights critical skill gaps at
@@ -294,7 +294,7 @@ const CorporateTrainingPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaUsers className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUsers className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Benchmarking:</strong>{" "}
                   Compare your workforce's skills profile against industry
@@ -307,7 +307,7 @@ const CorporateTrainingPage: React.FC = () => {
           <Box className="order-1 md:order-2">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Skills Gap Analysis
             </Typography>
@@ -344,7 +344,7 @@ const CorporateTrainingPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Onboarding
             </Typography>
@@ -389,7 +389,7 @@ const CorporateTrainingPage: React.FC = () => {
         <Box className="text-center mb-12">
           <Typography
             component="h2"
-            className="text-sm font-semibold text-blue-600 uppercase mb-2"
+            className="text-sm font-semibold text-[#111A50] uppercase mb-2"
           >
             Analytics & Benchmarking
           </Typography>
@@ -412,7 +412,7 @@ const CorporateTrainingPage: React.FC = () => {
             elevation={0}
             className="p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg"
           >
-            <FaChartBar className="text-4xl text-blue-600 mb-4" />
+            <FaChartBar className="text-4xl text-[#111A50] mb-4" />
             <Typography variant="h5" className="font-semibold text-gray-900 mb-3">
               Executive Dashboards
             </Typography>
@@ -429,7 +429,7 @@ const CorporateTrainingPage: React.FC = () => {
             elevation={0}
             className="p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg"
           >
-            <FaChartLine className="text-4xl text-blue-600 mb-4" />
+            <FaChartLine className="text-4xl text-[#111A50] mb-4" />
             <Typography variant="h5" className="font-semibold text-gray-900 mb-3">
               Team Performance Reports
             </Typography>
@@ -451,7 +451,7 @@ const CorporateTrainingPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               HR Integration
             </Typography>
@@ -510,7 +510,7 @@ const CorporateTrainingPage: React.FC = () => {
             to="/solutions/schools-universities"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaUniversity className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaUniversity className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Schools & Universities
             </Typography>
@@ -522,7 +522,7 @@ const CorporateTrainingPage: React.FC = () => {
             to="/solutions/guest-quizzes"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaRocket className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaRocket className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Guest Quizzes
             </Typography>
@@ -534,7 +534,7 @@ const CorporateTrainingPage: React.FC = () => {
             to="/solutions/earn-badges"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaTrophy className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaTrophy className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Earn Badges
             </Typography>

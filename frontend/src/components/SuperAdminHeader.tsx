@@ -47,7 +47,7 @@ const SuperAdminHeader: React.FC<HeaderProps> = ({ onToggleCollapse, onToggleMob
           <IconButton
             id="sidebar-toggle"
             onClick={onToggleMobile}
-            className="lg:hidden text-gray-600 hover:text-blue-600 p-2"
+            className="lg:hidden text-gray-600 hover:text-[#111A50] p-2"
           >
             <FaBars className="text-xl" />
           </IconButton>
@@ -56,7 +56,7 @@ const SuperAdminHeader: React.FC<HeaderProps> = ({ onToggleCollapse, onToggleMob
           <IconButton
             id="sidebar-collapse"
             onClick={onToggleCollapse}
-            className="hidden lg:block text-gray-600 hover:text-blue-600 p-2"
+            className="hidden lg:block text-gray-600 hover:text-[#111A50] p-2"
           >
             <FaBars className="text-xl" />
           </IconButton>
@@ -83,7 +83,7 @@ const SuperAdminHeader: React.FC<HeaderProps> = ({ onToggleCollapse, onToggleMob
           </Box>
 
           {/* Notification Bell (Static) */}
-          <IconButton className="relative p-2 text-gray-600 hover:text-blue-600">
+          <IconButton className="relative p-2 text-gray-600 hover:text-[#111A50]">
             <FaBell className="text-xl" />
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
               3

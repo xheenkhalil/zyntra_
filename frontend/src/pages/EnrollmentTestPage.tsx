@@ -114,7 +114,7 @@ const EnrollmentTestPage: React.FC = () => {
 
       <Paper className="p-6 shadow-lg bg-white rounded-xl">
         <Box className="flex justify-between items-center mb-4">
-          <Typography variant="h6" className={status.includes('Error') ? 'text-red-600' : 'text-blue-600'}>
+          <Typography variant="h6" className={status.includes('Error') ? 'text-red-600' : 'text-[#111A50]'}>
             Status: {status}
           </Typography>
         </Box>

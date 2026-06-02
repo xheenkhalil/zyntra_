@@ -145,7 +145,7 @@ const ContactPage: React.FC = () => {
             <List className="space-y-4">
               <ListItem disableGutters alignItems="flex-start" className="p-0">
                 <ListItemIcon className="mr-4 mt-1">
-                  <FaHandshake className="text-blue-600 text-xl" />
+                  <FaHandshake className="text-[#111A50] text-xl" />
                 </ListItemIcon>
                 <ListItemText
                   primary="B2B & Enterprise Sales"
@@ -154,7 +154,7 @@ const ContactPage: React.FC = () => {
                     className: "font-semibold text-gray-900",
                   }}
                   secondaryTypographyProps={{
-                    className: "text-blue-600 hover:underline",
+                    className: "text-[#111A50] hover:underline",
                   }}
                 />
               </ListItem>
@@ -162,7 +162,7 @@ const ContactPage: React.FC = () => {
               {/* --- FIX: ADDED BACK TECHNICAL SUPPORT --- */}
               <ListItem disableGutters alignItems="flex-start" className="p-0">
                 <ListItemIcon className="mr-4 mt-1">
-                  <FaTools className="text-blue-600 text-xl" />
+                  <FaTools className="text-[#111A50] text-xl" />
                 </ListItemIcon>
                 <ListItemText
                   primary="Technical Support"
@@ -171,7 +171,7 @@ const ContactPage: React.FC = () => {
                     className: "font-semibold text-gray-900",
                   }}
                   secondaryTypographyProps={{
-                    className: "text-blue-600 hover:underline",
+                    className: "text-[#111A50] hover:underline",
                   }}
                 />
               </ListItem>
@@ -179,7 +179,7 @@ const ContactPage: React.FC = () => {
               {/* --- FIX: ADDED BACK GENERAL INQUIRIES --- */}
               <ListItem disableGutters alignItems="flex-start" className="p-0">
                 <ListItemIcon className="mr-4 mt-1">
-                  <FaQuestionCircle className="text-blue-600 text-xl" />
+                  <FaQuestionCircle className="text-[#111A50] text-xl" />
                 </ListItemIcon>
                 <ListItemText
                   primary="General Inquiries"
@@ -188,14 +188,14 @@ const ContactPage: React.FC = () => {
                     className: "font-semibold text-gray-900",
                   }}
                   secondaryTypographyProps={{
-                    className: "text-blue-600 hover:underline",
+                    className: "text-[#111A50] hover:underline",
                   }}
                 />
               </ListItem>
 
               <ListItem disableGutters alignItems="flex-start" className="p-0">
                 <ListItemIcon className="mr-4 mt-1">
-                  <FaBuilding className="text-blue-600 text-xl" />
+                  <FaBuilding className="text-[#111A50] text-xl" />
                 </ListItemIcon>
                 <ListItemText
                   primary="Our Office"

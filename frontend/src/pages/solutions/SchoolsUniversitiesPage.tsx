@@ -31,7 +31,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -128,7 +128,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Exam Management
             </Typography>
@@ -173,7 +173,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaChartLine className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaChartLine className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Question Banks:</strong>{" "}
                   Build and organise thousands of questions by subject, topic,
@@ -181,7 +181,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaServer className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaServer className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Auto-Scheduling:</strong>{" "}
                   Intelligent scheduling algorithms prevent conflicts and
@@ -189,7 +189,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaUsers className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUsers className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Collaborative Authoring:</strong>{" "}
                   Multiple faculty members can co-author exams with role-based
@@ -197,7 +197,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaGlobe className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaGlobe className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Multi-Language Support:</strong>{" "}
                   Deliver exams in multiple languages to serve diverse student
@@ -215,7 +215,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Organisational Structure
             </Typography>
@@ -270,7 +270,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaUsers className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaUsers className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Bulk Import:</strong>{" "}
                   Upload thousands of students via CSV or direct SIS
@@ -279,7 +279,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaShieldAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaShieldAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Identity Verification:</strong>{" "}
                   Biometric enrollment with facial recognition ensures the
@@ -287,7 +287,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaPlug className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaPlug className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Self-Registration:</strong>{" "}
                   Students can self-enrol using institutional SSO, with
@@ -300,7 +300,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
           <Box className="order-1 md:order-2">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Student Enrollment
             </Typography>
@@ -336,7 +336,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Compliance & Accreditation
             </Typography>
@@ -382,7 +382,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
         <Box className="text-center mb-12">
           <Typography
             component="h2"
-            className="text-sm font-semibold text-blue-600 uppercase mb-2"
+            className="text-sm font-semibold text-[#111A50] uppercase mb-2"
           >
             Integrations
           </Typography>
@@ -404,7 +404,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             elevation={0}
             className="p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg"
           >
-            <FaPlug className="text-4xl text-blue-600 mb-4" />
+            <FaPlug className="text-4xl text-[#111A50] mb-4" />
             <Typography variant="h5" className="font-semibold text-gray-900 mb-3">
               Learning Management Systems
             </Typography>
@@ -421,7 +421,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             elevation={0}
             className="p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg"
           >
-            <FaServer className="text-4xl text-blue-600 mb-4" />
+            <FaServer className="text-4xl text-[#111A50] mb-4" />
             <Typography variant="h5" className="font-semibold text-gray-900 mb-3">
               Student Information Systems
             </Typography>
@@ -443,7 +443,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Scale & Integrity
             </Typography>
@@ -504,7 +504,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             to="/solutions/corporate-training"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaUsers className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaUsers className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Corporate Training
             </Typography>
@@ -516,7 +516,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             to="/solutions/guest-quizzes"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaRocket className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaRocket className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Guest Quizzes
             </Typography>
@@ -528,7 +528,7 @@ const SchoolsUniversitiesPage: React.FC = () => {
             to="/solutions/earn-badges"
             className="p-6 bg-blue-50 rounded-xl text-center hover:bg-blue-100 transition-colors no-underline"
           >
-            <FaCertificate className="text-2xl text-blue-600 mx-auto mb-2" />
+            <FaCertificate className="text-2xl text-[#111A50] mx-auto mb-2" />
             <Typography className="font-semibold text-gray-900">
               Earn Badges
             </Typography>

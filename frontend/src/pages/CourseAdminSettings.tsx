@@ -107,7 +107,7 @@ const CourseAdminSettings: React.FC = () => {
                 {/* --- 1. Profile Information --- */}
                 <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 h-full">
                     <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
-                        <FaUserEdit className="mr-3 text-blue-600" /> Profile Information
+                        <FaUserEdit className="mr-3 text-[#111A50]" /> Profile Information
                     </Typography>
 
                     <Box component="form" onSubmit={handleProfileSubmit}>
@@ -160,7 +160,7 @@ const CourseAdminSettings: React.FC = () => {
                 {/* --- 2. Security Settings --- */}
                 <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 h-full">
                     <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
-                        <FaLock className="mr-3 text-blue-600" /> Security
+                        <FaLock className="mr-3 text-[#111A50]" /> Security
                     </Typography>
 
                     <Box component="form" onSubmit={handlePasswordSubmit}>

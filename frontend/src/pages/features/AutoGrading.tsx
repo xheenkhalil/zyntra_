@@ -35,7 +35,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -106,7 +106,7 @@ const AutoGrading: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -155,7 +155,7 @@ const AutoGrading: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">&lt; 5 Seconds:</strong>{" "}
                   Average time to grade a complete exam with up to 100
@@ -163,7 +163,7 @@ const AutoGrading: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">98.5% Accuracy:</strong>{" "}
                   Our AI grading engine matches human grader agreement rates
@@ -171,7 +171,7 @@ const AutoGrading: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">15+ Question Types:</strong>{" "}
                   Support for MCQ, true/false, fill-in-the-blank, matching,
@@ -179,7 +179,7 @@ const AutoGrading: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">40+ Hours Saved:</strong>{" "}
                   Average time saved per instructor per exam cycle, freeing
@@ -371,7 +371,7 @@ const AutoGrading: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Configuration Options
             </Typography>
@@ -384,31 +384,31 @@ const AutoGrading: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaPercentage className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaPercentage className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Custom point values and weighting per question and section
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaClock className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaClock className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Time-based bonuses and late submission penalties
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaAdjust className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaAdjust className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Configurable partial credit rules and negative marking
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaFileAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaFileAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Multi-dimensional rubrics with weighted criteria
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaRobot className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaRobot className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   AI calibration with instructor-provided exemplar responses
                 </span>
@@ -438,8 +438,8 @@ const AutoGrading: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaChartBar className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaChartBar className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Smart Analytics
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -453,8 +453,8 @@ const AutoGrading: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaEye className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaEye className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   AI Proctoring
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -468,8 +468,8 @@ const AutoGrading: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaCloud className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaCloud className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Cloud Integration
                 </Typography>
                 <Typography className="text-gray-600 text-sm">

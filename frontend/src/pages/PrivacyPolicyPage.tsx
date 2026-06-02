@@ -12,7 +12,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 <Container maxWidth="lg">
                     <Paper elevation={0} className="p-8 md:p-12 rounded-2xl border border-gray-200 bg-white">
                         <Box className="flex items-center space-x-4 mb-8">
-                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-[#111A50]">
                                 <FaShieldAlt className="text-2xl" />
                             </div>
                             <div>
@@ -120,7 +120,7 @@ const PrivacyPolicyPage: React.FC = () => {
                                 <Typography variant="body1">
                                     If you have any questions about this Privacy Policy, please contact us at:
                                     <br />
-                                    <a href="mailto:privacy@zyntra.com" className="text-blue-600 hover:underline">privacy@zyntra.com</a>
+                                    <a href="mailto:privacy@zyntra.com" className="text-[#111A50] hover:underline">privacy@zyntra.com</a>
                                 </Typography>
                             </section>
                         </div>

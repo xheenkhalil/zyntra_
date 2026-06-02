@@ -189,7 +189,7 @@ const SuperAdminAnalytics: React.FC = () => {
             change={stats.totalUsers.change}
             icon={<FaUsers />}
             iconBg="bg-blue-100"
-            iconColor="text-blue-600"
+            iconColor="text-[#111A50]"
           />
           <MetricCard
             title="Active Exams"

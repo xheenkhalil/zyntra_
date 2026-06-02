@@ -215,7 +215,7 @@ const PricingPage: React.FC = () => {
                 variant="h4"
                 component="h3"
                 className={`text-2xl font-bold mt-4 ${
-                  tier.popular ? "text-blue-600" : "text-gray-900"
+                  tier.popular ? "text-[#111A50]" : "text-gray-900"
                 }`}
               >
                 {tier.name}
@@ -289,25 +289,25 @@ const PricingPage: React.FC = () => {
                 <List className="mt-4">
                   <ListItem disableGutters className="w-1/2 inline-block">
                     <ListItemIcon className="min-w-0 mr-2">
-                      <FaUsers className="text-blue-600" />
+                      <FaUsers className="text-[#111A50]" />
                     </ListItemIcon>
                     <ListItemText primary="Unlimited Admins" />
                   </ListItem>
                   <ListItem disableGutters className="w-1/2 inline-block">
                     <ListItemIcon className="min-w-0 mr-2">
-                      <FaBuilding className="text-blue-600" />
+                      <FaBuilding className="text-[#111A50]" />
                     </ListItemIcon>
                     <ListItemText primary="SSO Integration" />
                   </ListItem>
                   <ListItem disableGutters className="w-1/2 inline-block">
                     <ListItemIcon className="min-w-0 mr-2">
-                      <FaComments className="text-blue-600" />
+                      <FaComments className="text-[#111A50]" />
                     </ListItemIcon>
                     <ListItemText primary="Dedicated Support" />
                   </ListItem>
                   <ListItem disableGutters className="w-1/2 inline-block">
                     <ListItemIcon className="min-w-0 mr-2">
-                      <FaFileAlt className="text-blue-600" />
+                      <FaFileAlt className="text-[#111A50]" />
                     </ListItemIcon>
                     <ListItemText primary="Custom Contracts" />
                   </ListItem>

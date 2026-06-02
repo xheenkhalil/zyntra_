@@ -38,7 +38,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -59,7 +59,7 @@ const CategoryCard: React.FC<{
     <Box className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-xl",
+            className: "text-[#111A50] text-xl",
           })
         : icon}
     </Box>
@@ -163,7 +163,7 @@ const GuestQuizzesPage: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Practice Tests
             </Typography>
@@ -208,7 +208,7 @@ const GuestQuizzesPage: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaGlobe className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaGlobe className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">500+ Quizzes:</strong>{" "}
                   A vast and growing library covering technology, science,
@@ -216,7 +216,7 @@ const GuestQuizzesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaLightbulb className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaLightbulb className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Expert-Crafted:</strong>{" "}
                   Every question is written and reviewed by industry professionals
@@ -224,7 +224,7 @@ const GuestQuizzesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaClock className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaClock className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Flexible Timing:</strong>{" "}
                   Take quizzes at your own pace with optional timers, or challenge
@@ -232,7 +232,7 @@ const GuestQuizzesPage: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaMobileAlt className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaMobileAlt className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Mobile-Friendly:</strong>{" "}
                   Take quizzes on any device — desktop, tablet, or phone. Our
@@ -250,7 +250,7 @@ const GuestQuizzesPage: React.FC = () => {
           <Box className="text-center mb-12">
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Categories
             </Typography>
@@ -289,7 +289,7 @@ const GuestQuizzesPage: React.FC = () => {
         <Box className="text-center mb-12">
           <Typography
             component="h2"
-            className="text-sm font-semibold text-blue-600 uppercase mb-2"
+            className="text-sm font-semibold text-[#111A50] uppercase mb-2"
           >
             Instant Feedback
           </Typography>
@@ -334,7 +334,7 @@ const GuestQuizzesPage: React.FC = () => {
             <Box>
               <Typography
                 component="h2"
-                className="text-sm font-semibold text-blue-600 uppercase mb-2"
+                className="text-sm font-semibold text-[#111A50] uppercase mb-2"
               >
                 Zero Friction
               </Typography>
@@ -373,7 +373,7 @@ const GuestQuizzesPage: React.FC = () => {
               </Typography>
               <ul className="space-y-3">
                 <li className="flex items-start space-x-3">
-                  <FaTrophy className="text-blue-600 mt-1 flex-shrink-0" />
+                  <FaTrophy className="text-[#111A50] mt-1 flex-shrink-0" />
                   <span className="text-gray-700">
                     <strong className="text-gray-900">Global Rankings:</strong>{" "}
                     Compete against quiz-takers worldwide. See where you stand
@@ -381,7 +381,7 @@ const GuestQuizzesPage: React.FC = () => {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <FaUsers className="text-blue-600 mt-1 flex-shrink-0" />
+                  <FaUsers className="text-[#111A50] mt-1 flex-shrink-0" />
                   <span className="text-gray-700">
                     <strong className="text-gray-900">Friends & Groups:</strong>{" "}
                     Create private leaderboards to compete with friends,
@@ -389,7 +389,7 @@ const GuestQuizzesPage: React.FC = () => {
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <FaStar className="text-blue-600 mt-1 flex-shrink-0" />
+                  <FaStar className="text-[#111A50] mt-1 flex-shrink-0" />
                   <span className="text-gray-700">
                     <strong className="text-gray-900">Streak Rewards:</strong>{" "}
                     Build quiz-taking streaks and earn bonus points. Daily
@@ -407,7 +407,7 @@ const GuestQuizzesPage: React.FC = () => {
         <Box className="text-center mb-12">
           <Typography
             component="h2"
-            className="text-sm font-semibold text-blue-600 uppercase mb-2"
+            className="text-sm font-semibold text-[#111A50] uppercase mb-2"
           >
             Validation & Sharing
           </Typography>
@@ -439,7 +439,7 @@ const GuestQuizzesPage: React.FC = () => {
           </FeatureCard>
           <FeatureCard icon={<FaCertificate />} title="Path to Badges">
             Outstanding quiz performance unlocks{" "}
-            <Link to="/solutions/earn-badges" className="text-blue-600 hover:underline">
+            <Link to="/solutions/earn-badges" className="text-[#111A50] hover:underline">
               digital badges
             </Link>{" "}
             that you can add to your professional portfolio. Complete themed quiz
@@ -469,7 +469,7 @@ const GuestQuizzesPage: React.FC = () => {
               to="/solutions/schools-universities"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaUniversity className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaUniversity className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Schools & Universities
               </Typography>
@@ -481,7 +481,7 @@ const GuestQuizzesPage: React.FC = () => {
               to="/solutions/corporate-training"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaBriefcase className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaBriefcase className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Corporate Training
               </Typography>
@@ -493,7 +493,7 @@ const GuestQuizzesPage: React.FC = () => {
               to="/solutions/earn-badges"
               className="p-6 bg-white rounded-xl text-center hover:shadow-lg transition-all no-underline border border-gray-200"
             >
-              <FaTrophy className="text-2xl text-blue-600 mx-auto mb-2" />
+              <FaTrophy className="text-2xl text-[#111A50] mx-auto mb-2" />
               <Typography className="font-semibold text-gray-900">
                 Earn Badges
               </Typography>

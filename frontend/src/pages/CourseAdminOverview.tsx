@@ -188,7 +188,7 @@ const CourseAdminOverview: React.FC = () => {
             {/* HEADER + FILTER */}
             <Box className="flex justify-between items-center mb-6 flex-wrap gap-2">
                 <Typography variant="h5" className="font-bold text-gray-900 flex items-center space-x-2">
-                    <FaTachometerAlt className="text-blue-600" />
+                    <FaTachometerAlt className="text-[#111A50]" />
                     <span>Teacher Dashboard</span>
                 </Typography>
 
@@ -217,7 +217,7 @@ const CourseAdminOverview: React.FC = () => {
                     subText={`Enrolled`}
                     icon={<FaUsers />}
                     iconBg="bg-blue-100"
-                    iconColor="text-blue-600"
+                    iconColor="text-[#111A50]"
                     subTextColor="text-green-600"
                 />
                 <MetricCard
@@ -293,7 +293,7 @@ const CourseAdminOverview: React.FC = () => {
                     title="Manage Students"
                     description="Add, edit, or remove students"
                     icon={<FaUserGraduate />}
-                    color="bg-blue-50 text-blue-600"
+                    color="bg-blue-50 text-[#111A50]"
                     onClick={() => navigate('/courseadmin/students')}
                 />
                 <QuickActionCard

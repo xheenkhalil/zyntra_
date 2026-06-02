@@ -30,7 +30,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -101,7 +101,7 @@ const AIProctoring: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -150,7 +150,7 @@ const AIProctoring: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">24/7 Vigilance:</strong>{" "}
                   AI never gets tired, distracted, or needs breaks — every
@@ -158,7 +158,7 @@ const AIProctoring: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Cost Effective:</strong>{" "}
                   Eliminate the need for one-to-one human proctors, reducing
@@ -166,7 +166,7 @@ const AIProctoring: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Scalable:</strong>{" "}
                   Monitor 10 or 10,000 candidates simultaneously without any
@@ -174,7 +174,7 @@ const AIProctoring: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Fair & Consistent:</strong>{" "}
                   Every candidate is evaluated against the same standards,
@@ -347,8 +347,8 @@ const AIProctoring: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaFingerprint className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaFingerprint className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 Biometric Verification
               </Typography>
               <Typography className="text-gray-600 text-sm">
@@ -362,8 +362,8 @@ const AIProctoring: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaChartBar className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaChartBar className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 Smart Analytics
               </Typography>
               <Typography className="text-gray-600 text-sm">
@@ -377,8 +377,8 @@ const AIProctoring: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaLock className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaLock className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 Cloud Integration
               </Typography>
               <Typography className="text-gray-600 text-sm">

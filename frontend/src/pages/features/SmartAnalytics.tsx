@@ -32,7 +32,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -103,7 +103,7 @@ const SmartAnalytics: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -150,7 +150,7 @@ const SmartAnalytics: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Real-Time Dashboards:</strong>{" "}
                   Live data visualizations that update as exams are being taken,
@@ -158,7 +158,7 @@ const SmartAnalytics: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Predictive Models:</strong>{" "}
                   Machine learning algorithms identify at-risk students early,
@@ -166,7 +166,7 @@ const SmartAnalytics: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Exportable Reports:</strong>{" "}
                   Generate beautiful PDF and CSV reports for stakeholders,
@@ -174,7 +174,7 @@ const SmartAnalytics: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Historical Trends:</strong>{" "}
                   Track performance over semesters and years to measure the
@@ -281,7 +281,7 @@ const SmartAnalytics: React.FC = () => {
           <Box className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: <FaUserGraduate className="text-3xl text-blue-600 mb-4" />,
+                icon: <FaUserGraduate className="text-3xl text-[#111A50] mb-4" />,
                 title: "For Educators",
                 items: [
                   "Identify which topics need more classroom time",
@@ -291,7 +291,7 @@ const SmartAnalytics: React.FC = () => {
                 ],
               },
               {
-                icon: <FaDatabase className="text-3xl text-blue-600 mb-4" />,
+                icon: <FaDatabase className="text-3xl text-[#111A50] mb-4" />,
                 title: "For Administrators",
                 items: [
                   "Monitor institution-wide performance metrics",
@@ -301,7 +301,7 @@ const SmartAnalytics: React.FC = () => {
                 ],
               },
               {
-                icon: <FaChartBar className="text-3xl text-blue-600 mb-4" />,
+                icon: <FaChartBar className="text-3xl text-[#111A50] mb-4" />,
                 title: "For Students",
                 items: [
                   "View personalized performance summaries",
@@ -355,8 +355,8 @@ const SmartAnalytics: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaEye className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaEye className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 AI Proctoring
               </Typography>
               <Typography className="text-gray-600 text-sm">
@@ -370,8 +370,8 @@ const SmartAnalytics: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaRobot className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaRobot className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 Auto-Grading
               </Typography>
               <Typography className="text-gray-600 text-sm">
@@ -385,8 +385,8 @@ const SmartAnalytics: React.FC = () => {
               elevation={0}
               className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
             >
-              <FaFingerprint className="text-3xl text-blue-600 mb-4" />
-              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+              <FaFingerprint className="text-3xl text-[#111A50] mb-4" />
+              <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                 Cloud Integration
               </Typography>
               <Typography className="text-gray-600 text-sm">

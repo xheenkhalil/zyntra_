@@ -659,7 +659,7 @@ const ExamBuilderPage: React.FC = () => {
                                     <Box>
                                         <Tooltip title="Edit">
                                             <IconButton onClick={() => { setQuestionToEdit(q); setQuestionModalOpen(true); }}>
-                                                <EditIcon className="text-blue-600" />
+                                                <EditIcon className="text-[#111A50]" />
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip title="Delete">

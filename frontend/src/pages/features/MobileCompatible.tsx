@@ -35,7 +35,7 @@ const FeatureCard: React.FC<{
     <Box className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
       {React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<any, any>, {
-            className: "text-blue-600 text-lg sm:text-xl",
+            className: "text-[#111A50] text-lg sm:text-xl",
           })
         : icon}
     </Box>
@@ -106,7 +106,7 @@ const MobileCompatible: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Overview
             </Typography>
@@ -154,7 +154,7 @@ const MobileCompatible: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaApple className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaApple className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">iOS:</strong>{" "}
                   Full support for iPhone and iPad running iOS 15+ with
@@ -162,7 +162,7 @@ const MobileCompatible: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaAndroid className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaAndroid className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Android:</strong>{" "}
                   Compatible with Android 10+ devices across all major
@@ -170,7 +170,7 @@ const MobileCompatible: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaDesktop className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaDesktop className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">Desktop:</strong>{" "}
                   Optimized for Windows, macOS, and Linux with Chrome, Firefox,
@@ -178,7 +178,7 @@ const MobileCompatible: React.FC = () => {
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaGlobe className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaGlobe className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   <strong className="text-gray-900">PWA:</strong>{" "}
                   Install ZYNTRA as a progressive web app for app-like
@@ -285,22 +285,22 @@ const MobileCompatible: React.FC = () => {
           <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                icon: <FaTachometerAlt className="text-2xl text-blue-600" />,
+                icon: <FaTachometerAlt className="text-2xl text-[#111A50]" />,
                 title: "< 2s Load Time",
                 desc: "Initial exam page load completes in under 2 seconds on 4G networks, with subsequent pages loading in under 500ms from cache.",
               },
               {
-                icon: <FaBatteryFull className="text-2xl text-blue-600" />,
+                icon: <FaBatteryFull className="text-2xl text-[#111A50]" />,
                 title: "Battery Efficient",
                 desc: "Optimized rendering and minimal background processing ensure that mobile exams consume less than 5% battery per hour.",
               },
               {
-                icon: <FaWifi className="text-2xl text-blue-600" />,
+                icon: <FaWifi className="text-2xl text-[#111A50]" />,
                 title: "Low Data Usage",
                 desc: "Adaptive compression and intelligent caching keep data usage under 50MB per hour, even with proctoring enabled.",
               },
               {
-                icon: <FaSyncAlt className="text-2xl text-blue-600" />,
+                icon: <FaSyncAlt className="text-2xl text-[#111A50]" />,
                 title: "Auto-Save",
                 desc: "Answers are auto-saved every 10 seconds both locally and to the cloud, protecting against connection drops and device issues.",
               },
@@ -362,7 +362,7 @@ const MobileCompatible: React.FC = () => {
           <Box>
             <Typography
               component="h2"
-              className="text-sm font-semibold text-blue-600 uppercase mb-2"
+              className="text-sm font-semibold text-[#111A50] uppercase mb-2"
             >
               Inclusive Design
             </Typography>
@@ -375,31 +375,31 @@ const MobileCompatible: React.FC = () => {
             </Typography>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   WCAG 2.1 AA compliance across all mobile interfaces
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Full screen reader and voice-over support
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Adjustable font sizes, contrast, and color themes
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   Voice input and alternative input method support
                 </span>
               </li>
               <li className="flex items-start space-x-3">
-                <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                <FaCheckCircle className="text-[#111A50] mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
                   RTL language support for international deployments
                 </span>
@@ -429,8 +429,8 @@ const MobileCompatible: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaEye className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaEye className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   AI Proctoring
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -444,8 +444,8 @@ const MobileCompatible: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaFingerprint className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaFingerprint className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Biometric Verification
                 </Typography>
                 <Typography className="text-gray-600 text-sm">
@@ -459,8 +459,8 @@ const MobileCompatible: React.FC = () => {
                 elevation={0}
                 className="p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 h-full"
               >
-                <FaChartBar className="text-3xl text-blue-600 mb-4" />
-                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <FaChartBar className="text-3xl text-[#111A50] mb-4" />
+                <Typography variant="h6" className="font-semibold text-gray-900 mb-2 group-hover:text-[#111A50] transition-colors">
                   Cloud Integration
                 </Typography>
                 <Typography className="text-gray-600 text-sm">

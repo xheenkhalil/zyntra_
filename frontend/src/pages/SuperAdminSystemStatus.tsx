@@ -182,7 +182,7 @@ const SuperAdminSystemStatus: React.FC = () => {
           </Typography>
           <Box className="flex items-center space-x-2">
             <IconButton
-              className="text-gray-600 hover:text-blue-600 p-2"
+              className="text-gray-600 hover:text-[#111A50] p-2"
               onClick={fetchStatus}
               disabled={loading}
             >

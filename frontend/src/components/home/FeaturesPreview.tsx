@@ -19,7 +19,7 @@ const FeaturesPreview: React.FC = () => {
           {/* Feature 1: AI Proctoring */}
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaEye className="text-blue-600 text-lg sm:text-xl" />
+              <FaEye className="text-[#111A50] text-lg sm:text-xl" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
               AI Proctoring
@@ -33,7 +33,7 @@ const FeaturesPreview: React.FC = () => {
           {/* Feature 2: Smart Analytics */}
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaChartBar className="text-blue-600 text-lg sm:text-xl" />
+              <FaChartBar className="text-[#111A50] text-lg sm:text-xl" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
               Smart Analytics
@@ -47,7 +47,7 @@ const FeaturesPreview: React.FC = () => {
           {/* Feature 3: Secure Platform */}
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaLock className="text-blue-600 text-lg sm:text-xl" />
+              <FaLock className="text-[#111A50] text-lg sm:text-xl" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
               Secure Platform
@@ -61,7 +61,7 @@ const FeaturesPreview: React.FC = () => {
           {/* Feature 4: Customizable Exams */}
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaCogs className="text-blue-600 text-lg sm:text-xl" />
+              <FaCogs className="text-[#111A50] text-lg sm:text-xl" />
             </div>
             <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">
               Customizable Exams
@@ -74,7 +74,7 @@ const FeaturesPreview: React.FC = () => {
           {/* Feature 6: Instant Feedback */}
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaBolt className="text-blue-600 text-lg sm:text-xl" />
+              <FaBolt className="text-[#111A50] text-lg sm:text-xl" />
             </div>
             <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">
               Instant Feedback

@@ -124,7 +124,7 @@ const SuperAdminSettings: React.FC = () => {
         <Box>
           <Paper className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100 h-full">
             <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
-              <FaUserEdit className="mr-3 text-blue-600" /> Profile Information
+              <FaUserEdit className="mr-3 text-[#111A50]" /> Profile Information
             </Typography>
 
             <Box component="form" onSubmit={handleProfileSubmit}>
@@ -179,7 +179,7 @@ const SuperAdminSettings: React.FC = () => {
         <Box>
           <Paper className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100 h-full">
             <Typography variant="h6" className="font-semibold text-gray-900 mb-6 flex items-center">
-              <FaLock className="mr-3 text-blue-600" /> Change Password
+              <FaLock className="mr-3 text-[#111A50]" /> Change Password
             </Typography>
 
             <Box component="form" onSubmit={handlePasswordSubmit}>
