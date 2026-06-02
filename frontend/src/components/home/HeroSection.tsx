@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 // Import icons used in this section
 import {
-  FaRocket,
   FaPlay,
   FaVideo,
   FaUsers,
