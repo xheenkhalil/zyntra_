@@ -1,0 +1,16 @@
+# ZYNTRA Exam Platform
+# robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /superadmin/
+Disallow: /courseadmin/
+Disallow: /centraladmin/
+Disallow: /student/
+Disallow: /setup-account
+Disallow: /proctor/
+Disallow: /api/
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://zyntra.io/sitemap.xml

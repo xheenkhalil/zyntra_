@@ -10,12 +10,17 @@ export default defineConfig({
     viteCompression(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'robots.txt', 'sitemap.xml'],
       manifest: {
-        name: 'Zyntra Exams',
-        short_name: 'Zyntra',
-        description: 'AI-Powered Examination Platform',
-        theme_color: '#ffffff',
+        name: 'ZYNTRA — AI-Powered Examination Platform',
+        short_name: 'ZYNTRA',
+        description: 'AI-powered online examination platform for schools, universities, and businesses. Features AI proctoring, auto-grading, biometric verification, and smart analytics.',
+        theme_color: '#111A50',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        categories: ['education', 'productivity', 'business'],
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -26,6 +31,12 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }

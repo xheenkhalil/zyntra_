@@ -76,6 +76,7 @@ const SubmissionCompletePage = lazy(() => import('./pages/SubmissionCompletePage
 
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
+import SEORoute from './components/SEORoute';
 import { AuthProvider } from './context/AuthProvider';
 
 function App() {
@@ -87,30 +88,30 @@ function App() {
                     <Suspense fallback={<LoadingSpinner />}>
                         <Routes>
                             {/* --- Public Routes --- */}
-                            <Route path="/" element={<HomePage />} />
-                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/" element={<SEORoute path="/"><HomePage /></SEORoute>} />
+                            <Route path="/login" element={<SEORoute path="/login"><LoginPage /></SEORoute>} />
                             <Route path="/setup-account" element={<SetupAccountPage />} />
                             <Route path="/quiz/:quizId" element={<GuestQuizRunner />} />
-                            <Route path="/about" element={<AboutPage />} />
-                            <Route path="/pricing" element={<PricingPage />} />
-                            <Route path="/contact" element={<ContactPage />} />
-                            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-                            <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                            <Route path="/about" element={<SEORoute path="/about"><AboutPage /></SEORoute>} />
+                            <Route path="/pricing" element={<SEORoute path="/pricing"><PricingPage /></SEORoute>} />
+                            <Route path="/contact" element={<SEORoute path="/contact"><ContactPage /></SEORoute>} />
+                            <Route path="/privacy-policy" element={<SEORoute path="/privacy-policy"><PrivacyPolicyPage /></SEORoute>} />
+                            <Route path="/terms-of-service" element={<SEORoute path="/terms-of-service"><TermsOfServicePage /></SEORoute>} />
+                            <Route path="/cookie-policy" element={<SEORoute path="/cookie-policy"><CookiePolicyPage /></SEORoute>} />
 
                             {/* --- Solutions Routes --- */}
-                            <Route path="/solutions/schools-universities" element={<SchoolsUniversitiesPage />} />
-                            <Route path="/solutions/corporate-training" element={<CorporateTrainingPage />} />
-                            <Route path="/solutions/guest-quizzes" element={<GuestQuizzesPage />} />
-                            <Route path="/solutions/earn-badges" element={<EarnBadgesPage />} />
+                            <Route path="/solutions/schools-universities" element={<SEORoute path="/solutions/schools-universities"><SchoolsUniversitiesPage /></SEORoute>} />
+                            <Route path="/solutions/corporate-training" element={<SEORoute path="/solutions/corporate-training"><CorporateTrainingPage /></SEORoute>} />
+                            <Route path="/solutions/guest-quizzes" element={<SEORoute path="/solutions/guest-quizzes"><GuestQuizzesPage /></SEORoute>} />
+                            <Route path="/solutions/earn-badges" element={<SEORoute path="/solutions/earn-badges"><EarnBadgesPage /></SEORoute>} />
 
                             {/* --- Features Routes --- */}
-                            <Route path="/features/ai-proctoring" element={<AIProctoring />} />
-                            <Route path="/features/smart-analytics" element={<SmartAnalytics />} />
-                            <Route path="/features/biometric-verification" element={<BiometricVerification />} />
-                            <Route path="/features/mobile-compatible" element={<MobileCompatible />} />
-                            <Route path="/features/cloud-integration" element={<CloudIntegration />} />
-                            <Route path="/features/auto-grading" element={<AutoGrading />} />
+                            <Route path="/features/ai-proctoring" element={<SEORoute path="/features/ai-proctoring"><AIProctoring /></SEORoute>} />
+                            <Route path="/features/smart-analytics" element={<SEORoute path="/features/smart-analytics"><SmartAnalytics /></SEORoute>} />
+                            <Route path="/features/biometric-verification" element={<SEORoute path="/features/biometric-verification"><BiometricVerification /></SEORoute>} />
+                            <Route path="/features/mobile-compatible" element={<SEORoute path="/features/mobile-compatible"><MobileCompatible /></SEORoute>} />
+                            <Route path="/features/cloud-integration" element={<SEORoute path="/features/cloud-integration"><CloudIntegration /></SEORoute>} />
+                            <Route path="/features/auto-grading" element={<SEORoute path="/features/auto-grading"><AutoGrading /></SEORoute>} />
 
                             {/* --- PROCTORING ROUTE (Standalone) --- */}
                             {/* This allows both Superadmins and Course Admins to view the live feed */}
