@@ -74,10 +74,16 @@ const GuestQuizSection: React.FC = () => {
   // --- Converted Tailwind JSX ---
   return (
     <div className="w-full">
-      {/* Converted Typography to h2 with Tailwind classes */}
-      <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 md:mb-12 text-center">
-        Sharpen Your Skills
-      </h2>
+      {/* Restyled Typography with brand color and professional layout */}
+      <div className="text-center mb-10 md:mb-14">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111A50] tracking-tight mb-3">
+          Sharpen Your Skills
+        </h2>
+        <div className="w-20 h-1.5 bg-[#111A50] mx-auto rounded-full opacity-90"></div>
+        <p className="text-gray-500 mt-4 max-w-xl mx-auto text-sm sm:text-base font-medium">
+          Challenge yourself with our curated selection of intelligent exams designed to push your boundaries and master new domains.
+        </p>
+      </div>
 
       {/* Converted Box grid to Tailwind grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
