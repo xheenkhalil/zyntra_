@@ -1,5 +1,5 @@
 import React from "react";
-import { FaEye, FaChartBar, FaLock, FaCogs, FaGlobe, FaBolt } from "react-icons/fa";
+import { FaEye, FaChartBar, FaLock, FaCogs, FaBolt } from "react-icons/fa";
 
 const FeaturesPreview: React.FC = () => {
   return (
