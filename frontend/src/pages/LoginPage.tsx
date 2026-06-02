@@ -104,48 +104,73 @@ const LoginPage: React.FC = () => {
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        py: { xs: 4, md: 8 },
-        px: 2,
+        py: { xs: 0, md: 8 },
+        px: { xs: 0, sm: 2 },
       }}
     >
-      <Container component="main" maxWidth="sm" sx={{ m: "auto" }}>
+      <Container
+        component="main"
+        maxWidth="sm"
+        sx={{ m: "auto", px: { xs: 0, sm: 3 } }}
+        disableGutters
+      >
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderRadius: 4,
-            p: { xs: 3, sm: 4 },
-            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255, 255, 255, 0.18)",
+            backgroundColor: "rgba(255, 255, 255, 0.97)",
+            borderRadius: { xs: 0, sm: 4 },
+            p: { xs: 3, sm: 5 },
+            minHeight: { xs: "100vh", sm: "auto" },
+            justifyContent: { xs: "center", sm: "flex-start" },
+            boxShadow: {
+              xs: "none",
+              sm: "0 8px 32px 0 rgba(17, 26, 80, 0.15)",
+            },
+            backdropFilter: "blur(12px)",
+            border: {
+              xs: "none",
+              sm: "1px solid rgba(255, 255, 255, 0.3)",
+            },
           }}
         >
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate("/")}
-            sx={{ alignSelf: "flex-start", mb: 2, textTransform: "none", color: "text.secondary" }}
+            sx={{
+              alignSelf: "flex-start",
+              mb: 3,
+              textTransform: "none",
+              color: "text.secondary",
+              fontWeight: 500,
+            }}
           >
             Back to Home
           </Button>
 
           <Box
             sx={{
-              backgroundColor: "primary.main",
+              backgroundColor: "#111A50",
               borderRadius: "50%",
               p: 2,
               mb: 2,
             }}
           >
-            <LockOutlinedIcon sx={{ fontSize: "3rem", color: "white" }} />
+            <LockOutlinedIcon sx={{ fontSize: "2.5rem", color: "white" }} />
           </Box>
 
-          <Typography component="h1" variant="h4" fontWeight={700} gutterBottom>
+          <Typography
+            component="h1"
+            variant="h4"
+            fontWeight={700}
+            gutterBottom
+            sx={{ fontSize: { xs: "1.6rem", sm: "2rem" } }}
+          >
             Welcome Back
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={3}>
-            Sign in to continue to Zyntra Exams
+            Sign in to continue to ZYNTRA
           </Typography>
 
           {/* Tabs for Admin / Student */}
@@ -154,10 +179,27 @@ const LoginPage: React.FC = () => {
               borderBottom: 1,
               borderColor: "divider",
               width: "100%",
-              mt: 2,
+              mt: 1,
             }}
           >
-            <Tabs value={loginType} onChange={handleTabChange} centered>
+            <Tabs
+              value={loginType}
+              onChange={handleTabChange}
+              centered
+              sx={{
+                "& .MuiTab-root": {
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                },
+                "& .Mui-selected": {
+                  color: "#111A50 !important",
+                },
+                "& .MuiTabs-indicator": {
+                  backgroundColor: "#111A50",
+                },
+              }}
+            >
               <Tab label="Admin Login" value="admin" />
               <Tab label="Student Login" value="student" />
             </Tabs>
@@ -244,6 +286,8 @@ const LoginPage: React.FC = () => {
                 fontWeight: 600,
                 textTransform: "none",
                 borderRadius: 2,
+                backgroundColor: "#111A50",
+                "&:hover": { backgroundColor: "#080D2B" },
               }}
               disabled={loading}
             >
