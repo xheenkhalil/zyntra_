@@ -4,8 +4,8 @@ import { createTheme } from '@mui/material/styles';
 
 // Using the original Zyntra Brand Colors
 const zyntraPalette = {
-    primaryBlue: '#1A1F91',
-    primaryDarkBlue: '#1A1F91',
+    primaryBlue: '#111A50',
+    primaryDarkBlue: '#111A50',
     accentCyan: '#00E0FF',
     accentPurple: '#7230A6',
     backgroundLight: '#F8F9FC',

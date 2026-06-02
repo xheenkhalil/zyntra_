@@ -218,7 +218,7 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
               type="submit"
               color="inherit" // Let Tailwind control
               disabled={saving}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F91] hover:bg-[#1A1F91] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 px-4 py-2 bg-[#111A50] hover:bg-[#080D2B] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               sx={{ border: 'none' }}
               startIcon={
                 saving ? (

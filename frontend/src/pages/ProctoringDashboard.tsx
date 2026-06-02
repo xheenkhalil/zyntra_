@@ -261,7 +261,7 @@ const ProctoringDashboard: React.FC = () => {
 
                     {/* 3. LIVE VIDEO FEEDS */}
                     <Paper className="rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <Box className="bg-[#1A1F91] px-6 py-4 flex justify-between items-center">
+                        <Box className="bg-[#111A50] px-6 py-4 flex justify-between items-center">
                             <Box className="flex items-center text-white">
                                 <FaVideo className="mr-3 text-lg" />
                                 <Typography variant="h6" className="font-bold">Live Candidate Monitoring</Typography>

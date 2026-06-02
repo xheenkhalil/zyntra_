@@ -71,18 +71,18 @@ const StudentDashboard: React.FC = () => {
             {exams.length > 0 ? (
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 3 }}>
                     {exams.map((exam) => (
-                        <Card key={exam.id} className="exam-card" sx={{ borderTop: '4px solid #1A1F91', borderRadius: '12px' }}>
+                        <Card key={exam.id} className="exam-card" sx={{ borderTop: '4px solid #111A50', borderRadius: '12px' }}>
                             <CardContent sx={{ flexGrow: 1, p: 3 }}>
                                 <Typography variant="h5" component="div" gutterBottom sx={{ fontWeight: 800, color: '#1E1E49', mb: 2.5 }}>{exam.title}</Typography>
                                 
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                                        <TimerIcon sx={{ mr: 1.5, color: '#1A1F91', fontSize: 20 }} />
+                                        <TimerIcon sx={{ mr: 1.5, color: '#111A50', fontSize: 20 }} />
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>{exam.duration_minutes} minutes</Typography>
                                     </Box>
                                     
                                     <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                                        <AssignmentIcon sx={{ mr: 1.5, color: '#1A1F91', fontSize: 20 }} />
+                                        <AssignmentIcon sx={{ mr: 1.5, color: '#111A50', fontSize: 20 }} />
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>{exam.total_questions} Questions</Typography>
                                     </Box>
                                 </Box>
@@ -94,7 +94,7 @@ const StudentDashboard: React.FC = () => {
                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                         {exam.question_types.length > 0 ? (
                                             exam.question_types.map((type, idx) => (
-                                                <Chip key={idx} label={type.replace('_', ' ')} size="small" sx={{ bgcolor: 'rgba(60, 77, 206, 0.1)', color: '#1A1F91', fontWeight: 600, borderRadius: '6px' }} />
+                                                <Chip key={idx} label={type.replace('_', ' ')} size="small" sx={{ bgcolor: 'rgba(17, 26, 80, 0.1)', color: '#111A50', fontWeight: 600, borderRadius: '6px' }} />
                                             ))
                                         ) : (
                                             <Typography variant="body2" color="text.secondary">N/A</Typography>
@@ -110,8 +110,8 @@ const StudentDashboard: React.FC = () => {
                                     fullWidth
                                     onClick={() => navigate(`/student/exam/${exam.id}`)}
                                     sx={{
-                                        bgcolor: '#1A1F91', // Dark Royal Blue
-                                        '&:hover': { bgcolor: '#1a1f91' },
+                                        bgcolor: '#111A50', // Dark Royal Blue
+                                        '&:hover': { bgcolor: '#080D2B' },
                                         textTransform: 'none',
                                         fontWeight: 'bold',
                                         borderRadius: '8px',

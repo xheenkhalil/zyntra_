@@ -71,7 +71,7 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
     <Box
       id="sidebar"
       component="aside"
-      className={`fixed left-0 top-0 h-full bg-[#1A1F91] text-white shadow-2xl transition-all duration-300 z-40 ${
+      className={`fixed left-0 top-0 h-full bg-[#111A50] text-white shadow-2xl transition-all duration-300 z-40 ${
         isCollapsed ? 'sidebar-collapsed lg:w-[80px]' : 'sidebar-expanded lg:w-[280px]'
       } ${
         isMobileOpen ? 'mobile-open translate-x-0' : '-translate-x-full'
@@ -80,7 +80,7 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
       {/* Logo Section */}
       <Box className="p-6 border-b border-blue-700">
         <Box className="flex items-center space-x-3">
-          <Box className="w-10 h-10 bg-[#1A1F91] rounded-lg flex items-center justify-center flex-shrink-0">
+          <Box className="w-10 h-10 bg-[#111A50] rounded-lg flex items-center justify-center flex-shrink-0">
             <FaGraduationCap className="text-white text-xl" />
           </Box>
           <Box
