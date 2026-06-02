@@ -57,8 +57,7 @@ const FeaturesPreview: React.FC = () => {
               end-to-end encryption.
             </p>
           </div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-4 sm:mt-8">
+
           {/* Feature 4: Customizable Exams */}
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
@@ -69,19 +68,6 @@ const FeaturesPreview: React.FC = () => {
             </h3>
             <p className="text-gray-600 text-xs sm:text-base">
               Tailor your assessments with flexible question formats and dynamic time limits.
-            </p>
-          </div>
-
-          {/* Feature 5: Multi-Language */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 hover:shadow-xl transition-shadow duration-300">
-            <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-              <FaGlobe className="text-blue-600 text-lg sm:text-xl" />
-            </div>
-            <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">
-              Multi-Language
-            </h3>
-            <p className="text-gray-600 text-xs sm:text-base">
-              Deploy exams globally with full support for multiple languages and localization.
             </p>
           </div>
 
