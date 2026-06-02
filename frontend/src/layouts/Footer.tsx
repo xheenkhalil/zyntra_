@@ -33,49 +33,37 @@ const Footer: React.FC = () => {
         maxWidth={false}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
           {/* Company Info */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-4 sm:mb-6">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-[#111A50] rounded-lg flex items-center justify-center">
-                <FaGraduationCap className="text-white text-lg sm:text-xl" />
+          <div className="col-span-2 lg:col-span-3 flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-800 pb-8">
+            <div className="max-w-xl">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-[#111A50] rounded-lg flex items-center justify-center">
+                  <FaGraduationCap className="text-white text-lg sm:text-xl" />
+                </div>
+                <span className="text-xl sm:text-2xl font-bold">ZYNTRA</span>
               </div>
-              <span className="text-xl sm:text-2xl font-bold">ZYNTRA</span>
+              <p className="text-gray-400 mb-6 lg:mb-0 leading-relaxed text-sm sm:text-base">
+                Revolutionizing online examinations with AI-powered proctoring and
+                intelligent analytics for educational institutions worldwide.
+              </p>
             </div>
-            <p className="text-gray-400 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
-              Revolutionizing online examinations with AI-powered proctoring and
-              intelligent analytics for educational institutions worldwide.
-            </p>
-            {/* --- FIX: Added 'text-white' to social links --- */}
+            
+            {/* Social Links */}
             <div className="flex flex-wrap gap-2 sm:gap-4">
-              <a
-                href="#"
-                className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline"
-              >
+              <a href="#" className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline">
                 <FaFacebookF className="text-sm" />
               </a>
-              <a
-                href="#"
-                className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline"
-              >
+              <a href="#" className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline">
                 <FaTwitter className="text-sm" />
               </a>
-              <a
-                href="#"
-                className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline"
-              >
+              <a href="#" className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline">
                 <FaLinkedinIn className="text-sm" />
               </a>
-              <a
-                href="#"
-                className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline"
-              >
+              <a href="#" className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline">
                 <FaInstagram className="text-sm" />
               </a>
-              <a
-                href="#"
-                className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline"
-              >
+              <a href="#" className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 text-white no-underline">
                 <FaYoutube className="text-sm" />
               </a>
             </div>
