@@ -584,7 +584,10 @@ nav .nav-item:hover .mega-menu {
   .MuiTableContainer-root {
     width: 100% !important;
     overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .MuiTable-root {
+    min-width: 650px !important;
   }
   .MuiTableCell-root {
     white-space: nowrap !important;

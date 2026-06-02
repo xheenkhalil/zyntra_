@@ -262,7 +262,7 @@ const Navbar: React.FC = () => {
               <Box className="w-8 h-8 md:w-10 md:h-10 bg-[#111A50] rounded-lg flex items-center justify-center">
                 <FaGraduationCap className="text-white text-lg md:text-xl" />
               </Box>
-              <span className="text-xl md:text-2xl font-bold bg-[#111A50] text-[#111A50]">
+              <span className="text-xl md:text-2xl font-bold text-[#111A50]">
                 ZYNTRA
               </span>
             </Box>
