@@ -1,4 +1,5 @@
 import React, { useState, Suspense, lazy } from "react";
+import { Link } from "react-router-dom";
 
 // --- Standard Component Imports ---
 import Navbar from "../layouts/Navbar";
@@ -53,6 +54,26 @@ const HomePage: React.FC = () => {
 
         {/* 4. Features Preview (Loads instantly) */}
         <FeaturesPreview />
+
+        {/* CTA Section */}
+        <section className="bg-[#111A50] py-16 sm:py-24 text-center">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
+              Ready to Transform Your Assessment Process?
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+              Join thousands of institutions and educators using Zyntra to deliver secure, intelligent, and scalable exams today.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-white text-[#111A50] font-bold rounded-xl shadow-lg hover:bg-gray-100 transition-colors duration-200">
+                Get Started for Free
+              </Link>
+              <Link to="/contact" className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-[#111A50] transition-colors duration-200">
+                Contact Sales
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* 5. Footer */}
