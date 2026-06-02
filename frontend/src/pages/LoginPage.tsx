@@ -16,6 +16,7 @@ import {
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const LoginPage: React.FC = () => {
   const { login, user } = useAuth();
@@ -119,6 +120,14 @@ const LoginPage: React.FC = () => {
             border: "1px solid rgba(255, 255, 255, 0.18)",
           }}
         >
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/")}
+            sx={{ alignSelf: "flex-start", mb: 2, textTransform: "none", color: "text.secondary" }}
+          >
+            Back to Home
+          </Button>
+
           <Box
             sx={{
               backgroundColor: "primary.main",
