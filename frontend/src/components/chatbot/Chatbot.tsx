@@ -183,9 +183,10 @@ const Chatbot: React.FC = () => {
           {/* This button now only calls handleClose, not toggleChatbot */}
           <button
             onClick={handleClose}
-            className="text-white hover:text-gray-200 text-xl"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors duration-200 shadow-sm border-none outline-none"
+            title="Close chat"
           >
-            <FaTimes />
+            <FaTimes className="text-sm" />
           </button>
         </div>
 
