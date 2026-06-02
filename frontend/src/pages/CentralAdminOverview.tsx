@@ -286,15 +286,8 @@ const CentralAdminOverview: React.FC = () => {
 
 // --- Helper Component ---
 const MetricCard: React.FC<{ title: string; value: number | string; growth: string; icon: React.ReactElement; color: string }> =
-    ({ title, value, growth, icon, color }) => {
-        // Map color names to hex/classes roughly
-        const colorMap: Record<string, { bg: string, text: string }> = {
-            indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600' },
-            emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-            amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
-            rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
-        };
-        const theme = colorMap[color] || colorMap.indigo;
+    ({ title, value, growth, icon }) => {
+
 
         return (
             <div className="bg-white/80 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 h-full group cursor-default">
