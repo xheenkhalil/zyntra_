@@ -90,7 +90,7 @@ const GuestQuizSection: React.FC = () => {
               key={quiz.id}
               className="quiz-card flex flex-col h-full rounded-2xl shadow-md p-6 
                          transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 
-                         bg-white border-2 border-[#111A50]/10 hover:border-[#111A50]/30"
+                         bg-white border-2 border-[#111A50]/40 hover:border-[#111A50]"
             >
               {/* Converted CardContent to div */}
               <div className="flex-grow">
