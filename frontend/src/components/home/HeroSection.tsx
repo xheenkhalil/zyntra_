@@ -34,7 +34,7 @@ const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden bg-blue-900">
+    <section className="relative min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden bg-[#111A50]">
       {/* Background Image Slider */}
       <div className="hero-slider absolute inset-0">
         {slides.map((src, index) => (
@@ -49,7 +49,7 @@ const HeroSection: React.FC = () => {
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-blue-900 bg-opacity-80"></div>
+        <div className="absolute inset-0 bg-[#111A50]/90"></div>
       </div>
 
       {/* Floating Glass Elements (No logic, just JSX) */}
