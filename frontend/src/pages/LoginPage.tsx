@@ -102,11 +102,13 @@ const LoginPage: React.FC = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        flexDirection: "column",
+        overflowY: "auto",
+        py: { xs: 4, md: 8 },
+        px: 2,
       }}
     >
-      <Container component="main" maxWidth="sm">
+      <Container component="main" maxWidth="sm" sx={{ m: "auto" }}>
         <Box
           sx={{
             display: "flex",
@@ -114,7 +116,7 @@ const LoginPage: React.FC = () => {
             alignItems: "center",
             backgroundColor: "rgba(255, 255, 255, 0.95)",
             borderRadius: 4,
-            p: 4,
+            p: { xs: 3, sm: 4 },
             boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
             backdropFilter: "blur(4px)",
             border: "1px solid rgba(255, 255, 255, 0.18)",
