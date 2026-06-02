@@ -78,7 +78,7 @@ const HeroSection: React.FC = () => {
           <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-light mt-1 sm:mt-2">
             The Future of
           </span>
-          <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+          <span className="block bg-[#3C4DCE] text-[#3C4DCE]">
             Intelligent Exams
           </span>
         </h1>

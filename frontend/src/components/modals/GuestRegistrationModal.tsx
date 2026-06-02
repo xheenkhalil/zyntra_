@@ -108,7 +108,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
       >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#3C4DCE] rounded-lg flex items-center justify-center">
               <FaUserPlus className="text-white" />
             </div>
             <h3 className="text-xl font-bold text-gray-900">Great Job! 🎉</h3>
@@ -122,7 +122,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
         </div>
 
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 success-animation">
+          <div className="w-16 h-16 bg-[#3C4DCE] rounded-full flex items-center justify-center mx-auto mb-4 success-animation">
             <FaTrophy className="text-white text-2xl" />
           </div>
           <h4 className="text-lg font-semibold text-gray-900 mb-2">
@@ -144,7 +144,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6">
+        <div className="bg-[#3C4DCE] rounded-lg p-4 mb-6">
           <h5 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
             <FaStar className="text-yellow-500" />
             <span>Create an account to unlock:</span>
@@ -267,7 +267,7 @@ const GuestRegistrationModal: React.FC<GuestRegistrationModalProps> = ({
           </button>
           <button
             onClick={handleRegistration}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-semibold"
+            className="flex-1 px-4 py-3 bg-[#3C4DCE] hover:bg-[#2C31B9] text-white rounded-lg font-semibold"
           >
             Create Account
           </button>

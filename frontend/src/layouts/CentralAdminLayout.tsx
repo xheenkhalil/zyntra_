@@ -70,14 +70,14 @@ const CentralAdminLayout: React.FC = () => {
             <Box
                 id="sidebar"
                 component="aside"
-                className={`fixed left-0 top-0 h-full bg-gradient-to-b from-blue-900 to-blue-800 text-white shadow-2xl transition-all duration-300 z-40 ${isCollapsed ? 'sidebar-collapsed lg:w-20' : 'sidebar-expanded lg:w-64'
+                className={`fixed left-0 top-0 h-full bg-[#3C4DCE] text-white shadow-2xl transition-all duration-300 z-40 ${isCollapsed ? 'sidebar-collapsed lg:w-20' : 'sidebar-expanded lg:w-64'
                     } ${isMobileOpen ? 'mobile-open translate-x-0' : '-translate-x-full'
                     } lg:translate-x-0`}
             >
                 {/* Logo/Header Section */}
                 <Box className="flex items-center justify-between p-4 border-b border-blue-700">
                     <Box className="flex items-center space-x-3">
-                        <Box className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Box className="w-8 h-8 bg-[#3C4DCE] rounded-lg flex items-center justify-center flex-shrink-0">
                             <FaGraduationCap className="text-white text-lg" />
                         </Box>
                         <span id="logo-text" className={`text-xl font-bold transition-opacity duration-300 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>

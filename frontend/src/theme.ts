@@ -111,6 +111,14 @@ export const zyntraTheme = createTheme({
                     }
                 }
             }
+        },
+        MuiTableContainer: {
+            styleOverrides: {
+                root: {
+                    overflowX: 'auto',
+                    maxWidth: '100%',
+                }
+            }
         }
     }
 });

@@ -288,11 +288,11 @@ const CentralAdminOverview: React.FC = () => {
 const MetricCard: React.FC<{ title: string; value: number | string; growth: string; icon: React.ReactElement; color: string }> =
     ({ title, value, growth, icon, color }) => {
         // Map color names to hex/classes roughly
-        const colorMap: Record<string, { bg: string, text: string, gradient: string }> = {
-            indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600', gradient: 'from-indigo-500 to-indigo-600' },
-            emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600', gradient: 'from-emerald-500 to-emerald-600' },
-            amber: { bg: 'bg-amber-100', text: 'text-amber-600', gradient: 'from-amber-500 to-amber-600' },
-            rose: { bg: 'bg-rose-100', text: 'text-rose-600', gradient: 'from-rose-500 to-rose-600' },
+        const colorMap: Record<string, { bg: string, text: string }> = {
+            indigo: { bg: 'bg-indigo-100', text: 'text-indigo-600' },
+            emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+            amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
+            rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
         };
         const theme = colorMap[color] || colorMap.indigo;
 
@@ -310,7 +310,7 @@ const MetricCard: React.FC<{ title: string; value: number | string; growth: stri
                             {growth}
                         </div>
                     </Box>
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${theme.gradient} text-white shadow-md group-hover:shadow-lg group-hover:rotate-12 transition-all duration-300`}>
+                    <div className={`p-3 rounded-xl bg-[#3C4DCE] text-white shadow-md group-hover:shadow-lg group-hover:rotate-12 transition-all duration-300`}>
                         <div className="text-xl">
                             {icon}
                         </div>

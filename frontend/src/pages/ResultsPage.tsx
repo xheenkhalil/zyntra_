@@ -150,7 +150,7 @@ const ResultsPage: React.FC = () => {
             mb: 4,
             borderRadius: 3,
             background:
-              "linear-gradient(135deg, rgba(33,150,243,0.1), rgba(156,39,176,0.1))",
+              "#3C4DCE, rgba(156,39,176,0.1))",
             backdropFilter: "blur(10px)",
           }}
         >

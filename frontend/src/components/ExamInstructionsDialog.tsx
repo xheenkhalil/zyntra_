@@ -109,10 +109,10 @@ const ExamInstructionsDialog: React.FC<ExamInstructionsDialogProps> = ({
                             px: 6,
                             py: 1.5,
                             fontSize: '1.1rem',
-                            background: 'linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)',
+                            background: '#3C4DCE',
                             boxShadow: '0 3px 5px 2px rgba(25, 118, 210, .3)',
                             '&:hover': {
-                                background: 'linear-gradient(45deg, #1565c0 30%, #1976d2 90%)',
+                                background: '#3C4DCE',
                             }
                         }}
                     >
