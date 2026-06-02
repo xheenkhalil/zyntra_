@@ -14,9 +14,9 @@ import {
 // --- Slider Configuration ---
 // Store slide images in an array
 const slides = [
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop", // Modern laptop/tech
-  "https://images.unsplash.com/photo-1513258496099-48168024aec0?q=80&w=2070&auto=format&fit=crop", // Students studying
-  "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=2070&auto=format&fit=crop", // Modern diverse team/tech
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80",
+  "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+  "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
 ];
 
 const HeroSection: React.FC = () => {
@@ -49,7 +49,17 @@ const HeroSection: React.FC = () => {
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-[#111A50]/70"></div>
+        <div className="absolute inset-0 bg-blue-900 bg-opacity-80"></div>
+      </div>
+
+      {/* Floating Glass Elements (No logic, just JSX) */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="floating-element absolute top-10 sm:top-20 left-5 sm:left-10 w-12 sm:w-16 h-12 sm:h-16 glass-effect rounded-full"></div>
+        <div className="floating-element absolute top-32 sm:top-40 right-10 sm:right-20 w-8 sm:w-12 h-8 sm:h-12 glass-effect rounded-full"></div>
+        <div className="floating-element absolute bottom-24 sm:bottom-32 left-1/4 w-16 sm:w-20 h-16 sm:h-20 glass-effect rounded-full"></div>
+        <div className="floating-element absolute bottom-10 sm:bottom-20 right-1/4 w-10 sm:w-14 h-10 sm:h-14 glass-effect rounded-full"></div>
+        <div className="floating-element absolute top-26 sm:top-34 right-10 sm:right-20 w-8 sm:w-12 h-8 sm:h-12 glass-effect rounded-full"></div>
+        <div className="floating-element absolute top-10 sm:top-20 left-5 sm:left-10 w-12 sm:w-16 h-12 sm:h-16 glass-effect rounded-full"></div>
       </div>
 
       {/* Hero Content */}
@@ -63,12 +73,12 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-white mb-4 sm:mb-6 leading-tight tracking-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
           <span className="block">ZYNTRA</span>
-          <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mt-2 sm:mt-4 text-gray-200">
+          <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-light mt-1 sm:mt-2">
             The Future of
           </span>
-          <span className="block text-white mt-1">
+          <span className="block text-blue-300">
             Intelligent Exams
           </span>
         </h1>
@@ -94,27 +104,27 @@ const HeroSection: React.FC = () => {
           </Link>
 </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto mt-12">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
-            <FaUsers className="text-3xl text-white mb-3 mx-auto opacity-90" />
-            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">10K+</div>
-            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
+          <div className="glass-effect rounded-xl p-4 sm:p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+            <FaUsers className="text-2xl sm:text-3xl text-white mb-2 sm:mb-3 mx-auto" />
+            <div className="text-xl sm:text-2xl font-bold text-white">10K+</div>
+            <div className="text-white text-opacity-80 text-sm sm:text-base">
               Active Users
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
-            <FaFileAlt className="text-3xl text-white mb-3 mx-auto opacity-90" />
-            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">50K+</div>
-            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
+          <div className="glass-effect rounded-xl p-4 sm:p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+            <FaFileAlt className="text-2xl sm:text-3xl text-white mb-2 sm:mb-3 mx-auto" />
+            <div className="text-xl sm:text-2xl font-bold text-white">50K+</div>
+            <div className="text-white text-opacity-80 text-sm sm:text-base">
               Exams Conducted
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
-            <FaShieldAlt className="text-3xl text-white mb-3 mx-auto opacity-90" />
-            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">
+          <div className="glass-effect rounded-xl p-4 sm:p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+            <FaShieldAlt className="text-2xl sm:text-3xl text-white mb-2 sm:mb-3 mx-auto" />
+            <div className="text-xl sm:text-2xl font-bold text-white">
               99.9%
             </div>
-            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
+            <div className="text-white text-opacity-80 text-sm sm:text-base">
               Security Rate
             </div>
           </div>
