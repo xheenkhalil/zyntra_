@@ -157,7 +157,7 @@ const AutoGrading: React.FC = () => {
               <li className="flex items-start space-x-3">
                 <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
                 <span className="text-gray-700">
-                  <strong className="text-gray-900">< 5 Seconds:</strong>{" "}
+                  <strong className="text-gray-900">&lt; 5 Seconds:</strong>{" "}
                   Average time to grade a complete exam with up to 100
                   questions, including essay-type responses.
                 </span>
