@@ -34,7 +34,7 @@ const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden bg-[#111A50]">
+    <section className="relative min-h-[500px] sm:min-h-[600px] md:min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden bg-[#111A50] py-16 md:py-0">
       {/* Background Image Slider */}
       <div className="hero-slider absolute inset-0">
         {slides.map((src, index) => (
@@ -64,14 +64,7 @@ const HeroSection: React.FC = () => {
 
       {/* Hero Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <div className="inline-flex items-center space-x-2 glass-effect rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6">
-            <FaRocket className="text-white text-xs sm:text-sm" />
-            <span className="text-white text-xs sm:text-sm font-medium">
-              Powered by AI Technology
-            </span>
-          </div>
-        </div>
+        {/* AI Badge Removed */}
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
           <span className="block">ZYNTRA</span>
