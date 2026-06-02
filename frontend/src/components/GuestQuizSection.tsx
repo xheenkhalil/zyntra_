@@ -88,14 +88,13 @@ const GuestQuizSection: React.FC = () => {
             // and add utility classes from your HTML for hover effects.
             <div
               key={quiz.id}
-              className="quiz-card flex flex-col h-full rounded-2xl shadow-lg p-6 
+              className="quiz-card flex flex-col h-full rounded-2xl shadow-md p-6 
                          transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 
-                         bg-[rgba(255,255,255,0.95)] backdrop-blur-[20px] 
-                         border border-[rgba(255,255,255,0.3)]"
+                         bg-white border-2 border-[#111A50]/10 hover:border-[#111A50]/30"
             >
               {/* Converted CardContent to div */}
               <div className="flex-grow">
-                <p className="text-sm text-blue-600 font-semibold mb-1">
+                <p className="text-xs tracking-wider uppercase text-[#111A50] font-bold mb-2">
                   {quiz.category}
                 </p>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -121,10 +120,10 @@ const GuestQuizSection: React.FC = () => {
               </div>
 
               {/* Converted CardActions to div */}
-              <div className="mt-6 pt-4 border-t border-gray-200/60">
+              <div className="mt-6 pt-4 border-t border-gray-100">
                 <button
                   onClick={() => navigate(`/quiz/${quiz.id}`)}
-                  className="text-blue-600 font-semibold text-sm hover:text-blue-800 transition-colors border-none"
+                  className="w-full py-3 bg-[#111A50] hover:bg-[#080D2B] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                 >
                   Start Quiz
                 </button>
