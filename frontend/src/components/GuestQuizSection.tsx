@@ -126,7 +126,7 @@ const GuestQuizSection: React.FC = () => {
               </div>
 
               {/* Converted CardActions to div */}
-              <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-2">
                 <button
                   onClick={() => navigate(`/quiz/${quiz.id}`)}
                   className="w-full py-3 bg-[#111A50] hover:bg-[#080D2B] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"

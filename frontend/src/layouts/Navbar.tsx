@@ -401,7 +401,7 @@ const Navbar: React.FC = () => {
             <Button
               variant="text"
               onClick={() => handleNavigate("/login")}
-              className="flex items-center justify-center space-x-2 px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
+              className="flex items-center justify-center space-x-2 px-4 py-2 !text-[#111A50] hover:!text-[#080D2B] font-medium"
               startIcon={<FaSignInAlt className="text-sm" />}
             >
               Login
