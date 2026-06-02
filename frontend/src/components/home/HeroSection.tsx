@@ -49,14 +49,7 @@ const HeroSection: React.FC = () => {
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#111A50]/95 via-[#111A50]/80 to-[#7230A6]/70"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-      </div>
-
-      {/* Modern Floating Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#00E0FF] rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#7230A6] rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute inset-0 bg-[#111A50]/70"></div>
       </div>
 
       {/* Hero Content */}
@@ -71,11 +64,11 @@ const HeroSection: React.FC = () => {
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-white mb-4 sm:mb-6 leading-tight tracking-tight">
-          <span className="block drop-shadow-lg">ZYNTRA</span>
+          <span className="block">ZYNTRA</span>
           <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mt-2 sm:mt-4 text-gray-200">
             The Future of
           </span>
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00E0FF] to-blue-300 drop-shadow-[0_0_15px_rgba(0,224,255,0.4)] mt-1">
+          <span className="block text-white mt-1">
             Intelligent Exams
           </span>
         </h1>
@@ -102,26 +95,26 @@ const HeroSection: React.FC = () => {
 </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto mt-12">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
-            <FaUsers className="text-4xl text-[#00E0FF] mb-4 mx-auto drop-shadow-md" />
-            <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-wide">10K+</div>
-            <div className="text-gray-300 font-semibold text-sm sm:text-base mt-2 tracking-wider uppercase">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
+            <FaUsers className="text-3xl text-white mb-3 mx-auto opacity-90" />
+            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">10K+</div>
+            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
               Active Users
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
-            <FaFileAlt className="text-4xl text-[#00E0FF] mb-4 mx-auto drop-shadow-md" />
-            <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-wide">50K+</div>
-            <div className="text-gray-300 font-semibold text-sm sm:text-base mt-2 tracking-wider uppercase">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
+            <FaFileAlt className="text-3xl text-white mb-3 mx-auto opacity-90" />
+            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">50K+</div>
+            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
               Exams Conducted
             </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
-            <FaShieldAlt className="text-4xl text-[#00E0FF] mb-4 mx-auto drop-shadow-md" />
-            <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-wide">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center">
+            <FaShieldAlt className="text-3xl text-white mb-3 mx-auto opacity-90" />
+            <div className="text-3xl sm:text-4xl font-bold text-white tracking-wide">
               99.9%
             </div>
-            <div className="text-gray-300 font-semibold text-sm sm:text-base mt-2 tracking-wider uppercase">
+            <div className="text-gray-200 font-medium text-sm sm:text-base mt-1 uppercase tracking-wider">
               Security Rate
             </div>
           </div>
