@@ -9,6 +9,7 @@ import {
   Button,
   IconButton,
   Collapse,
+  Drawer,
 } from "@mui/material";
 // Importing all icons needed for the component and its menus
 import {
@@ -44,13 +45,12 @@ const DesktopSolutionsMenu = () => (
       {/* For Institutions */}
       <div>
         <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
-          <FaBuilding className="text-blue-600" />
+          <FaBuilding className="text-[#111A50]" />
           <span>For Institutions</span>
         </h3>
-        {/* These are DIVs, not <a> tags, to prevent underlines */}
         <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-            <FaSchool className="text-blue-600 text-lg" />
+          <Link to="/solutions/schools-universities" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+            <FaSchool className="text-[#111A50] text-lg" />
             <div>
               <h4 className="font-semibold text-gray-900">
                 Schools & Universities
@@ -59,43 +59,43 @@ const DesktopSolutionsMenu = () => (
                 Academic examination solutions
               </p>
             </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-            <FaBriefcase className="text-blue-600 text-lg" />
+          </Link>
+          <Link to="/solutions/corporate-training" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+            <FaBriefcase className="text-[#111A50] text-lg" />
             <div>
               <h4 className="font-semibold text-gray-900">Corporate Training</h4>
               <p className="text-sm text-gray-600">
                 Employee assessment & certification
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
       {/* For Individuals */}
       <div>
         <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
-          <FaUser className="text-blue-600" />
+          <FaUser className="text-[#111A50]" />
           <span>For Individuals</span>
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-            <FaQuestionCircle className="text-blue-600 text-lg" />
+          <Link to="/solutions/guest-quizzes" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+            <FaQuestionCircle className="text-[#111A50] text-lg" />
             <div>
               <h4 className="font-semibold text-gray-900">Guest Quizzes</h4>
               <p className="text-sm text-gray-600">
                 Free practice tests & assessments
               </p>
             </div>
-          </div>
-          <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-            <FaMedal className="text-blue-600 text-lg" />
+          </Link>
+          <Link to="/solutions/earn-badges" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+            <FaMedal className="text-[#111A50] text-lg" />
             <div>
               <h4 className="font-semibold text-gray-900">Earn Badges</h4>
               <p className="text-sm text-gray-600">
                 Achievement & skill recognition
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>
@@ -106,26 +106,26 @@ const DesktopFeaturesMenu = () => (
   <div className="mega-menu absolute top-full left-0 w-[600px] bg-white shadow-xl rounded-lg border border-gray-100 mt-2 p-6 z-50">
     <div className="grid grid-cols-2 gap-6">
       <div className="space-y-4">
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaEye className="text-blue-600 text-lg" />
+        <Link to="/features/ai-proctoring" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaEye className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">AI Proctoring</h4>
             <p className="text-sm text-gray-600">
               Real-time monitoring & cheating detection
             </p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaBrain className="text-blue-600 text-lg" />
+        </Link>
+        <Link to="/features/smart-analytics" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaBrain className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">Smart Analytics</h4>
             <p className="text-sm text-gray-600">
               Advanced performance insights
             </p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaFingerprint className="text-blue-600 text-lg" />
+        </Link>
+        <Link to="/features/biometric-verification" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaFingerprint className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">
               Biometric Verification
@@ -134,32 +134,32 @@ const DesktopFeaturesMenu = () => (
               Face & voice recognition security
             </p>
           </div>
-        </div>
+        </Link>
       </div>
       <div className="space-y-4">
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaMobileAlt className="text-blue-600 text-lg" />
+        <Link to="/features/mobile-compatible" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaMobileAlt className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">Mobile Compatible</h4>
             <p className="text-sm text-gray-600">Take exams on any device</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaCloud className="text-blue-600 text-lg" />
+        </Link>
+        <Link to="/features/cloud-integration" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaCloud className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">Cloud Integration</h4>
             <p className="text-sm text-gray-600">Seamless data synchronization</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
-          <FaRobot className="text-blue-600 text-lg" />
+        </Link>
+        <Link to="/features/auto-grading" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer no-underline">
+          <FaRobot className="text-[#111A50] text-lg" />
           <div>
             <h4 className="font-semibold text-gray-900">Auto-Grading</h4>
             <p className="text-sm text-gray-600">
               Instant results with AI scoring
             </p>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   </div>
@@ -173,23 +173,23 @@ const MobileSolutionsMenu: React.FC = () => (
     <div>
       <h4 className="font-semibold text-gray-900 mb-2">For Institutions</h4>
       <div className="space-y-2 ml-4">
-        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+        <Link to="/solutions/schools-universities" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
           Schools & Universities
-        </a>
-        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+        </Link>
+        <Link to="/solutions/corporate-training" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
           Corporate Training
-        </a>
+        </Link>
       </div>
     </div>
     <div>
       <h4 className="font-semibold text-gray-900 mb-2">For Individuals</h4>
       <div className="space-y-2 ml-4">
-        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+        <Link to="/solutions/guest-quizzes" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
           Guest Quizzes
-        </a>
-        <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+        </Link>
+        <Link to="/solutions/earn-badges" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
           Earn Badges
-        </a>
+        </Link>
       </div>
     </div>
   </div>
@@ -197,24 +197,24 @@ const MobileSolutionsMenu: React.FC = () => (
 
 const MobileFeaturesMenu: React.FC = () => (
   <div className="space-y-2">
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    <Link to="/features/ai-proctoring" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       AI Proctoring
-    </a>
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    </Link>
+    <Link to="/features/smart-analytics" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       Smart Analytics
-    </a>
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    </Link>
+    <Link to="/features/biometric-verification" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       Biometric Verification
-    </a>
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    </Link>
+    <Link to="/features/mobile-compatible" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       Mobile Compatible
-    </a>
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    </Link>
+    <Link to="/features/cloud-integration" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       Cloud Integration
-    </a>
-    <a href="#" className="block text-gray-600 hover:text-[#111A50] py-1">
+    </Link>
+    <Link to="/features/auto-grading" className="block text-gray-600 hover:text-[#111A50] py-1 no-underline">
       Auto-Grading
-    </a>
+    </Link>
   </div>
 );
 
@@ -336,68 +336,96 @@ const Navbar: React.FC = () => {
         </Toolbar>
       </Container>
 
-      {/* === 1:1 STYLING FIX: Render the correct MOBILE versions of the menus --- */}
-      <Collapse in={isMobileMenuOpen} timeout="auto" unmountOnExit>
-        <Box className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-4">
-          {/* Solutions Mobile */}
-          <div>
-            <div
-              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
-              onClick={() => toggleAccordion("solutions")}
-            >
-              <div className="flex items-center space-x-2">
-                <FaCogs className="text-sm" />
-                <span>Solutions</span>
+      {/* === MOBILE DRAWER: slides in from the right side === */}
+      <Drawer
+        anchor="right"
+        open={isMobileMenuOpen}
+        onClose={toggleMobileMenu}
+        PaperProps={{
+          sx: {
+            width: '85%',
+            maxWidth: 360,
+            backgroundColor: '#fff',
+          }
+        }}
+      >
+        <Box className="h-full flex flex-col">
+          {/* Drawer Header */}
+          <Box className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-[#111A50] rounded-lg flex items-center justify-center">
+                <FaGraduationCap className="text-white text-sm" />
               </div>
-              <FaChevronDown
-                className={`text-xs transition-transform duration-200 ${
-                  mobileAccordion === "solutions" ? "rotate-180" : ""
-                }`}
-              />
+              <span className="text-lg font-bold text-[#111A50]">ZYNTRA</span>
             </div>
-            <Collapse
-              in={mobileAccordion === "solutions"}
-              className="ml-4 mt-2"
-            >
-              <MobileSolutionsMenu />
-            </Collapse>
-          </div>
+            <IconButton onClick={toggleMobileMenu} className="!text-gray-500 hover:!text-red-500">
+              <FaTimes className="text-lg" />
+            </IconButton>
+          </Box>
 
-          {/* Features Mobile */}
-          <div>
-            <div
-              className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
-              onClick={() => toggleAccordion("features")}
-            >
-              <div className="flex items-center space-x-2">
-                <FaStar className="text-sm" />
-                <span>Features</span>
+          {/* Drawer Content */}
+          <Box className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            {/* Solutions Mobile */}
+            <div>
+              <div
+                className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
+                onClick={() => toggleAccordion("solutions")}
+              >
+                <div className="flex items-center space-x-2">
+                  <FaCogs className="text-sm" />
+                  <span>Solutions</span>
+                </div>
+                <FaChevronDown
+                  className={`text-xs transition-transform duration-200 ${
+                    mobileAccordion === "solutions" ? "rotate-180" : ""
+                  }`}
+                />
               </div>
-              <FaChevronDown
-                className={`text-xs transition-transform duration-200 ${
-                  mobileAccordion === "features" ? "rotate-180" : ""
-                }`}
-              />
+              <Collapse
+                in={mobileAccordion === "solutions"}
+                className="ml-4 mt-2"
+              >
+                <MobileSolutionsMenu />
+              </Collapse>
             </div>
-            <Collapse
-              in={mobileAccordion === "features"}
-              className="ml-4 mt-2"
+
+            {/* Features Mobile */}
+            <div>
+              <div
+                className="mobile-menu-item flex items-center justify-between text-gray-700 hover:text-[#111A50] py-2 cursor-pointer"
+                onClick={() => toggleAccordion("features")}
+              >
+                <div className="flex items-center space-x-2">
+                  <FaStar className="text-sm" />
+                  <span>Features</span>
+                </div>
+                <FaChevronDown
+                  className={`text-xs transition-transform duration-200 ${
+                    mobileAccordion === "features" ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+              <Collapse
+                in={mobileAccordion === "features"}
+                className="ml-4 mt-2"
+              >
+                <MobileFeaturesMenu />
+              </Collapse>
+            </div>
+
+            {/* Pricing */}
+            <Link
+              to="/pricing"
+              onClick={toggleMobileMenu}
+              className="flex items-center space-x-2 text-gray-700 hover:text-[#111A50] py-2 no-underline"
             >
-              <MobileFeaturesMenu />
-            </Collapse>
-          </div>
+              <FaTag className="text-sm" />
+              <span>Pricing</span>
+            </Link>
+          </Box>
 
-          {/* Pricing */}
-          <a
-            href="#"
-            className="flex items-center space-x-2 text-gray-700 hover:text-[#111A50] py-2"
-          >
-            <FaTag className="text-sm" />
-            <span>Pricing</span>
-          </a>
-
-          {/* Mobile Buttons */}
-          <Box className="flex flex-col space-y-2 pt-4 border-t border-gray-100">
+          {/* Drawer Footer Buttons */}
+          <Box className="flex flex-col space-y-2 p-4 border-t border-gray-100">
             <Button
               variant="text"
               onClick={() => handleNavigate("/login")}
@@ -416,7 +444,7 @@ const Navbar: React.FC = () => {
             </Button>
           </Box>
         </Box>
-      </Collapse>
+      </Drawer>
     </AppBar>
   );
 };

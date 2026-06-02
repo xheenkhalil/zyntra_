@@ -24,6 +24,20 @@ const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage'));
 
+// --- Solutions Pages ---
+const SchoolsUniversitiesPage = lazy(() => import('./pages/solutions/SchoolsUniversitiesPage'));
+const CorporateTrainingPage = lazy(() => import('./pages/solutions/CorporateTrainingPage'));
+const GuestQuizzesPage = lazy(() => import('./pages/solutions/GuestQuizzesPage'));
+const EarnBadgesPage = lazy(() => import('./pages/solutions/EarnBadgesPage'));
+
+// --- Features Pages ---
+const AIProctoring = lazy(() => import('./pages/features/AIProctoring'));
+const SmartAnalytics = lazy(() => import('./pages/features/SmartAnalytics'));
+const BiometricVerification = lazy(() => import('./pages/features/BiometricVerification'));
+const MobileCompatible = lazy(() => import('./pages/features/MobileCompatible'));
+const CloudIntegration = lazy(() => import('./pages/features/CloudIntegration'));
+const AutoGrading = lazy(() => import('./pages/features/AutoGrading'));
+
 // --- Super Admin Pages ---
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const SuperAdminGuestQuizzes = lazy(() => import('./pages/SuperAdminGuestQuizzes'));
@@ -83,6 +97,20 @@ function App() {
                             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                             <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                             <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+
+                            {/* --- Solutions Routes --- */}
+                            <Route path="/solutions/schools-universities" element={<SchoolsUniversitiesPage />} />
+                            <Route path="/solutions/corporate-training" element={<CorporateTrainingPage />} />
+                            <Route path="/solutions/guest-quizzes" element={<GuestQuizzesPage />} />
+                            <Route path="/solutions/earn-badges" element={<EarnBadgesPage />} />
+
+                            {/* --- Features Routes --- */}
+                            <Route path="/features/ai-proctoring" element={<AIProctoring />} />
+                            <Route path="/features/smart-analytics" element={<SmartAnalytics />} />
+                            <Route path="/features/biometric-verification" element={<BiometricVerification />} />
+                            <Route path="/features/mobile-compatible" element={<MobileCompatible />} />
+                            <Route path="/features/cloud-integration" element={<CloudIntegration />} />
+                            <Route path="/features/auto-grading" element={<AutoGrading />} />
 
                             {/* --- PROCTORING ROUTE (Standalone) --- */}
                             {/* This allows both Superadmins and Course Admins to view the live feed */}
