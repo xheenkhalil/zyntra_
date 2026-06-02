@@ -77,6 +77,7 @@ const SubmissionCompletePage = lazy(() => import('./pages/SubmissionCompletePage
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
 import SEORoute from './components/SEORoute';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { AuthProvider } from './context/AuthProvider';
 
 function App() {
@@ -183,6 +184,7 @@ function App() {
                                 <Route path="/test-enroll" element={<EnrollmentTestPage />} />
                             </Route>
                         </Routes>
+                        <PWAInstallPrompt />
                     </Suspense>
                 </AuthProvider>
             </Router>
