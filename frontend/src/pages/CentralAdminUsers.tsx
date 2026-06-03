@@ -126,8 +126,8 @@ const CentralAdminUsers: React.FC = () => {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={user.role === 'courseadmin' ? 'Teacher' : 'Student'}
-                                            color={user.role === 'courseadmin' ? 'primary' : 'secondary'}
+                                            label={user.role === 'centraladmin' ? 'Org Admin' : user.role === 'courseadmin' ? 'Teacher' : 'Student'}
+                                            color={user.role === 'centraladmin' ? 'warning' : user.role === 'courseadmin' ? 'primary' : 'secondary'}
                                             size="small"
                                             variant="outlined"
                                         />

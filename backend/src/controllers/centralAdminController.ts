@@ -49,13 +49,17 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     const user = result.rows[0];
     const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
 
+    // Get Organization Name
+    const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+    const organizationName = orgResult.rows[0]?.name || 'your organization';
+
     // Automatically send invite email via Brevo or queue
     try {
       if (emailQueue) {
-        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
         console.log(`[CentralAdmin] Queued invite email for ${email}`);
       } else {
-        await emailService.sendAdminInviteEmail(email, fullName, setupLink);
+        await emailService.sendAdminInviteEmail(email, fullName, setupLink, organizationName);
         console.log(`[CentralAdmin] Invite email sent synchronously to ${email}`);
       }
     } catch (emailErr) {
@@ -261,14 +265,18 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
 
     const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${token}`;
 
+    // Get Organization Name
+    const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+    const organizationName = orgResult.rows[0]?.name || 'your organization';
+
     // Actually send the email via Brevo or queue
     const userFullName = userResult.rows[0].full_name || 'Administrator';
     try {
       if (emailQueue) {
-        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
         console.log(`[CentralAdmin] Queued invite re-send for ${email}`);
       } else {
-        await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
+        await emailService.sendAdminInviteEmail(email, userFullName, setupLink, organizationName);
         console.log(`[CentralAdmin] Invite re-sent synchronously to ${email}`);
       }
     } catch (emailErr) {
