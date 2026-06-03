@@ -46,7 +46,7 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     ]);
 
     const user = result.rows[0];
-    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${setupToken}`;
+    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
 
     // Automatically send invite email via Brevo
     try {
@@ -253,7 +253,7 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${token}`;
+    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${token}`;
 
     // Actually send the email via Brevo
     const userFullName = userResult.rows[0].full_name || 'Administrator';

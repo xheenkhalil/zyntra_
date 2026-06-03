@@ -5,7 +5,7 @@
 const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'support@zyntra.io';
 const EMAIL_NAME = process.env.EMAIL_NAME || 'ZYNTRA';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app';
 
 /**
  * Send an email via the Brevo transactional email API.

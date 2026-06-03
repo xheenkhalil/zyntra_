@@ -12,7 +12,7 @@ const config = {
   EMAIL_FROM: process.env.EMAIL_FROM,
   EMAIL_NAME: process.env.EMAIL_NAME,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  FRONTEND_URL: process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app',
 };
 
 // Update the check
