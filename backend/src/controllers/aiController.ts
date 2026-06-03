@@ -22,7 +22,7 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-flash-latest',
       systemInstruction: systemPrompt,
     });
 
@@ -102,7 +102,7 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     const userPrompt = `Based on the following text, generate ${targetCount} multiple-choice questions. Each question should have ${numOptions} options.\n\n--- TEXT CONTEXT ---\n${documentText.substring(0, 12000)}\n--- END OF TEXT CONTEXT ---`;
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-flash-latest',
       systemInstruction: systemPrompt,
     });
 
