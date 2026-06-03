@@ -165,7 +165,7 @@ function App() {
                                     <Route index element={<CourseAdminOverview />} />
                                     <Route path="students" element={<CourseAdminDashboard />} />
                                     <Route path="exams" element={<ExamBankPage />} />
-                                    <Route path="exams/create" element={<ExamBuilderPage />} />
+                                    <Route path="exams/:examId" element={<ExamBuilderPage />} />
                                     <Route path="exams/:examId/edit" element={<ExamBuilderPage />} />
                                     <Route path="results" element={<ResultsPage />} />
                                     <Route path="proctoring" element={<ProctoringOverview />} />
