@@ -27,6 +27,10 @@ if (connection) {
                 const { email, fullName, inviteLink } = payload;
                 await emailService.sendAdminInviteEmail(email, fullName, inviteLink);
                 console.log(`[EmailWorker] Successfully sent admin invite to ${email}`);
+            } else if (type === 'sendWelcomeEmail') {
+                const { email, fullName, role } = payload;
+                await emailService.sendWelcomeEmail(email, fullName, role);
+                console.log(`[EmailWorker] Successfully sent welcome email to ${email}`);
             } else {
                 console.warn(`[EmailWorker] Unknown job type: ${type}`);
             }

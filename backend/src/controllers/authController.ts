@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { validatePassword } from '../utils/passwordValidator';
+import { emailQueue } from '../queues/emailQueue';
+import * as emailService from '../services/emailService';
 
 // ===========================================
 // LOGIN CONTROLLER
@@ -151,6 +153,21 @@ export const setupAccount = async (req: Request, res: Response) => {
         "UPDATE organizations SET status = 'active', updated_at = NOW() WHERE id = $1",
         [updatedUser.organization_id],
       );
+    }
+
+    // Send Welcome Email to Admins/Teachers
+    if (updatedUser.role === 'centraladmin' || updatedUser.role === 'courseadmin') {
+      try {
+        if (emailQueue) {
+          await emailQueue.add('sendWelcomeEmail', { type: 'sendWelcomeEmail', payload: { email: updatedUser.email, fullName: updatedUser.full_name, role: updatedUser.role } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+          console.log(`[AuthController] Queued welcome email for ${updatedUser.email}`);
+        } else {
+          await emailService.sendWelcomeEmail(updatedUser.email, updatedUser.full_name, updatedUser.role);
+          console.log(`[AuthController] Welcome email sent synchronously to ${updatedUser.email}`);
+        }
+      } catch (err) {
+        console.error('[AuthController] Failed to send/queue welcome email:', err);
+      }
     }
 
     res.status(200).json({
