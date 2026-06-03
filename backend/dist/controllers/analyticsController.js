@@ -12,7 +12,7 @@ const getCourseAdminStats = async (req, res) => {
     const { examId } = req.query;
     try {
         // --- Build dynamic WHERE clause for filtering submissions ---
-        let submissionFilter = 'WHERE e.course_admin_id = $1 AND es.status = \'completed\'';
+        let submissionFilter = "WHERE e.course_admin_id = $1 AND es.status = 'completed'";
         const submissionParams = [courseAdminId];
         if (examId && examId !== 'all') {
             submissionFilter += ` AND e.id = $2`;
@@ -64,7 +64,7 @@ const getCourseAdminStats = async (req, res) => {
                 pass_fail: {
                     pass_count: submissionStatsResult.rows[0].pass_count,
                     fail_count: submissionStatsResult.rows[0].fail_count,
-                }
+                },
             },
             topStudents: topStudentsResult.rows,
             filterExams: filterExamsResult.rows,
@@ -72,7 +72,7 @@ const getCourseAdminStats = async (req, res) => {
         res.status(200).json(finalStats);
     }
     catch (error) {
-        console.error("Error fetching course admin stats:", error);
+        console.error('Error fetching course admin stats:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

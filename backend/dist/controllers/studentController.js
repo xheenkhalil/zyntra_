@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getExamInfo = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
 const encryptionService_1 = require("../services/encryptionService");
-// Fetches all exams with 'live' status for the student's organization.
+// fetches all exams with 'live' status for the student's organization.
 const getAvailableExams = async (req, res) => {
     const studentId = req.user?.userId;
     const organizationId = req.user?.organizationId;
@@ -30,15 +30,15 @@ const getAvailableExams = async (req, res) => {
             GROUP BY e.id, es.status;
         `;
         const result = await db_1.default.query(query, [studentId, organizationId]);
-        const exams = result.rows.map(row => ({
+        const exams = result.rows.map((row) => ({
             ...row,
             total_questions: parseInt(row.total_questions || '0'),
-            question_types: row.question_types || []
+            question_types: row.question_types || [],
         }));
         res.status(200).json(exams);
     }
     catch (error) {
-        console.error("Error fetching available exams:", error);
+        console.error('Error fetching available exams:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -47,7 +47,7 @@ exports.getAvailableExams = getAvailableExams;
 const getExamInfo = async (req, res) => {
     const { examId } = req.params;
     try {
-        const query = 'SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = \'live\'';
+        const query = "SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = 'live'";
         const result = await db_1.default.query(query, [examId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Exam not found' });
@@ -55,7 +55,7 @@ const getExamInfo = async (req, res) => {
         res.status(200).json(result.rows[0]);
     }
     catch (error) {
-        console.error("Error fetching exam info:", error);
+        console.error('Error fetching exam info:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -67,7 +67,7 @@ const startOrResumeExam = async (req, res) => {
     const client = await db_1.default.connect();
     try {
         // --- 1. Get Exam and Check Status (Fail Fast) ---
-        const examQuery = 'SELECT * FROM exams WHERE id = $1 AND status = \'live\'';
+        const examQuery = "SELECT * FROM exams WHERE id = $1 AND status = 'live'";
         const examResult = await client.query(examQuery, [examId]);
         if (examResult.rows.length === 0) {
             return res.status(404).json({ message: 'Exam not found or is not live.' });
@@ -78,7 +78,11 @@ const startOrResumeExam = async (req, res) => {
             try {
                 const proctorCheck = await client.query('SELECT user_id FROM proctor_profiles WHERE user_id = $1', [studentId]);
                 if (proctorCheck.rows.length === 0) {
-                    return res.status(403).json({ message: 'Proctoring required: You must complete face enrollment before starting this exam.' });
+                    return res
+                        .status(403)
+                        .json({
+                        message: 'Proctoring required: You must complete face enrollment before starting this exam.',
+                    });
                 }
             }
             catch (err) {
@@ -95,7 +99,8 @@ const startOrResumeExam = async (req, res) => {
         const existingSubmissionQuery = 'SELECT * FROM exam_submissions WHERE exam_id = $1 AND student_id = $2';
         const submissionResult = await client.query(existingSubmissionQuery, [examId, studentId]);
         if (submissionResult.rows.length > 0) {
-            if (submissionResult.rows[0].status === 'completed' || submissionResult.rows[0].status === 'submitted_auto') {
+            if (submissionResult.rows[0].status === 'completed' ||
+                submissionResult.rows[0].status === 'submitted_auto') {
                 return res.status(409).json({ message: 'You have already completed this exam.' });
             }
             submission = submissionResult.rows[0];
@@ -113,7 +118,8 @@ const startOrResumeExam = async (req, res) => {
         }
         // --- 3. Fetch & Decrypt Questions for Student Runner ---
         const questionsResult = await client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
-        const sanitizedQuestions = questionsResult.rows.map(q => {
+        const sanitizedQuestions = questionsResult.rows
+            .map((q) => {
             try {
                 if (!q.encrypted_data) {
                     console.warn(`Question ${q.id} has no encrypted data. Skipping.`);
@@ -125,16 +131,19 @@ const startOrResumeExam = async (req, res) => {
                     question_text: decryptedContent.questionText,
                     question_type: decryptedContent.questionType,
                     question_instructions: decryptedContent.questionInstructions,
-                    options: decryptedContent.options ? decryptedContent.options.map(opt => ({ text: opt.text })) : null,
+                    options: decryptedContent.options
+                        ? decryptedContent.options.map((opt) => ({ text: opt.text }))
+                        : null,
                 };
             }
             catch (err) {
                 console.error(`Failed to decrypt question ${q.id}:`, err);
                 return null;
             }
-        }).filter(q => q !== null);
+        })
+            .filter((q) => q !== null);
         return res.status(200).json({
-            message: submissionResult.rows.length > 0 ? "Resuming exam." : "Starting new exam.",
+            message: submissionResult.rows.length > 0 ? 'Resuming exam.' : 'Starting new exam.',
             exam: {
                 id: exam.id,
                 title: exam.title,
@@ -146,12 +155,12 @@ const startOrResumeExam = async (req, res) => {
                 id: submission.id,
                 answers: submission.answers || {},
                 time_remaining_seconds: submission.time_remaining_seconds,
-                last_question_index: submission.last_question_index || 0
-            }
+                last_question_index: submission.last_question_index || 0,
+            },
         });
     }
     catch (error) {
-        console.error("Error starting or resuming exam:", error);
+        console.error('Error starting or resuming exam:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
     finally {
@@ -172,28 +181,40 @@ const saveExamProgress = async (req, res) => {
             SET answers = $1, time_remaining_seconds = $2, last_question_index = $3
             WHERE id = $4 AND student_id = $5 AND status = 'in_progress';
         `;
-        // Note: If last_question_index column doesn't exist yet, this will fail. 
+        // Note: If last_question_index column doesn't exist yet, this will fail.
         // We should probably handle that or ensure migration runs first.
-        // For now, I'll use a safer query that only updates if the column exists? 
+        // For now, I'll use a safer query that only updates if the column exists?
         // No, I'll just assume the migration will be run immediately after this file update.
-        const result = await db_1.default.query(query, [JSON.stringify(answers), time_remaining_seconds, last_question_index || 0, submissionId, studentId]);
+        const result = await db_1.default.query(query, [
+            JSON.stringify(answers),
+            time_remaining_seconds,
+            last_question_index || 0,
+            submissionId,
+            studentId,
+        ]);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'In-progress submission not found.' });
         }
         res.status(200).json({ message: 'Progress saved.' });
     }
     catch (error) {
-        if (error.code === '42703') { // Undefined column
+        if (error.code === '42703') {
+            // Undefined column
             // Fallback for before migration
             const fallbackQuery = `
                 UPDATE exam_submissions
                 SET answers = $1, time_remaining_seconds = $2
                 WHERE id = $3 AND student_id = $4 AND status = 'in_progress';
             `;
-            await db_1.default.query(fallbackQuery, [JSON.stringify(answers), time_remaining_seconds, submissionId, studentId]);
+            await db_1.default.query(fallbackQuery, [
+                JSON.stringify(answers),
+                time_remaining_seconds,
+                submissionId,
+                studentId,
+            ]);
             return res.status(200).json({ message: 'Progress saved (legacy).' });
         }
-        console.error("Error saving exam progress:", error);
+        console.error('Error saving exam progress:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -216,13 +237,17 @@ const submitExam = async (req, res) => {
         `;
         const submissionResult = await client.query(submissionQuery, [submissionId, studentId]);
         if (submissionResult.rows.length === 0) {
-            return res.status(404).json({ message: 'In-progress submission not found. It may have been completed or expired.' });
+            return res
+                .status(404)
+                .json({
+                message: 'In-progress submission not found. It may have been completed or expired.',
+            });
         }
         const examId = submissionResult.rows[0].exam_id;
         // 2. Fetch Exam Settings and ALL encrypted Questions
         const [examResult, questionsResult] = await Promise.all([
             client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
-            client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [examId])
+            client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [examId]),
         ]);
         const gradingScale = examResult.rows[0].grading_scale;
         let score = 0;
@@ -238,24 +263,25 @@ const submitExam = async (req, res) => {
             switch (decryptedContent.questionType) {
                 case 'MCQ':
                 case 'TRUE_FALSE': {
-                    const correctAnswer = decryptedContent.options?.find(opt => opt.isCorrect)?.text;
+                    const correctAnswer = decryptedContent.options?.find((opt) => opt.isCorrect)?.text;
                     if (correctAnswer === studentAnswer) {
                         score++;
                     }
                     break;
                 }
                 case 'MSQ': {
-                    const correctAnswers = decryptedContent.options?.filter(opt => opt.isCorrect).map(opt => opt.text) || [];
+                    const correctAnswers = decryptedContent.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
                     const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
                     const isCorrect = correctAnswers.length === studentAnswers.length &&
-                        correctAnswers.every(ans => studentAnswers.includes(ans));
+                        correctAnswers.every((ans) => studentAnswers.includes(ans));
                     if (isCorrect) {
                         score++;
                     }
                     break;
                 }
                 case 'FILL_BLANK': {
-                    if (studentAnswer.toLowerCase().trim() === decryptedContent.correctAnswer?.toLowerCase().trim()) {
+                    if (studentAnswer.toLowerCase().trim() ===
+                        decryptedContent.correctAnswer?.toLowerCase().trim()) {
                         score++;
                     }
                     break;
@@ -285,7 +311,10 @@ const submitExam = async (req, res) => {
             RETURNING id, score_percentage, grade, submitted_at;
         `;
         const finalResult = await client.query(updateSubmissionQuery, [
-            scorePercentage.toFixed(2), finalGrade, JSON.stringify(answers), submissionId
+            scorePercentage.toFixed(2),
+            finalGrade,
+            JSON.stringify(answers),
+            submissionId,
         ]);
         await client.query('COMMIT');
         res.status(201).json({
@@ -295,7 +324,7 @@ const submitExam = async (req, res) => {
     }
     catch (error) {
         await client.query('ROLLBACK');
-        console.error("Error submitting exam:", error);
+        console.error('Error submitting exam:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
     finally {

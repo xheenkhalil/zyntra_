@@ -19,7 +19,9 @@ const createExam = async (req, res) => {
     try {
         // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
         if (!organizationId) {
-            const userRes = await db_1.default.query('SELECT organization_id FROM users WHERE id = $1', [courseAdminId]);
+            const userRes = await db_1.default.query('SELECT organization_id FROM users WHERE id = $1', [
+                courseAdminId,
+            ]);
             if (userRes.rows.length > 0) {
                 organizationId = userRes.rows[0].organization_id;
             }
@@ -36,7 +38,7 @@ const createExam = async (req, res) => {
             duration_minutes || 60,
             is_proctored || false,
             courseAdminId,
-            organizationId || null
+            organizationId || null,
         ]);
         res.status(201).json(newExam.rows[0]);
     }
@@ -55,7 +57,9 @@ const getExamsForCourseAdmin = async (req, res) => {
     try {
         // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
         if (!organizationId) {
-            const userRes = await db_1.default.query('SELECT organization_id FROM users WHERE id = $1', [courseAdminId]);
+            const userRes = await db_1.default.query('SELECT organization_id FROM users WHERE id = $1', [
+                courseAdminId,
+            ]);
             if (userRes.rows.length > 0) {
                 organizationId = userRes.rows[0].organization_id;
             }
@@ -72,7 +76,7 @@ const getExamsForCourseAdmin = async (req, res) => {
         `;
         // Ensure organizationId is null if undefined
         const result = await db_1.default.query(query, [courseAdminId, organizationId || null]);
-        const exams = result.rows.map(row => {
+        const exams = result.rows.map((row) => {
             const registered = parseInt(row.registered_count || '0');
             const completed = parseInt(row.completed_count || '0');
             const autoSubmitted = 0; // DB enum doesn't support 'submitted_auto' yet
@@ -86,8 +90,8 @@ const getExamsForCourseAdmin = async (req, res) => {
                     completed: completed,
                     pending: pending,
                     auto_submitted: autoSubmitted,
-                    proctoring_defaulters: 0
-                }
+                    proctoring_defaulters: 0,
+                },
             };
         });
         res.status(200).json(exams);
@@ -107,11 +111,13 @@ const getExamById = async (req, res) => {
     try {
         const examResult = await db_1.default.query('SELECT * FROM exams WHERE id = $1 AND course_admin_id = $2', [examId, courseAdminId]);
         if (examResult.rows.length === 0) {
-            return res.status(404).json({ message: 'Exam not found or you do not have permission to view it.' });
+            return res
+                .status(404)
+                .json({ message: 'Exam not found or you do not have permission to view it.' });
         }
         const questionsResult = await db_1.default.query('SELECT * FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
         // Transform questions to include correct_answer for FILL_BLANK
-        const questions = questionsResult.rows.map(q => {
+        const questions = questionsResult.rows.map((q) => {
             if (q.question_type === 'FILL_BLANK' && q.options && q.options.length > 0) {
                 return { ...q, correct_answer: q.options[0].text };
             }
@@ -144,7 +150,9 @@ const addQuestionToExam = async (req, res) => {
     // Type-specific validation and data preparation
     if (type === 'MCQ' || type === 'MSQ' || type === 'TRUE_FALSE') {
         if (!options || !Array.isArray(options) || options.length < 2) {
-            return res.status(400).json({ message: 'At least two options are required for this question type.' });
+            return res
+                .status(400)
+                .json({ message: 'At least two options are required for this question type.' });
         }
         if (!options.some((opt) => opt.isCorrect === true)) {
             return res.status(400).json({ message: 'At least one option must be marked as correct.' });
@@ -164,7 +172,9 @@ const addQuestionToExam = async (req, res) => {
     try {
         const examCheck = await db_1.default.query('SELECT id FROM exams WHERE id = $1 AND course_admin_id = $2', [examId, courseAdminId]);
         if (examCheck.rows.length === 0) {
-            return res.status(403).json({ message: 'Forbidden: You do not own this exam or it does not exist.' });
+            return res
+                .status(403)
+                .json({ message: 'Forbidden: You do not own this exam or it does not exist.' });
         }
         // Encrypt the question data for student view
         const questionData = {
@@ -172,7 +182,7 @@ const addQuestionToExam = async (req, res) => {
             questionType: type,
             options: finalOptions,
             questionInstructions: req.body.questionInstructions || null,
-            correctAnswer: type === 'FILL_BLANK' ? correctAnswer : null
+            correctAnswer: type === 'FILL_BLANK' ? correctAnswer : null,
         };
         const encryptedData = (0, encryptionService_1.encrypt)(JSON.stringify(questionData));
         const query = `
@@ -185,7 +195,7 @@ const addQuestionToExam = async (req, res) => {
             questionText,
             JSON.stringify(finalOptions),
             type,
-            encryptedData
+            encryptedData,
         ]);
         // If it's FILL_BLANK, append correct_answer to response so frontend sees it immediately
         const responseQuestion = newQuestion.rows[0];
@@ -207,7 +217,11 @@ const updateExamSettings = async (req, res) => {
     const { examId } = req.params;
     const { status, grading_scale, duration_minutes, instructions, is_proctored } = req.body;
     const courseAdminId = req.user?.userId;
-    if (!status && !grading_scale && !duration_minutes && !instructions && is_proctored === undefined) {
+    if (!status &&
+        !grading_scale &&
+        !duration_minutes &&
+        !instructions &&
+        is_proctored === undefined) {
         return res.status(400).json({ message: 'No settings provided to update.' });
     }
     try {
@@ -238,7 +252,9 @@ const updateExamSettings = async (req, res) => {
         queryParams.push(examId, courseAdminId);
         const result = await db_1.default.query(query, queryParams);
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Exam not found or you do not have permission to edit it.' });
+            return res
+                .status(404)
+                .json({ message: 'Exam not found or you do not have permission to edit it.' });
         }
         res.status(200).json(result.rows[0]);
     }
@@ -255,7 +271,7 @@ const archiveExam = async (req, res) => {
     const { examId } = req.params;
     const courseAdminId = req.user?.userId;
     try {
-        const result = await db_1.default.query('UPDATE exams SET status = \'archived\' WHERE id = $1 AND course_admin_id = $2 RETURNING *', [examId, courseAdminId]);
+        const result = await db_1.default.query("UPDATE exams SET status = 'archived' WHERE id = $1 AND course_admin_id = $2 RETURNING *", [examId, courseAdminId]);
         if (result.rows.length === 0)
             return res.status(404).json({ message: 'Exam not found' });
         res.json({ message: 'Exam archived', exam: result.rows[0] });
@@ -283,7 +299,7 @@ const restoreExam = async (req, res) => {
     const { examId } = req.params;
     const courseAdminId = req.user?.userId;
     try {
-        const result = await db_1.default.query('UPDATE exams SET status = \'draft\' WHERE id = $1 AND course_admin_id = $2 RETURNING *', [examId, courseAdminId]);
+        const result = await db_1.default.query("UPDATE exams SET status = 'draft' WHERE id = $1 AND course_admin_id = $2 RETURNING *", [examId, courseAdminId]);
         if (result.rows.length === 0)
             return res.status(404).json({ message: 'Exam not found' });
         res.json({ message: 'Exam restored', exam: result.rows[0] });
@@ -302,7 +318,9 @@ const getExamResults = async (req, res) => {
         const examCheckQuery = 'SELECT id FROM exams WHERE id = $1 AND course_admin_id = $2';
         const examCheckResult = await db_1.default.query(examCheckQuery, [examId, courseAdminId]);
         if (examCheckResult.rows.length === 0) {
-            return res.status(403).json({ message: 'Forbidden: You do not have permission to view results for this exam.' });
+            return res
+                .status(403)
+                .json({ message: 'Forbidden: You do not have permission to view results for this exam.' });
         }
         // Step 2: Fetch all submissions for this exam and join with user data
         const resultsQuery = `

@@ -8,6 +8,7 @@ exports.exportStudents = exports.bulkDeleteStudents = exports.deleteStudent = ex
 const db_1 = __importDefault(require("../services/db"));
 const csv = require('csv-parser');
 const emailService_1 = require("../services/emailService");
+const emailQueue_1 = require("../queues/emailQueue");
 // --- HELPER FUNCTION (Audit Log - Copied from Proctoring Controller) ---
 // This ensures we can log actions securely.
 const logAudit = async (action, details, userId, organizationId) => {
@@ -60,8 +61,22 @@ const createStudent = async (req, res) => {
         const newUser = newUserResult.rows[0];
         // Audit Log
         await logAudit('STUDENT_CREATED_INDIVIDUAL', `Student ${newUser.full_name} registered manually with ID: ${studentCode}`, teacherUserId, organizationId);
+        // Automatically send student credentials email
+        try {
+            if (emailQueue_1.emailQueue) {
+                await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email, fullName, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                console.log(`[CourseAdmin] Queued student email for ${email}`);
+            }
+            else {
+                await (0, emailService_1.sendStudentCredentials)(email, fullName, studentCode);
+                console.log(`[CourseAdmin] Student credentials email sent synchronously to ${email}`);
+            }
+        }
+        catch (emailErr) {
+            console.error('[CourseAdmin] Failed to send/queue student email, but student was created:', emailErr);
+        }
         res.status(201).json({
-            message: 'Student created successfully. Student ID provided for login.',
+            message: 'Student created successfully. Credentials sent via email.',
             user: newUser,
         });
     }
@@ -123,15 +138,19 @@ const bulkRegisterStudents = async (req, res) => {
                     student.full_name,
                     student.email,
                     studentCode,
-                    organizationId
+                    organizationId,
                 ]);
                 if ((result.rowCount ?? 0) > 0) {
                     registeredCount++;
                     // Send email if requested
                     if (sendEmails) {
-                        // We don't await this to avoid slowing down the bulk process too much, 
-                        // but ideally this should be a background job.
-                        (0, emailService_1.sendStudentCredentials)(student.email, student.full_name, studentCode).catch(console.error);
+                        if (emailQueue_1.emailQueue) {
+                            await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email: student.email, fullName: student.full_name, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                        }
+                        else {
+                            // Fallback: fire and forget if no Redis
+                            (0, emailService_1.sendStudentCredentials)(student.email, student.full_name, studentCode).catch(console.error);
+                        }
                     }
                 }
                 else {
@@ -198,8 +217,8 @@ const getStudentsForOrg = async (req, res) => {
                 page,
                 limit,
                 total,
-                totalPages: Math.ceil(total / limit)
-            }
+                totalPages: Math.ceil(total / limit),
+            },
         });
     }
     catch (error) {
@@ -293,7 +312,7 @@ const bulkDeleteStudents = async (req, res) => {
         await logAudit('STUDENTS_BULK_DELETED', `${deletedCount} students deleted in bulk operation`, teacherUserId, organizationId);
         res.status(200).json({
             message: `${deletedCount} student(s) deleted successfully`,
-            deletedCount
+            deletedCount,
         });
     }
     catch (error) {
@@ -320,7 +339,9 @@ const exportStudents = async (req, res) => {
         const result = await db_1.default.query(query, [organizationId]);
         const students = result.rows;
         const csvHeader = 'Full Name,Email,Student ID,Date Registered\n';
-        const csvRows = students.map(s => `"${s.full_name}","${s.email}","${s.student_id}","${new Date(s.created_at).toISOString()}"`).join('\n');
+        const csvRows = students
+            .map((s) => `"${s.full_name}","${s.email}","${s.student_id}","${new Date(s.created_at).toISOString()}"`)
+            .join('\n');
         res.header('Content-Type', 'text/csv');
         res.attachment('students_export.csv');
         res.send(csvHeader + csvRows);

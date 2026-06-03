@@ -15,7 +15,9 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, no token' });
     try {
         // Check blacklist
-        const blacklistCheck = await db_1.default.query('SELECT token FROM token_blacklist WHERE token = $1', [token]);
+        const blacklistCheck = await db_1.default.query('SELECT token FROM token_blacklist WHERE token = $1', [
+            token,
+        ]);
         if (blacklistCheck.rows.length > 0) {
             return res.status(401).json({ message: 'Not authorized, token revoked' });
         }
@@ -26,7 +28,7 @@ const protect = async (req, res, next) => {
         req.user = {
             userId: decoded.userId,
             role: decoded.role,
-            organizationId: decoded.organizationId
+            organizationId: decoded.organizationId,
         };
         next();
     }

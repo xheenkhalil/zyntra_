@@ -38,18 +38,23 @@ const getCourseAdminStats = async (req, examId) => {
             // 3. Submissions Stats (Filtered)
             db_1.default.query(submissionsQuery, submissionsParams),
             // 4. Recent Activity (Audit Logs) - Global
-            db_1.default.query(`
+            db_1.default
+                .query(`
                 SELECT action, details, created_at 
                 FROM audit_logs 
                 WHERE organization_id = $1 
                 ORDER BY created_at DESC 
                 LIMIT 5
-            `, [organizationId]).catch(err => {
-                console.error("❌❌❌ AUDIT LOGS QUERY FAILED:", err.message);
+            `, [organizationId])
+                .catch((err) => {
+                console.error('❌❌❌ AUDIT LOGS QUERY FAILED:', err.message);
                 return { rows: [] }; // Return empty to prevent 500 crash
             }),
             // 5. Live Exams List for Filter
-            db_1.default.query('SELECT id, title FROM exams WHERE organization_id = $1 AND status = $2', [organizationId, 'live'])
+            db_1.default.query('SELECT id, title FROM exams WHERE organization_id = $1 AND status = $2', [
+                organizationId,
+                'live',
+            ]),
         ]);
         const total_students = parseInt(studentsResult.rows[0]?.count ?? '0', 10);
         const active_exams = parseInt(examsResult.rows[0]?.count ?? '0', 10);
@@ -61,7 +66,7 @@ const getCourseAdminStats = async (req, examId) => {
         const recent_activity = auditLogsResult.rows.map((row) => ({
             action: row.action,
             details: row.details || row.description || '',
-            timestamp: row.created_at
+            timestamp: row.created_at,
         }));
         const exam_list = examsListResult.rows;
         const stats = {
@@ -70,14 +75,14 @@ const getCourseAdminStats = async (req, examId) => {
             averageScore: Math.round(avg_score),
             passRate: `${Math.round(pass_rate)}%`,
             aiInsights: 23,
-            passRateChange: "+1.5%",
+            passRateChange: '+1.5%',
             recentActivity: recent_activity,
-            examList: exam_list
+            examList: exam_list,
         };
         return stats;
     }
     catch (error) {
-        console.error("❌❌❌ Error in getCourseAdminStats:", error.message);
+        console.error('❌❌❌ Error in getCourseAdminStats:', error.message);
         console.error(error.stack);
         throw new Error('Failed to fetch key metrics.');
     }
@@ -91,9 +96,9 @@ const getPerformanceChartData = async (req, examId) => {
     try {
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const params = [organizationId, thirtyDaysAgo];
-        let examFilter = "";
+        let examFilter = '';
         if (examId && examId !== 'all') {
-            examFilter = "AND e.id = $3";
+            examFilter = 'AND e.id = $3';
             params.push(examId);
         }
         const query = `
@@ -110,14 +115,14 @@ const getPerformanceChartData = async (req, examId) => {
         `;
         const result = await db_1.default.query(query, params);
         const chartData = {
-            labels: result.rows.map(row => new Date(row.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-            avgScores: result.rows.map(row => row.avg_score ? parseFloat(row.avg_score).toFixed(1) : '0'),
-            passRates: result.rows.map(row => row.total_submissions > 0 ? ((row.passes / row.total_submissions) * 100).toFixed(1) : '0'),
+            labels: result.rows.map((row) => new Date(row.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            avgScores: result.rows.map((row) => row.avg_score ? parseFloat(row.avg_score).toFixed(1) : '0'),
+            passRates: result.rows.map((row) => row.total_submissions > 0 ? ((row.passes / row.total_submissions) * 100).toFixed(1) : '0'),
         };
         return chartData;
     }
     catch (error) {
-        console.error("❌ Error fetching performance chart:", error.message);
+        console.error('❌ Error fetching performance chart:', error.message);
         throw new Error('Failed to fetch performance chart data.');
     }
 };
@@ -129,9 +134,9 @@ const getResultsDistribution = async (req, examId) => {
         throw new Error('Organization ID missing for chart data.');
     try {
         const params = [organizationId];
-        let examFilter = "";
+        let examFilter = '';
         if (examId && examId !== 'all') {
-            examFilter = "AND e.id = $2";
+            examFilter = 'AND e.id = $2';
             params.push(examId);
         }
         const query = `
@@ -152,14 +157,14 @@ const getResultsDistribution = async (req, examId) => {
                 parseInt(data.excellent, 10) || 0,
                 parseInt(data.good, 10) || 0,
                 parseInt(data.average, 10) || 0,
-                parseInt(data.below_average, 10) || 0
+                parseInt(data.below_average, 10) || 0,
             ],
-            colors: ['rgb(16, 185, 129)', 'rgb(59, 130, 246)', 'rgb(245, 158, 11)', 'rgb(239, 68, 68)']
+            colors: ['rgb(16, 185, 129)', 'rgb(59, 130, 246)', 'rgb(245, 158, 11)', 'rgb(239, 68, 68)'],
         };
         return chartData;
     }
     catch (error) {
-        console.error("❌ Error fetching results distribution chart:", error.message);
+        console.error('❌ Error fetching results distribution chart:', error.message);
         throw new Error('Failed to fetch distribution chart data.');
     }
 };
@@ -177,11 +182,11 @@ const getTeacherDashboardBatch = async (req, res) => {
         res.status(200).json({
             metrics: stats,
             performance: performanceChart,
-            distribution: resultsChart
+            distribution: resultsChart,
         });
     }
     catch (error) {
-        console.error("❌❌❌ BATCH ERROR:", error.message);
+        console.error('❌❌❌ BATCH ERROR:', error.message);
         res.status(500).json({ message: error.message || 'Failed to load dashboard data' });
     }
 };

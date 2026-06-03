@@ -14,6 +14,5 @@ const router = (0, express_1.Router)();
  */
 router.get('/status', authMiddleware_1.protect, // 1. Checks for a valid login token
 (0, authMiddleware_1.authorize)('superadmin'), // 2. Checks if the user's role is 'superadmin'
-systemController_1.getSystemStatus // 3. Only runs if both checks pass
-);
+systemController_1.getSystemStatus);
 exports.default = router;

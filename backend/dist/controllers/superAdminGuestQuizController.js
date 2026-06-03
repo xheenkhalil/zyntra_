@@ -21,7 +21,7 @@ const logAudit = async (action, details, userId, organizationId) => {
       VALUES ($1, $2, $3, $4)
     `;
         // Fire-and-forget
-        db_1.default.query(query, [action, details, userId, organizationId]);
+        void db_1.default.query(query, [action, details, userId, organizationId]);
     }
     catch (err) {
         console.error('Failed to write to audit log:', err);
@@ -40,17 +40,15 @@ const createGuestQuiz = async (req, res) => {
         return res.status(400).json({ message: 'Title and category are required to create a quiz.' });
     }
     try {
-        const result = await db_1.default.query('INSERT INTO guest_quizzes (title, category, status) VALUES ($1, $2, $3) RETURNING *', [title, category, 'draft'] // New quizzes start as 'draft'
-        );
+        const result = await db_1.default.query('INSERT INTO guest_quizzes (title, category, status) VALUES ($1, $2, $3) RETURNING *', [title, category, 'draft']);
         const newQuiz = result.rows[0];
         // --- AUDIT LOG ---
-        logAudit('guest_quiz_created', `Created guest quiz: ${newQuiz.title}`, adminUserId, null // Guest quizzes are not tied to an org
-        );
+        void logAudit('guest_quiz_created', `Created guest quiz: ${newQuiz.title}`, adminUserId, null);
         // -----------------
         res.status(201).json(newQuiz);
     }
     catch (error) {
-        console.error("Error creating guest quiz:", error);
+        console.error('Error creating guest quiz:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -83,7 +81,7 @@ const getAllGuestQuizzes = async (req, res) => {
         res.status(200).json(result.rows);
     }
     catch (error) {
-        console.error("Error fetching all guest quizzes for admin:", error);
+        console.error('Error fetching all guest quizzes for admin:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -99,11 +97,11 @@ const getGuestQuizById = async (req, res) => {
         const questionsResult = await db_1.default.query('SELECT id, question_text, options FROM guest_questions WHERE quiz_id = $1 ORDER BY created_at', [quizId]);
         res.status(200).json({
             ...quizResult.rows[0],
-            questions: questionsResult.rows
+            questions: questionsResult.rows,
         });
     }
     catch (error) {
-        console.error("Error fetching specific guest quiz for admin:", error);
+        console.error('Error fetching specific guest quiz for admin:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -120,12 +118,12 @@ const updateGuestQuiz = async (req, res) => {
         }
         const updatedQuiz = result.rows[0];
         // --- AUDIT LOG ---
-        logAudit('guest_quiz_updated', `Updated guest quiz: ${updatedQuiz.title} (Status: ${updatedQuiz.status})`, adminUserId, null);
+        void logAudit('guest_quiz_updated', `Updated guest quiz: ${updatedQuiz.title} (Status: ${updatedQuiz.status})`, adminUserId, null);
         // -----------------
         res.status(200).json(updatedQuiz);
     }
     catch (error) {
-        console.error("Error updating guest quiz:", error);
+        console.error('Error updating guest quiz:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -138,7 +136,9 @@ const deleteGuestQuiz = async (req, res) => {
     try {
         await client.query('BEGIN');
         // 1. Get quiz title for logging before deleting
-        const titleResult = await client.query('SELECT title FROM guest_quizzes WHERE id = $1', [quizId]);
+        const titleResult = await client.query('SELECT title FROM guest_quizzes WHERE id = $1', [
+            quizId,
+        ]);
         if (titleResult.rows.length === 0) {
             throw new Error('Quiz not found');
         }
@@ -154,14 +154,18 @@ const deleteGuestQuiz = async (req, res) => {
             return res.status(404).json({ message: 'Guest quiz not found.' });
         }
         // --- AUDIT LOG ---
-        logAudit('guest_quiz_deleted', `Deleted guest quiz: ${quizTitle} (ID: ${quizId})`, adminUserId, null);
+        void logAudit('guest_quiz_deleted', `Deleted guest quiz: ${quizTitle} (ID: ${quizId})`, adminUserId, null);
         // -----------------
         await client.query('COMMIT');
-        res.status(200).json({ message: 'Guest quiz and all associated questions/submissions deleted successfully.' });
+        res
+            .status(200)
+            .json({
+            message: 'Guest quiz and all associated questions/submissions deleted successfully.',
+        });
     }
     catch (error) {
         await client.query('ROLLBACK');
-        console.error("Error deleting guest quiz:", error);
+        console.error('Error deleting guest quiz:', error);
         if (error.message === 'Quiz not found') {
             return res.status(404).json({ message: 'Guest quiz not found.' });
         }
@@ -179,7 +183,9 @@ const addGuestQuizQuestion = async (req, res) => {
     const adminUserId = req.user?.userId;
     const { question_text, options } = req.body;
     if (!question_text || !options || !Array.isArray(options) || options.length < 2) {
-        return res.status(400).json({ message: 'Question text and at least two options are required.' });
+        return res
+            .status(400)
+            .json({ message: 'Question text and at least two options are required.' });
     }
     if (!options.some((opt) => opt.isCorrect)) {
         return res.status(400).json({ message: 'At least one option must be marked as correct.' });
@@ -188,12 +194,12 @@ const addGuestQuizQuestion = async (req, res) => {
         const result = await db_1.default.query('INSERT INTO guest_questions (quiz_id, question_text, options) VALUES ($1, $2, $3) RETURNING *', [quizId, question_text, JSON.stringify(options)]);
         const newQuestion = result.rows[0];
         // --- AUDIT LOG ---
-        logAudit('guest_question_created', `New question added to quiz ${quizId}: ${newQuestion.question_text.substring(0, 50)}...`, adminUserId, null);
+        void logAudit('guest_question_created', `New question added to quiz ${quizId}: ${newQuestion.question_text.substring(0, 50)}...`, adminUserId, null);
         // -----------------
         res.status(201).json(newQuestion);
     }
     catch (error) {
-        console.error("Error adding guest quiz question to DB:", error);
+        console.error('Error adding guest quiz question to DB:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -204,7 +210,9 @@ const updateGuestQuizQuestion = async (req, res) => {
     const { question_text, options } = req.body;
     const adminUserId = req.user?.userId;
     if (!question_text || !options || !Array.isArray(options) || options.length < 2) {
-        return res.status(400).json({ message: 'Question text and at least two options are required.' });
+        return res
+            .status(400)
+            .json({ message: 'Question text and at least two options are required.' });
     }
     if (!options.some((opt) => opt.isCorrect)) {
         return res.status(400).json({ message: 'At least one option must be marked as correct.' });
@@ -215,12 +223,12 @@ const updateGuestQuizQuestion = async (req, res) => {
             return res.status(404).json({ message: 'Guest quiz question not found.' });
         }
         // --- AUDIT LOG ---
-        logAudit('guest_question_updated', `Updated question ${questionId}`, adminUserId, null);
+        void logAudit('guest_question_updated', `Updated question ${questionId}`, adminUserId, null);
         // -----------------
         res.status(200).json(result.rows[0]);
     }
     catch (error) {
-        console.error("Error updating guest quiz question:", error);
+        console.error('Error updating guest quiz question:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -235,12 +243,12 @@ const deleteGuestQuizQuestion = async (req, res) => {
             return res.status(404).json({ message: 'Guest quiz question not found.' });
         }
         // --- AUDIT LOG ---
-        logAudit('guest_question_deleted', `Deleted question: ${result.rows[0].question_text.substring(0, 50)}... from quiz ${result.rows[0].quiz_id}`, adminUserId, null);
+        void logAudit('guest_question_deleted', `Deleted question: ${result.rows[0].question_text.substring(0, 50)}... from quiz ${result.rows[0].quiz_id}`, adminUserId, null);
         // -----------------
         res.status(200).json({ message: 'Guest quiz question deleted successfully.' });
     }
     catch (error) {
-        console.error("Error deleting guest quiz question:", error);
+        console.error('Error deleting guest quiz question:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

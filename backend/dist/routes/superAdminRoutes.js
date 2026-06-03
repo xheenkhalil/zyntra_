@@ -23,14 +23,10 @@ router.get('/activity-feed', superAdminController_1.getActivityFeed);
 // =====================================
 // Routes for the organization collection
 // POST | GET /api/superadmin/organizations
-router.route('/organizations')
-    .get(superAdminController_1.getAllOrganizations)
-    .post(superAdminController_1.createOrganization);
+router.route('/organizations').get(superAdminController_1.getAllOrganizations).post(superAdminController_1.createOrganization);
 // Routes for a specific organization by ID
 // PUT | DELETE /api/superadmin/organizations/:id
-router.route('/organizations/:id')
-    .put(superAdminController_1.updateOrganization)
-    .delete(superAdminController_1.deleteOrganization);
+router.route('/organizations/:id').put(superAdminController_1.updateOrganization).delete(superAdminController_1.deleteOrganization);
 // Specific action routes for an organization
 // PUT /api/superadmin/organizations/:id/archive
 router.put('/organizations/:id/archive', superAdminController_1.archiveOrganization);

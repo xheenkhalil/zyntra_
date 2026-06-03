@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,6 +40,8 @@ exports.getOrganizationUsers = exports.getOrganizationExams = exports.getOrganiz
 const db_1 = __importDefault(require("../services/db"));
 const argon2_1 = __importDefault(require("argon2"));
 const crypto_1 = __importDefault(require("crypto"));
+const emailService = __importStar(require("../services/emailService"));
+const emailQueue_1 = require("../queues/emailQueue");
 /**
  * Create a new Course Admin and return a setup link.
  */
@@ -43,9 +78,23 @@ const createCourseAdmin = async (req, res) => {
             assigned_role_details || null,
         ]);
         const user = result.rows[0];
-        const setupLink = `http://localhost:5173/setup-account?token=${setupToken}`;
+        const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
+        // Automatically send invite email via Brevo or queue
+        try {
+            if (emailQueue_1.emailQueue) {
+                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                console.log(`[CentralAdmin] Queued invite email for ${email}`);
+            }
+            else {
+                await emailService.sendAdminInviteEmail(email, fullName, setupLink);
+                console.log(`[CentralAdmin] Invite email sent synchronously to ${email}`);
+            }
+        }
+        catch (emailErr) {
+            console.error('[CentralAdmin] Email sending/queueing failed, but user was created:', emailErr);
+        }
         return res.status(201).json({
-            message: 'Course Admin created successfully. Send them this link to set up their account.',
+            message: 'Course Admin created and invite email sent automatically.',
             user,
             setupLink,
         });
@@ -53,7 +102,9 @@ const createCourseAdmin = async (req, res) => {
     catch (error) {
         console.error('Error creating course admin:', error);
         if (error.code === '23505') {
-            return res.status(409).json({ message: 'A user with that email or username already exists.' });
+            return res
+                .status(409)
+                .json({ message: 'A user with that email or username already exists.' });
         }
         res.status(500).json({ message: 'Internal server error.' });
     }
@@ -217,9 +268,30 @@ const sendInviteEmail = async (req, res) => {
             return res.status(404).json({ message: 'Course Admin not found or permission denied.' });
         }
         const { email, account_setup_token } = userResult.rows[0];
-        const setupLink = `http://localhost:5173/setup-account?token=${account_setup_token}`;
-        // TODO: integrate actual email service (Nodemailer, SendGrid, etc.)
-        console.log(`Mock email sent to ${email}: ${setupLink}`);
+        // Regenerate token if expired or missing
+        let token = account_setup_token;
+        if (!token) {
+            token = crypto_1.default.randomUUID();
+            const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            await db_1.default.query('UPDATE users SET account_setup_token = $1, account_setup_expires = $2, status = $3 WHERE id = $4', [token, tokenExpires, 'pending_setup', userId]);
+        }
+        const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${token}`;
+        // Actually send the email via Brevo or queue
+        const userFullName = userResult.rows[0].full_name || 'Administrator';
+        try {
+            if (emailQueue_1.emailQueue) {
+                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                console.log(`[CentralAdmin] Queued invite re-send for ${email}`);
+            }
+            else {
+                await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
+                console.log(`[CentralAdmin] Invite re-sent synchronously to ${email}`);
+            }
+        }
+        catch (emailErr) {
+            console.error('[CentralAdmin] Failed to resend/queue invite:', emailErr);
+            return res.status(500).json({ message: 'Failed to queue or send invite email.' });
+        }
         res.status(200).json({ message: `Invite email sent to ${email}.`, setupLink });
     }
     catch (error) {
@@ -236,7 +308,7 @@ exports.sendInviteEmail = sendInviteEmail;
 // Helper to calculate percentage change
 const calculatePercentChange = (current, previous) => {
     if (previous === 0)
-        return current > 0 ? "+100%" : "0%";
+        return current > 0 ? '+100%' : '0%';
     const change = ((current - previous) / previous) * 100;
     return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
 };
@@ -258,7 +330,9 @@ const getOrganizationStats = async (req, res) => {
         const totalStudents = parseInt(studentsCount.rows[0].count);
         // 3. Total Exams
         console.log('Fetching exams count...');
-        const examsCount = await db_1.default.query("SELECT COUNT(*) FROM exams WHERE organization_id = $1", [organizationId]);
+        const examsCount = await db_1.default.query('SELECT COUNT(*) FROM exams WHERE organization_id = $1', [
+            organizationId,
+        ]);
         console.log('Exams count result:', examsCount.rows[0]);
         const totalExams = parseInt(examsCount.rows[0].count);
         // 4. Active Sessions (Active Exams)
@@ -281,7 +355,7 @@ const getOrganizationStats = async (req, res) => {
             const current = parseInt(currentResult.rows[0].count);
             const previous = parseInt(previousResult.rows[0].count);
             if (previous === 0)
-                return current > 0 ? "+100%" : "0%";
+                return current > 0 ? '+100%' : '0%';
             const change = ((current - previous) / previous) * 100;
             return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
         };
@@ -327,9 +401,9 @@ const getOrganizationStats = async (req, res) => {
                 examStatus: {
                     completed: parseInt(examStatusCounts.completed || '0'),
                     inProgress: parseInt(examStatusCounts.in_progress || '0'),
-                    notStarted: parseInt(examStatusCounts.not_started || '0')
-                }
-            }
+                    notStarted: parseInt(examStatusCounts.not_started || '0'),
+                },
+            },
         });
     }
     catch (error) {

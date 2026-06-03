@@ -14,23 +14,23 @@ const s3Client = new client_s3_1.S3Client({
     region: AWS_REGION,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    }
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    },
 });
 const rekognitionClient = new client_rekognition_1.RekognitionClient({
     region: AWS_REGION,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
-    }
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    },
 });
 const S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
 // --- Helper Functions ---
 const uploadBase64Image = async (base64Image, key) => {
-    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
     if (!S3_BUCKET_NAME)
-        throw new Error("S3 Bucket name not configured.");
+        throw new Error('S3 Bucket name not configured.');
     const uploadParams = {
         Bucket: S3_BUCKET_NAME,
         Key: key,
@@ -42,7 +42,7 @@ const uploadBase64Image = async (base64Image, key) => {
         return `https://${S3_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
     }
     catch (err) {
-        console.error("S3 Upload Error:", err);
+        console.error('S3 Upload Error:', err);
         throw new Error(`Failed to upload image to S3: ${err}`);
     }
 };
@@ -64,9 +64,11 @@ const enrollIdentity = async (req, res) => {
     const studentId = req.user?.userId;
     const { base64Images } = req.body;
     if (!studentId)
-        return res.status(401).json({ message: "Authentication required." });
+        return res.status(401).json({ message: 'Authentication required.' });
     if (!base64Images || base64Images.length < 3) {
-        return res.status(400).json({ message: "At least 3 reference images are required for enrollment." });
+        return res
+            .status(400)
+            .json({ message: 'At least 3 reference images are required for enrollment.' });
     }
     const client = await db_1.default.connect();
     const collectionId = `ZYNTRA_USER_${studentId.replace(/-/g, '')}`;
@@ -80,7 +82,7 @@ const enrollIdentity = async (req, res) => {
         }
         catch (e) {
             if (e.name !== 'ResourceAlreadyExistsException') {
-                console.error("Rekognition CreateCollection Error:", e);
+                console.error('Rekognition CreateCollection Error:', e);
                 throw new Error(`Failed to init face collection: ${e.message}`);
             }
         }
@@ -102,12 +104,12 @@ const enrollIdentity = async (req, res) => {
                     },
                     ExternalImageId: fileKey.replace(/\//g, '_'),
                     MaxFaces: 1,
-                    QualityFilter: "AUTO",
-                    DetectionAttributes: ["DEFAULT"]
+                    QualityFilter: 'AUTO',
+                    DetectionAttributes: ['DEFAULT'],
                 }));
             }
             catch (rekError) {
-                console.error("Rekognition Indexing Error:", rekError);
+                console.error('Rekognition Indexing Error:', rekError);
                 throw new Error(`Failed to index face ${i}: ${rekError.message}`);
             }
         }
@@ -124,14 +126,14 @@ const enrollIdentity = async (req, res) => {
         await client.query(saveQuery, [studentId, JSON.stringify(uploadedUrls), collectionId]);
         await client.query('COMMIT');
         res.status(200).json({
-            message: "Identity successfully enrolled.",
+            message: 'Identity successfully enrolled.',
             collectionId: collectionId,
             referenceUrls: uploadedUrls,
         });
     }
     catch (error) {
         await client.query('ROLLBACK');
-        console.error("Proctoring Enrollment FATAL ERROR:", error);
+        console.error('Proctoring Enrollment FATAL ERROR:', error);
         res.status(500).json({ message: `Enrollment failed: ${error.message}` });
     }
     finally {
@@ -148,9 +150,9 @@ const analyzeTestImage = async (req, res) => {
     const studentId = req.user?.userId;
     const { base64Image, submissionId } = req.body;
     if (!studentId)
-        return res.status(401).json({ message: "Authentication required." });
+        return res.status(401).json({ message: 'Authentication required.' });
     if (!base64Image || !submissionId) {
-        return res.status(400).json({ message: "Image and submission ID are required." });
+        return res.status(400).json({ message: 'Image and submission ID are required.' });
     }
     const client = await db_1.default.connect();
     const HIGH_CONFIDENCE_THRESHOLD = 90;
@@ -164,8 +166,8 @@ const analyzeTestImage = async (req, res) => {
         if (profileResult.rows.length === 0 || profileResult.rows[0].reference_images.length === 0) {
             await client.query('ROLLBACK');
             return res.status(403).json({
-                message: "Identity profile not found. Please enroll first.",
-                code: "ENROLLMENT_REQUIRED"
+                message: 'Identity profile not found. Please enroll first.',
+                code: 'ENROLLMENT_REQUIRED',
             });
         }
         const referenceUrl = profileResult.rows[0].reference_images[0];
@@ -176,13 +178,13 @@ const analyzeTestImage = async (req, res) => {
                 S3Object: {
                     Bucket: S3_BUCKET_NAME,
                     Name: sourceKey,
-                }
+                },
             },
             TargetImage: {
                 S3Object: {
                     Bucket: S3_BUCKET_NAME,
                     Name: TEST_IMAGE_S3_KEY,
-                }
+                },
             },
             SimilarityThreshold: HIGH_CONFIDENCE_THRESHOLD,
         };
@@ -209,7 +211,7 @@ const analyzeTestImage = async (req, res) => {
                 studentId,
                 flagAction,
                 publicTestUrl,
-                JSON.stringify({ reason: flagReason, confidence: faceMatch?.Similarity || 0 })
+                JSON.stringify({ reason: flagReason, confidence: faceMatch?.Similarity || 0 }),
             ]);
         }
         await client.query('COMMIT');
@@ -217,7 +219,7 @@ const analyzeTestImage = async (req, res) => {
     }
     catch (error) {
         await client.query('ROLLBACK');
-        console.error("Image Analysis Error:", error);
+        console.error('Image Analysis Error:', error);
         res.status(500).json({ message: `Analysis failed: ${error.message}` });
     }
     finally {
@@ -235,7 +237,7 @@ const registerViolation = async (req, res) => {
     const { submissionId, violationType } = req.body;
     const MAX_WARNINGS = 3;
     if (!studentId)
-        return res.status(401).json({ message: "Authentication required." });
+        return res.status(401).json({ message: 'Authentication required.' });
     const client = await db_1.default.connect();
     try {
         await client.query('BEGIN');
@@ -248,14 +250,20 @@ const registerViolation = async (req, res) => {
         const submission = submissionResult.rows[0];
         if (!submission || submission.status !== 'in_progress') {
             await client.query('ROLLBACK');
-            return res.status(404).json({ message: "Exam not active." });
+            return res.status(404).json({ message: 'Exam not active.' });
         }
         const currentWarnings = submission.warning_count || 0;
         const newWarnings = currentWarnings + 1;
         await client.query(`
             INSERT INTO proctor_flags (submission_id, student_id, type, warning_count, analysis_data)
             VALUES ($1, $2, $3, $4, $5);
-        `, [submissionId, studentId, violationType, newWarnings, JSON.stringify({ reason: violationType })]);
+        `, [
+            submissionId,
+            studentId,
+            violationType,
+            newWarnings,
+            JSON.stringify({ reason: violationType }),
+        ]);
         if (newWarnings >= MAX_WARNINGS) {
             await client.query(`
                 UPDATE exam_submissions 
@@ -275,7 +283,7 @@ const registerViolation = async (req, res) => {
     }
     catch (error) {
         await client.query('ROLLBACK');
-        console.error("Violation Error:", error);
+        console.error('Violation Error:', error);
         res.status(500).json({ message: 'Failed to register violation.' });
     }
     finally {
@@ -380,7 +388,7 @@ const getLiveProctorCandidates = async (examId) => {
         return candidatesResult.rows;
     }
     catch (err) {
-        console.error("Error in getLiveProctorCandidates:", err);
+        console.error('Error in getLiveProctorCandidates:', err);
         throw err;
     }
 };
@@ -401,11 +409,15 @@ const getExamProctoringBatch = async (req, res) => {
             const belongsToOrg = exam.organization_id === adminOrgId;
             const ownsExam = exam.course_admin_id === adminUserId;
             if (!belongsToOrg) {
-                return res.status(403).json({ message: 'Forbidden: Exam does not belong to your organization.' });
+                return res
+                    .status(403)
+                    .json({ message: 'Forbidden: Exam does not belong to your organization.' });
             }
             // Strict ownership check: only the creator can view proctoring data
             if (!ownsExam) {
-                return res.status(403).json({ message: 'Forbidden: You do not have permission to access this exam.' });
+                return res
+                    .status(403)
+                    .json({ message: 'Forbidden: You do not have permission to access this exam.' });
             }
         }
         const stats = await getExamProctoringStats(examId);
@@ -428,13 +440,18 @@ const getExamProctoringBatch = async (req, res) => {
             charts: {
                 detection: detectionChartData,
                 threatLevel: threatChartData,
-            }
+            },
         });
     }
     catch (error) {
-        console.error("Error fetching proctoring dashboard data:", error);
-        console.error("Stack trace:", error.stack);
-        res.status(500).json({ message: 'Internal server error while loading dashboard data.', error: error.message });
+        console.error('Error fetching proctoring dashboard data:', error);
+        console.error('Stack trace:', error.stack);
+        res
+            .status(500)
+            .json({
+            message: 'Internal server error while loading dashboard data.',
+            error: error.message,
+        });
     }
 };
 exports.getExamProctoringBatch = getExamProctoringBatch;
@@ -447,7 +464,7 @@ const getOrganizationProctoringOverview = async (req, res) => {
     const adminOrgId = req.user?.organizationId;
     const adminUserId = req.user?.userId;
     if (!adminOrgId)
-        return res.status(400).json({ message: "Organization ID required." });
+        return res.status(400).json({ message: 'Organization ID required.' });
     try {
         // Fetch all exams for this course admin in the organization
         // We only show exams created by this admin to maintain strict ownership
@@ -467,7 +484,7 @@ const getOrganizationProctoringOverview = async (req, res) => {
         res.status(200).json(result.rows);
     }
     catch (error) {
-        console.error("Error fetching organization proctoring overview:", error);
+        console.error('Error fetching organization proctoring overview:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 };
@@ -480,15 +497,17 @@ exports.getOrganizationProctoringOverview = getOrganizationProctoringOverview;
 const getProctoringStatus = async (req, res) => {
     const studentId = req.user?.userId;
     if (!studentId)
-        return res.status(401).json({ message: "Authentication required." });
+        return res.status(401).json({ message: 'Authentication required.' });
     try {
-        const result = await db_1.default.query('SELECT 1 FROM proctor_profiles WHERE user_id = $1', [studentId]);
+        const result = await db_1.default.query('SELECT 1 FROM proctor_profiles WHERE user_id = $1', [
+            studentId,
+        ]);
         res.status(200).json({
-            enrolled: result.rows.length > 0
+            enrolled: result.rows.length > 0,
         });
     }
     catch (error) {
-        console.error("Error checking proctoring status:", error);
+        console.error('Error checking proctoring status:', error);
         res.status(500).json({ message: 'Internal server error.' });
     }
 };

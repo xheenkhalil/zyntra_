@@ -4,6 +4,7 @@ import pool from '../services/db';
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import * as emailService from '../services/emailService';
+import { emailQueue } from '../queues/emailQueue';
 
 /**
  * Create a new Course Admin and return a setup link.
@@ -48,12 +49,17 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     const user = result.rows[0];
     const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
 
-    // Automatically send invite email via Brevo
+    // Automatically send invite email via Brevo or queue
     try {
-      await emailService.sendAdminInviteEmail(email, fullName, setupLink);
-      console.log(`[CentralAdmin] Invite email sent to ${email}`);
+      if (emailQueue) {
+        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        console.log(`[CentralAdmin] Queued invite email for ${email}`);
+      } else {
+        await emailService.sendAdminInviteEmail(email, fullName, setupLink);
+        console.log(`[CentralAdmin] Invite email sent synchronously to ${email}`);
+      }
     } catch (emailErr) {
-      console.error('[CentralAdmin] Email sending failed, but user was created:', emailErr);
+      console.error('[CentralAdmin] Email sending/queueing failed, but user was created:', emailErr);
     }
 
     return res.status(201).json({
@@ -255,14 +261,19 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
 
     const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${token}`;
 
-    // Actually send the email via Brevo
+    // Actually send the email via Brevo or queue
     const userFullName = userResult.rows[0].full_name || 'Administrator';
     try {
-      await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
-      console.log(`[CentralAdmin] Invite re-sent to ${email}`);
+      if (emailQueue) {
+        await emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        console.log(`[CentralAdmin] Queued invite re-send for ${email}`);
+      } else {
+        await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
+        console.log(`[CentralAdmin] Invite re-sent synchronously to ${email}`);
+      }
     } catch (emailErr) {
-      console.error('[CentralAdmin] Failed to resend invite:', emailErr);
-      return res.status(500).json({ message: 'Failed to send invite email.' });
+      console.error('[CentralAdmin] Failed to resend/queue invite:', emailErr);
+      return res.status(500).json({ message: 'Failed to queue or send invite email.' });
     }
 
     res.status(200).json({ message: `Invite email sent to ${email}.`, setupLink });

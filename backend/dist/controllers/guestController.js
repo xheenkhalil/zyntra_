@@ -36,7 +36,7 @@ const getPublicQuizzes = async (req, res) => {
         res.status(200).json(result.rows);
     }
     catch (error) {
-        console.error("Error fetching public quizzes:", error);
+        console.error('Error fetching public quizzes:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -57,11 +57,11 @@ const getPublicQuizById = async (req, res) => {
         if (quizResult.rows.length === 0) {
             return res.status(404).json({ message: 'Quiz not found or not published.' });
         }
-        const questionsResult = await db_1.default.query("SELECT id, question_text, options FROM guest_questions WHERE quiz_id = $1 ORDER BY created_at", [quizId]);
-        const sanitizedQuestions = questionsResult.rows.map(q => ({
+        const questionsResult = await db_1.default.query('SELECT id, question_text, options FROM guest_questions WHERE quiz_id = $1 ORDER BY created_at', [quizId]);
+        const sanitizedQuestions = questionsResult.rows.map((q) => ({
             id: q.id,
             question_text: q.question_text,
-            options: q.options.map(opt => ({ text: opt.text })),
+            options: q.options.map((opt) => ({ text: opt.text })),
         }));
         const responseData = {
             ...quizResult.rows[0],
@@ -73,7 +73,7 @@ const getPublicQuizById = async (req, res) => {
         res.status(200).json(responseData);
     }
     catch (error) {
-        console.error("Error fetching public quiz:", error);
+        console.error('Error fetching public quiz:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -94,12 +94,12 @@ const submitPublicQuiz = async (req, res) => {
         const questionsQuery = 'SELECT id, options FROM guest_questions WHERE quiz_id = $1';
         const questionsResult = await db_1.default.query(questionsQuery, [quizId]);
         const correctAnswers = new Map(questionsResult.rows.map((q) => {
-            const correctOption = q.options.find(opt => opt.isCorrect === true);
+            const correctOption = q.options.find((opt) => opt.isCorrect === true);
             return [q.id, correctOption ? correctOption.text : null];
         }));
         // Calculate score
         let score = 0;
-        Object.keys(answers).forEach(questionId => {
+        Object.keys(answers).forEach((questionId) => {
             if (correctAnswers.get(questionId) === answers[questionId])
                 score++;
         });
@@ -110,12 +110,17 @@ const submitPublicQuiz = async (req, res) => {
             INSERT INTO guest_submissions (quiz_id, score_percentage, answers, rating)
             VALUES ($1, $2, $3, $4)
         `;
-        await db_1.default.query(submissionQuery, [quizId, scorePercentage, JSON.stringify(answers), rating || null]);
+        await db_1.default.query(submissionQuery, [
+            quizId,
+            scorePercentage,
+            JSON.stringify(answers),
+            rating || null,
+        ]);
         console.log(`✅ Submission inserted for quiz ${quizId}. Score: ${scorePercentage.toFixed(1)}%, Rating stored: ${rating || 'null'}`);
         // Invalidate cache since participant count or rating might have changed
         await cacheService_1.default.del('public_quizzes');
         // We don't necessarily need to invalidate the individual quiz cache unless we show stats there, but let's be safe if we add that later
-        // await CacheService.del(`public_quiz_${quizId}`); 
+        // await CacheService.del(`public_quiz_${quizId}`);
         res.status(201).json({
             message: 'Quiz submitted successfully!',
             score,
@@ -124,7 +129,7 @@ const submitPublicQuiz = async (req, res) => {
         });
     }
     catch (error) {
-        console.error("Error submitting public quiz:", error);
+        console.error('Error submitting public quiz:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -168,7 +173,7 @@ const updateQuizRating = async (req, res) => {
         });
     }
     catch (error) {
-        console.error("Error updating quiz rating:", error);
+        console.error('Error updating quiz rating:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

@@ -21,7 +21,7 @@ class CacheService {
                         return null;
                     }
                     return Math.min(times * 50, 2000);
-                }
+                },
             });
             this.redis.on('connect', () => {
                 console.log('✅ Connected to Redis Cache');

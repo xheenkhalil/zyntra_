@@ -10,13 +10,8 @@ const router = (0, express_1.Router)();
 // This is much cleaner than adding 'superAdminAccess' to every route.
 router.use(authMiddleware_1.protect, (0, authMiddleware_1.authorize)('superadmin'));
 // --- Guest Quiz Management (Upgraded with router.route()) ---
-router.route('/')
-    .post(superAdminGuestQuizController_1.createGuestQuiz)
-    .get(superAdminGuestQuizController_1.getAllGuestQuizzes);
-router.route('/:quizId')
-    .get(superAdminGuestQuizController_1.getGuestQuizById)
-    .put(superAdminGuestQuizController_1.updateGuestQuiz)
-    .delete(superAdminGuestQuizController_1.deleteGuestQuiz);
+router.route('/').post(superAdminGuestQuizController_1.createGuestQuiz).get(superAdminGuestQuizController_1.getAllGuestQuizzes);
+router.route('/:quizId').get(superAdminGuestQuizController_1.getGuestQuizById).put(superAdminGuestQuizController_1.updateGuestQuiz).delete(superAdminGuestQuizController_1.deleteGuestQuiz);
 // --- Guest Quiz Question Management ---
 // POST /api/guest-quizzes/:quizId/questions
 router.post('/:quizId/questions', superAdminGuestQuizController_1.addGuestQuizQuestion);

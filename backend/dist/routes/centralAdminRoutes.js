@@ -6,14 +6,8 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.protect, (0, authMiddleware_1.authorize)('centraladmin'));
 // === Base CRUD Routes ===
-router
-    .route('/course-admins')
-    .post(centralAdminController_1.createCourseAdmin)
-    .get(centralAdminController_1.getCourseAdminsForOrg);
-router
-    .route('/course-admins/:userId')
-    .put(centralAdminController_1.updateCourseAdmin)
-    .delete(centralAdminController_1.deleteCourseAdmin);
+router.route('/course-admins').post(centralAdminController_1.createCourseAdmin).get(centralAdminController_1.getCourseAdminsForOrg);
+router.route('/course-admins/:userId').put(centralAdminController_1.updateCourseAdmin).delete(centralAdminController_1.deleteCourseAdmin);
 // === Status Management Routes ===
 router.put('/course-admins/:userId/archive', centralAdminController_1.archiveCourseAdmin);
 router.put('/course-admins/:userId/unarchive', centralAdminController_1.unarchiveCourseAdmin);

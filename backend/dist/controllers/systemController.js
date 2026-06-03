@@ -29,7 +29,7 @@ const getSystemStatus = async (req, res) => {
         dbLatency = `${latencyMs.toFixed(2)} ms`;
     }
     catch (dbError) {
-        console.error("System Status DB Check FAILED:", dbError.message);
+        console.error('System Status DB Check FAILED:', dbError.message);
         dbStatus = 'Error';
         dbLatency = null;
     }
@@ -38,8 +38,6 @@ const getSystemStatus = async (req, res) => {
     const apiStatus = dbStatus === 'Operational' ? 'Operational' : 'Degraded';
     const proctoringStatus = 'Operational'; // Mock status
     const paymentStatus = 'Maintenance'; // Mock status from your HTML
-    const emailStatus = 'Operational'; // Mock status
-    const storageStatus = 'Operational'; // Mock status
     // 3. Compile Full Status Report
     // This JSON structure matches the needs of your new dashboard.
     const statusReport = {

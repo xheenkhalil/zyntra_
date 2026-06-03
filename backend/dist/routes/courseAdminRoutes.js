@@ -37,14 +37,10 @@ router.get('/dashboard-batch', (req, res, next) => {
 router.get('/students/export', courseAdminController_1.exportStudents);
 // GET /api/courseadmin/students
 // POST /api/courseadmin/students
-router.route('/students')
-    .get(courseAdminController_1.getStudentsForOrg)
-    .post(courseAdminController_1.createStudent);
+router.route('/students').get(courseAdminController_1.getStudentsForOrg).post(courseAdminController_1.createStudent);
 // PUT /api/courseadmin/students/:id
 // DELETE /api/courseadmin/students/:id
-router.route('/students/:id')
-    .put(courseAdminController_1.updateStudent)
-    .delete(courseAdminController_1.deleteStudent);
+router.route('/students/:id').put(courseAdminController_1.updateStudent).delete(courseAdminController_1.deleteStudent);
 // POST /api/courseadmin/students/bulk-delete
 router.post('/students/bulk-delete', courseAdminController_1.bulkDeleteStudents);
 // POST /api/courseadmin/students/bulk-register
@@ -55,10 +51,7 @@ router.post('/students/bulk-register', upload.single('studentsFile'), courseAdmi
 // NOTE: Basic CRUD (Create/Get All) is usually handled in examRoutes.ts under /api/exams
 // These are the specific actions for editing/managing.
 // Routes for a specific exam by its ID
-router.route('/exams/:examId')
-    .get(examController_1.getExamById)
-    .put(examController_1.updateExamSettings)
-    .delete(examController_1.deleteExam);
+router.route('/exams/:examId').get(examController_1.getExamById).put(examController_1.updateExamSettings).delete(examController_1.deleteExam);
 // Specific action routes
 router.put('/exams/:examId/archive', examController_stubs_1.archiveExam);
 router.put('/exams/:examId/restore', examController_stubs_1.restoreExam);

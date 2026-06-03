@@ -48,8 +48,8 @@ const emailService = __importStar(require("../services/emailService"));
 // Audit Log Helper
 const logAudit = async (action, details, userId, organizationId) => {
     try {
-        const safeOrgId = (organizationId && organizationId.length > 0) ? organizationId : null;
-        const safeUserId = (userId && userId.length > 0) ? userId : null;
+        const safeOrgId = organizationId && organizationId.length > 0 ? organizationId : null;
+        const safeUserId = userId && userId.length > 0 ? userId : null;
         const query = `
       INSERT INTO audit_log (action, details, user_id, organization_id)
       VALUES ($1, $2, $3, $4)
@@ -66,7 +66,7 @@ const calculatePercentChange = (current, previous) => {
     const currentNum = Number(current);
     const previousNum = Number(previous);
     if (previousNum === 0) {
-        return currentNum > 0 ? "+100.0%" : "+0.0%";
+        return currentNum > 0 ? '+100.0%' : '+0.0%';
     }
     const change = ((currentNum - previousNum) / previousNum) * 100;
     return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
@@ -88,19 +88,19 @@ const getDashboardStats = async (req, res) => {
         // 2. Active Exams
         const examsCount = await db_1.default.query('SELECT COUNT(*) FROM exams');
         const totalExams = parseInt(examsCount.rows[0].count);
-        const examsChange = "+5.0%";
+        const examsChange = '+5.0%';
         // 3. Organizations
         const orgsCount = await db_1.default.query('SELECT COUNT(*) FROM organizations');
         const totalOrgs = parseInt(orgsCount.rows[0].count);
-        const orgsChange = "+2.0%";
+        const orgsChange = '+2.0%';
         // 4. Revenue (Mock)
         const totalRevenue = 0;
-        const revenueChange = "+0.0%";
+        const revenueChange = '+0.0%';
         res.json({
             totalUsers: { value: totalUsers, change: userChange },
             activeExams: { value: totalExams, change: examsChange },
             organizations: { value: totalOrgs, change: orgsChange },
-            monthlyRevenue: { value: totalRevenue, change: revenueChange }
+            monthlyRevenue: { value: totalRevenue, change: revenueChange },
         });
     }
     catch (error) {
@@ -125,8 +125,8 @@ const getUserGrowthChart = async (req, res) => {
       ORDER BY date ASC;
     `;
         const result = await db_1.default.query(query);
-        const labels = result.rows.map(r => r.date);
-        const data = result.rows.map(r => parseInt(r.count));
+        const labels = result.rows.map((r) => r.date);
+        const data = result.rows.map((r) => parseInt(r.count));
         res.json({ labels, data });
     }
     catch (error) {
@@ -153,8 +153,8 @@ const getSystemPerformanceChart = async (req, res) => {
                 data: memoryData,
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            }
-        ]
+            },
+        ],
     });
 };
 exports.getSystemPerformanceChart = getSystemPerformanceChart;
@@ -293,12 +293,17 @@ const createCentralAdmin = async (req, res) => {
     // Validate inputs
     if (!fullName || !email || !username || !organizationId) {
         console.log('FAIL: Missing fields');
-        return res.status(400).json({ message: 'All fields (fullName, email, username, organizationId) are required.' });
+        return res
+            .status(400)
+            .json({ message: 'All fields (fullName, email, username, organizationId) are required.' });
     }
     try {
         // 1. Check if user exists
         console.log('STEP 1: Checking user existence...');
-        const userCheck = await db_1.default.query('SELECT id FROM users WHERE email = $1 OR username = $2', [email, username]);
+        const userCheck = await db_1.default.query('SELECT id FROM users WHERE email = $1 OR username = $2', [
+            email,
+            username,
+        ]);
         if (userCheck.rows.length > 0) {
             console.log('FAIL: User already exists');
             return res.status(400).json({ message: 'User with this email or username already exists' });
@@ -314,12 +319,19 @@ const createCentralAdmin = async (req, res) => {
       VALUES ($1, $2, $3, 'centraladmin', $4, 'pending_setup', $5, $6)
       RETURNING id, full_name, email, role, organization_id;
     `;
-        const result = await db_1.default.query(query, [fullName, email, username, organizationId, setupToken, tokenExpires]);
+        const result = await db_1.default.query(query, [
+            fullName,
+            email,
+            username,
+            organizationId,
+            setupToken,
+            tokenExpires,
+        ]);
         const newUser = result.rows[0];
         console.log('SUCCESS: User inserted', newUser.id);
         await logAudit('create_central_admin', `Created central admin: ${fullName} for org ${organizationId}`, adminUserId, organizationId);
         // 4. Send Invite Email (using Resend)
-        const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+        const inviteLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
         console.log('STEP 4: Sending invite email to:', email);
         try {
             await emailService.sendAdminInviteEmail(email, fullName, inviteLink);
@@ -332,7 +344,7 @@ const createCentralAdmin = async (req, res) => {
         res.status(201).json({
             message: 'Central Admin created and invite sent.',
             user: newUser,
-            setupLink: inviteLink
+            setupLink: inviteLink,
         });
     }
     catch (error) {
@@ -351,7 +363,7 @@ const sendInviteEmail = async (req, res) => {
         const setupToken = crypto_1.default.randomUUID();
         const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await db_1.default.query('UPDATE users SET account_setup_token = $1, account_setup_expires = $2, status = $3 WHERE id = $4', [setupToken, tokenExpires, 'pending_setup', userId]);
-        const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+        const inviteLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
         await emailService.sendAdminInviteEmail(user.email, user.full_name, inviteLink);
         res.json({ message: 'Invite email resent successfully', setupLink: inviteLink });
     }
@@ -411,7 +423,7 @@ const getAllUsers = async (req, res) => {
         const dataParams = [...queryParams, limitNum, offset];
         const [dataResult, countResult] = await Promise.all([
             db_1.default.query(dataQuery, dataParams),
-            db_1.default.query(countQuery, queryParams)
+            db_1.default.query(countQuery, queryParams),
         ]);
         const users = dataResult.rows;
         const totalUsers = parseInt(countResult.rows[0].count, 10);
@@ -422,8 +434,8 @@ const getAllUsers = async (req, res) => {
                 currentPage: pageNum,
                 totalPages,
                 totalUsers,
-                limit: limitNum
-            }
+                limit: limitNum,
+            },
         });
     }
     catch (error) {
@@ -454,7 +466,7 @@ const updateUserStatus = async (req, res) => {
         await logAudit('user_status_changed', `Status of user ${updatedUser.full_name} (${updatedUser.id}) set to ${status}`, adminUserId, updatedUser.organization_id);
         res.status(200).json({
             message: `User status updated to ${status}`,
-            user: updatedUser
+            user: updatedUser,
         });
     }
     catch (error) {
@@ -486,7 +498,7 @@ const updateUserRole = async (req, res) => {
         await logAudit('user_role_changed', `Role of user ${updatedUser.full_name} (${updatedUser.id}) set to ${role}`, adminUserId, updatedUser.organization_id);
         res.status(200).json({
             message: `User role updated to ${role}`,
-            user: updatedUser
+            user: updatedUser,
         });
     }
     catch (error) {

@@ -10,7 +10,7 @@ const config_1 = __importDefault(require("../config"));
 const pool = new pg_1.Pool({
     connectionString: config_1.default.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
     },
     // --- FIX #1: Prevent Stale Connections ---
     // Supabase/PgBouncer is very aggressive with idle connections.

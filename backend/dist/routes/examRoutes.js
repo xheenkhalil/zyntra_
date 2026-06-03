@@ -9,14 +9,9 @@ const router = (0, express_1.Router)();
 // All routes in this file are for Course Admins
 router.use(authMiddleware_1.protect, (0, authMiddleware_1.authorize)('courseadmin'));
 // Routes for the main exam collection
-router.route('/')
-    .post(examController_1.createExam)
-    .get(examController_1.getExamsForCourseAdmin);
+router.route('/').post(examController_1.createExam).get(examController_1.getExamsForCourseAdmin);
 // Routes for a specific exam by its ID
-router.route('/:examId')
-    .get(examController_1.getExamById)
-    .put(examController_1.updateExamSettings)
-    .delete(examController_1.deleteExam);
+router.route('/:examId').get(examController_1.getExamById).put(examController_1.updateExamSettings).delete(examController_1.deleteExam);
 // Specific action routes for an exam
 router.put('/:examId/archive', examController_stubs_1.archiveExam);
 router.put('/:examId/restore', examController_stubs_1.restoreExam);

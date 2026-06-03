@@ -59,10 +59,14 @@ const generateFromDocument = async (req, res) => {
             documentText = result.value;
         }
         else {
-            return res.status(400).json({ message: 'Unsupported file type. Please upload a PDF or DOCX file.' });
+            return res
+                .status(400)
+                .json({ message: 'Unsupported file type. Please upload a PDF or DOCX file.' });
         }
         if (documentText.length < 100) {
-            return res.status(400).json({ message: 'Document is too short to generate meaningful questions.' });
+            return res
+                .status(400)
+                .json({ message: 'Document is too short to generate meaningful questions.' });
         }
         const systemPrompt = `You are an expert quiz generation assistant. Your task is to generate a list of multiple-choice questions based *only* on the provided text context. You MUST respond with ONLY a valid JSON object containing a single key "questions" which is an array of question objects. Do not include any introductory text, explanations, or markdown formatting. Each object in the "questions" array must have two keys: "questionText" (a string) and "options" (an array of objects). Each option object must have two keys: "text" (a string for the option) and "isCorrect" (a boolean). For each question, exactly ONE option must have "isCorrect" set to true.`;
         const userPrompt = `Based on the following text, generate ${numQuestions} multiple-choice questions. Each question should have ${numOptions} options.\n\n--- TEXT CONTEXT ---\n${documentText.substring(0, 12000)}\n--- END OF TEXT CONTEXT ---`;

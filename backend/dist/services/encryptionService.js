@@ -43,7 +43,7 @@ const KEY = process.env.AES_SECRET_KEY;
 const IV_LENGTH = 16;
 // --- Safety Check ---
 if (!KEY || KEY.length !== 32) {
-    console.error("FATAL ERROR: AES_SECRET_KEY must be exactly 32 characters long. Please set it in your .env file.");
+    console.error('FATAL ERROR: AES_SECRET_KEY must be exactly 32 characters long. Please set it in your .env file.');
 }
 /**
  * Encrypts plaintext data using AES-256-CBC.
@@ -52,7 +52,7 @@ if (!KEY || KEY.length !== 32) {
  */
 function encrypt(text) {
     if (!KEY)
-        throw new Error("Encryption key is not set.");
+        throw new Error('Encryption key is not set.');
     // Generate a secure, unique Initialization Vector (IV) for each encryption
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(KEY, 'utf8'), iv);
@@ -69,7 +69,7 @@ function encrypt(text) {
  */
 function decrypt(encryptedText) {
     if (!KEY)
-        throw new Error("Encryption key is not set.");
+        throw new Error('Encryption key is not set.');
     const parts = encryptedText.split(':');
     if (parts.length !== 2) {
         throw new Error("Invalid encrypted format. Expected 'iv:ciphertext'.");
@@ -77,7 +77,7 @@ function decrypt(encryptedText) {
     const iv = Buffer.from(parts[0], 'hex');
     const encrypted = parts[1];
     if (iv.length !== IV_LENGTH) {
-        throw new Error("Invalid IV length during decryption.");
+        throw new Error('Invalid IV length during decryption.');
     }
     const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(KEY, 'utf8'), iv);
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');

@@ -46,15 +46,21 @@ const loginUser = async (req, res) => {
             }
         }
         else {
-            return res.status(400).json({ message: 'Please provide either a Student ID or an email and password.' });
+            return res
+                .status(400)
+                .json({ message: 'Please provide either a Student ID or an email and password.' });
         }
         // --- Account Status Safety Check ---
         if (user.status === 'pending_setup') {
-            await db_1.default.query(`UPDATE users SET status = 'active', updated_at = NOW() WHERE id = $1`, [user.id]);
+            await db_1.default.query(`UPDATE users SET status = 'active', updated_at = NOW() WHERE id = $1`, [
+                user.id,
+            ]);
             user.status = 'active';
         }
         else if (user.status === 'archived') {
-            return res.status(403).json({ message: 'Account is archived. Please contact your organization admin.' });
+            return res
+                .status(403)
+                .json({ message: 'Account is archived. Please contact your organization admin.' });
         }
         // --- JWT Creation ---
         const tokenPayload = {
@@ -162,8 +168,8 @@ const getMe = async (req, res) => {
                 role: user.role,
                 status: user.status,
                 organizationId: user.organization_id,
-                studentId: user.student_id
-            }
+                studentId: user.student_id,
+            },
         });
     }
     catch (error) {
@@ -193,11 +199,12 @@ const updateMyProfile = async (req, res) => {
         }
         res.status(200).json({
             message: 'Profile updated successfully.',
-            user: result.rows[0]
+            user: result.rows[0],
         });
     }
     catch (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
+            // Unique constraint violation
             return res.status(409).json({ message: 'An account with this email already exists.' });
         }
         console.error('Update profile error:', error);
@@ -215,7 +222,9 @@ const changeMyPassword = async (req, res) => {
         return res.status(400).json({ message: 'All password fields are required.' });
     }
     if (currentPassword === newPassword) {
-        return res.status(400).json({ message: 'New password cannot be the same as the old password.' });
+        return res
+            .status(400)
+            .json({ message: 'New password cannot be the same as the old password.' });
     }
     // --- Re-using your password strength validation ---
     const { valid, errors } = (0, passwordValidator_1.validatePassword)(newPassword);
@@ -239,7 +248,10 @@ const changeMyPassword = async (req, res) => {
         // 3. Hash the new password
         const newPasswordHash = await argon2_1.default.hash(newPassword);
         // 4. Update the password in the database
-        await db_1.default.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [newPasswordHash, userId]);
+        await db_1.default.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [
+            newPasswordHash,
+            userId,
+        ]);
         res.status(200).json({ message: 'Password changed successfully.' });
     }
     catch (error) {
@@ -258,7 +270,10 @@ const logoutUser = async (req, res) => {
             const decoded = jsonwebtoken_1.default.decode(token);
             if (decoded && decoded.exp) {
                 const expiresAt = new Date(decoded.exp * 1000);
-                await db_1.default.query('INSERT INTO token_blacklist (token, expires_at) VALUES ($1, $2)', [token, expiresAt]);
+                await db_1.default.query('INSERT INTO token_blacklist (token, expires_at) VALUES ($1, $2)', [
+                    token,
+                    expiresAt,
+                ]);
             }
         }
         catch (error) {

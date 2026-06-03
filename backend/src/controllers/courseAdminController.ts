@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 const csv = require('csv-parser');
 import { AuthRequest } from '../middleware/authMiddleware';
 import { sendStudentCredentials } from '../services/emailService';
+import { emailQueue } from '../queues/emailQueue';
 
 // --- HELPER FUNCTION (Audit Log - Copied from Proctoring Controller) ---
 // This ensures we can log actions securely.
@@ -84,10 +85,15 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
 
     // Automatically send student credentials email
     try {
-      await sendStudentCredentials(email, fullName, studentCode);
-      console.log(`[CourseAdmin] Student credentials email sent to ${email}`);
+      if (emailQueue) {
+        await emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email, fullName, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        console.log(`[CourseAdmin] Queued student email for ${email}`);
+      } else {
+        await sendStudentCredentials(email, fullName, studentCode);
+        console.log(`[CourseAdmin] Student credentials email sent synchronously to ${email}`);
+      }
     } catch (emailErr) {
-      console.error('[CourseAdmin] Failed to send student email, but student was created:', emailErr);
+      console.error('[CourseAdmin] Failed to send/queue student email, but student was created:', emailErr);
     }
 
     res.status(201).json({
@@ -173,11 +179,12 @@ export const bulkRegisterStudents = async (req: AuthRequest, res: Response) => {
           registeredCount++;
           // Send email if requested
           if (sendEmails) {
-            // We don't await this to avoid slowing down the bulk process too much,
-            // but ideally this should be a background job.
-            sendStudentCredentials(student.email, student.full_name, studentCode).catch(
-              console.error,
-            );
+            if (emailQueue) {
+               await emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email: student.email, fullName: student.full_name, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+            } else {
+               // Fallback: fire and forget if no Redis
+               sendStudentCredentials(student.email, student.full_name, studentCode).catch(console.error);
+            }
           }
         } else {
           errors++; // Count students skipped due to ON CONFLICT (duplicate email)

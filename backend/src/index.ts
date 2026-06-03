@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
+import cacheService from './services/cacheService'; // Initialize cache service early
+import './queues/emailQueue'; // Initialize BullMQ email worker early
 import { errorHandler } from './middleware/errorMiddleware';
 
 // === Route Imports ===
