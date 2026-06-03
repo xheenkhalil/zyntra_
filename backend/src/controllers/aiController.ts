@@ -9,6 +9,36 @@ const pdf = require('pdf-parse');
 
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY as string);
 
+async function generateWithFallback(systemPrompt: string, userPrompt: string) {
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash',
+    'gemini-2.0-flash'
+  ];
+  let lastError: any;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+      });
+
+      const response = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { responseMimeType: 'application/json' },
+      });
+      return response;
+    } catch (error: any) {
+      console.warn(`Model ${modelName} failed:`, error?.message || String(error));
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('All fallback models failed to generate content.');
+}
+
 export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
   const { topic, difficulty = 'Medium', count, numQuestions, numOptions = 4, examId } = req.body;
   const targetCount = count || numQuestions || 5;
@@ -21,15 +51,7 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
   const userPrompt = `Generate ${targetCount} questions about "${topic}" at a ${difficulty} difficulty level. Each question should have ${numOptions} options.`;
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
-      systemInstruction: systemPrompt,
-    });
-
-    const response = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig: { responseMimeType: 'application/json' },
-    });
+    const response = await generateWithFallback(systemPrompt, userPrompt);
 
     let content = response.response.text();
     if (!content) throw new Error('AI returned an empty response.');
@@ -101,15 +123,7 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     const systemPrompt = `You are an expert quiz generation assistant. Your task is to generate a list of multiple-choice questions based *only* on the provided text context. You MUST respond with ONLY a valid JSON object containing a single key "questions" which is an array of question objects. Do not include any introductory text, explanations, or markdown formatting. Each object in the "questions" array must have two keys: "questionText" (a string) and "options" (an array of objects). Each option object must have two keys: "text" (a string for the option) and "isCorrect" (a boolean). For each question, exactly ONE option must have "isCorrect" set to true.`;
     const userPrompt = `Based on the following text, generate ${targetCount} multiple-choice questions. Each question should have ${numOptions} options.\n\n--- TEXT CONTEXT ---\n${documentText.substring(0, 12000)}\n--- END OF TEXT CONTEXT ---`;
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-flash-latest',
-      systemInstruction: systemPrompt,
-    });
-
-    const response = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig: { responseMimeType: 'application/json' },
-    });
+    const response = await generateWithFallback(systemPrompt, userPrompt);
 
     let content = response.response.text();
     if (!content) throw new Error('AI returned an empty response.');
