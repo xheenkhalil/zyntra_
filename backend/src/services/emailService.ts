@@ -168,34 +168,34 @@ export const sendWelcomeEmail = async (
   fullName: string,
   role: string,
 ) => {
-  const loginUrl = \`\${FRONTEND_URL}/login\`;
+  const loginUrl = `${FRONTEND_URL}/login`;
   
   let roleTitle = 'Administrator';
   let roleCapabilities = '';
 
   if (role === 'centraladmin') {
     roleTitle = 'Organization Administrator';
-    roleCapabilities = \`
+    roleCapabilities = `
       <li><strong>Manage Organization:</strong> Oversee your entire institution's settings.</li>
       <li><strong>Manage Teachers:</strong> Invite and manage course administrators.</li>
       <li><strong>Global Analytics:</strong> View performance metrics across all exams and students.</li>
       <li><strong>Resource Allocation:</strong> Distribute exam quotas and features.</li>
-    \`;
+    `;
   } else if (role === 'courseadmin') {
     roleTitle = 'Course Administrator (Teacher)';
-    roleCapabilities = \`
+    roleCapabilities = `
       <li><strong>Create Exams:</strong> Design quizzes and exams with AI assistance.</li>
       <li><strong>Manage Students:</strong> Register students individually or via bulk upload.</li>
       <li><strong>Proctoring:</strong> Monitor live exams with AI anti-cheat features.</li>
       <li><strong>Grading & Analytics:</strong> Utilize auto-grading and review class performance.</li>
-    \`;
+    `;
   } else {
     // Fallback or students (though students shouldn't get this email per requirements)
     return null;
   }
 
   const subject = 'Welcome to ZYNTRA — Your Account is Ready!';
-  const html = \`
+  const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <!-- Header -->
       <div style="background: #111A50; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -205,23 +205,23 @@ export const sendWelcomeEmail = async (
 
       <!-- Body -->
       <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #111A50; margin: 0 0 15px; font-size: 20px;">Welcome to ZYNTRA, \${fullName}!</h2>
+        <h2 style="color: #111A50; margin: 0 0 15px; font-size: 20px;">Welcome to ZYNTRA, ${fullName}!</h2>
         <p style="color: #4b5563; line-height: 1.6; margin: 0 0 10px;">
           Your password has been successfully set up, and your account is now fully active.
         </p>
         
         <!-- Role Info -->
         <div style="background: #f8f9fa; border-left: 4px solid #F5B841; padding: 15px 20px; margin: 20px 0;">
-          <p style="color: #111A50; font-weight: 700; margin: 0 0 5px; font-size: 15px;">You are registered as: <span style="color: #3b82f6;">\${roleTitle}</span></p>
+          <p style="color: #111A50; font-weight: 700; margin: 0 0 5px; font-size: 15px;">You are registered as: <span style="color: #3b82f6;">${roleTitle}</span></p>
           <p style="color: #4b5563; margin: 0; font-size: 13px;">Here is what you can do from your dashboard:</p>
           <ul style="color: #4b5563; font-size: 13px; margin: 10px 0 0; padding-left: 18px; line-height: 1.8;">
-            \${roleCapabilities}
+            ${roleCapabilities}
           </ul>
         </div>
 
         <!-- Login Button -->
         <div style="text-align: center; margin: 30px 0;">
-          <a href="\${loginUrl}" style="display: inline-block; background: #111A50; color: #ffffff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px;">Go to Dashboard</a>
+          <a href="${loginUrl}" style="display: inline-block; background: #111A50; color: #ffffff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px;">Go to Dashboard</a>
         </div>
 
         <!-- Divider -->
@@ -232,6 +232,6 @@ export const sendWelcomeEmail = async (
         </p>
       </div>
     </div>
-  \`;
+  `;
   return sendEmail(email, subject, html);
 };
