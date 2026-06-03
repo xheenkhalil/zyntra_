@@ -82,8 +82,16 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
       organizationId,
     );
 
+    // Automatically send student credentials email
+    try {
+      await sendStudentCredentials(email, fullName, studentCode);
+      console.log(`[CourseAdmin] Student credentials email sent to ${email}`);
+    } catch (emailErr) {
+      console.error('[CourseAdmin] Failed to send student email, but student was created:', emailErr);
+    }
+
     res.status(201).json({
-      message: 'Student created successfully. Student ID provided for login.',
+      message: 'Student created successfully. Credentials sent via email.',
       user: newUser,
     });
   } catch (error: any) {

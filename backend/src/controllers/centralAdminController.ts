@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
 import argon2 from 'argon2';
 import crypto from 'crypto';
+import * as emailService from '../services/emailService';
 
 /**
  * Create a new Course Admin and return a setup link.
@@ -45,10 +46,18 @@ export const createCourseAdmin = async (req: AuthRequest, res: Response) => {
     ]);
 
     const user = result.rows[0];
-    const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${setupToken}`;
+
+    // Automatically send invite email via Brevo
+    try {
+      await emailService.sendAdminInviteEmail(email, fullName, setupLink);
+      console.log(`[CentralAdmin] Invite email sent to ${email}`);
+    } catch (emailErr) {
+      console.error('[CentralAdmin] Email sending failed, but user was created:', emailErr);
+    }
 
     return res.status(201).json({
-      message: 'Course Admin created successfully. Send them this link to set up their account.',
+      message: 'Course Admin created and invite email sent automatically.',
       user,
       setupLink,
     });
@@ -232,10 +241,29 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
     }
 
     const { email, account_setup_token } = userResult.rows[0];
-    const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${account_setup_token}`;
 
-    // TODO: integrate actual email service (Nodemailer, SendGrid, etc.)
-    console.log(`Mock email sent to ${email}: ${setupLink}`);
+    // Regenerate token if expired or missing
+    let token = account_setup_token;
+    if (!token) {
+      token = crypto.randomUUID();
+      const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await pool.query(
+        'UPDATE users SET account_setup_token = $1, account_setup_expires = $2, status = $3 WHERE id = $4',
+        [token, tokenExpires, 'pending_setup', userId],
+      );
+    }
+
+    const setupLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${token}`;
+
+    // Actually send the email via Brevo
+    const userFullName = userResult.rows[0].full_name || 'Administrator';
+    try {
+      await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
+      console.log(`[CentralAdmin] Invite re-sent to ${email}`);
+    } catch (emailErr) {
+      console.error('[CentralAdmin] Failed to resend invite:', emailErr);
+      return res.status(500).json({ message: 'Failed to send invite email.' });
+    }
 
     res.status(200).json({ message: `Invite email sent to ${email}.`, setupLink });
   } catch (error) {

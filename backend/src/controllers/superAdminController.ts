@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import pool from '../services/db';
 import argon2 from 'argon2';
 import crypto from 'crypto';
-import { Resend } from 'resend';
+// Email service handles Brevo integration
 import { AuthRequest } from '../middleware/authMiddleware';
 import * as emailService from '../services/emailService';
 
@@ -370,7 +370,7 @@ export const createCentralAdmin = async (req: AuthRequest, res: Response) => {
     );
 
     // 4. Send Invite Email (using Resend)
-    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+    const inviteLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${setupToken}`;
 
     console.log('STEP 4: Sending invite email to:', email);
     try {
@@ -408,7 +408,7 @@ export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
       [setupToken, tokenExpires, 'pending_setup', userId],
     );
 
-    const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/setup-account?token=${setupToken}`;
+    const inviteLink = `${process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app'}/setup-account?token=${setupToken}`;
 
     await emailService.sendAdminInviteEmail(user.email, user.full_name, inviteLink);
 

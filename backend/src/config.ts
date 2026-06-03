@@ -8,8 +8,11 @@ const config = {
   PORT: process.env.PORT || 5000,
   DATABASE_URL: process.env.DATABASE_URL,
   JWT_SECRET: process.env.JWT_SECRET,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_NAME: process.env.EMAIL_NAME,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://zyntra-exams.vercel.app',
 };
 
 // Update the check
