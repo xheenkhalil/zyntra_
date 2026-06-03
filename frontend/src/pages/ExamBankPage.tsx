@@ -81,7 +81,7 @@ const ExamBankPage: React.FC = () => {
 
   // --- Action Handlers ---
   const handleEdit = (examId: string) => {
-    navigate(`/courseadmin/exams/${examId}`);
+    navigate(`/courseadmin/exams/${examId}/edit`);
   };
 
   const handleDelete = (examId: string) => {
@@ -193,7 +193,7 @@ const ExamBankPage: React.FC = () => {
     try {
       const newExam = await createExam(newExamTitle.trim());
       handleCloseCreate();
-      navigate(`/courseadmin/exams/${newExam.id}`);
+      navigate(`/courseadmin/exams/${newExam.id}/edit`);
     } catch (err: unknown) {
       let message = 'Failed to create exam.';
       if (
