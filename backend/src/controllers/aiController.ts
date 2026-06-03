@@ -31,8 +31,10 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
       generationConfig: { responseMimeType: 'application/json' },
     });
 
-    const content = response.response.text();
+    let content = response.response.text();
     if (!content) throw new Error('AI returned an empty response.');
+
+    content = content.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
 
     const result = JSON.parse(content);
     const questions = result.questions || result;
@@ -58,9 +60,9 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
     }
 
     res.status(200).json(questions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating AI questions:', error);
-    res.status(500).json({ message: 'Failed to generate questions from AI.' });
+    res.status(500).json({ message: 'Failed to generate questions from AI.', error: error?.message || String(error) });
   }
 };
 
@@ -109,8 +111,10 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
       generationConfig: { responseMimeType: 'application/json' },
     });
 
-    const content = response.response.text();
+    let content = response.response.text();
     if (!content) throw new Error('AI returned an empty response.');
+
+    content = content.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
 
     const result = JSON.parse(content);
     const questions = result.questions || result;
@@ -136,8 +140,8 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     }
 
     res.status(200).json(questions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating from document:', error);
-    res.status(500).json({ message: 'Failed to generate questions from document.' });
+    res.status(500).json({ message: 'Failed to generate questions from document.', error: error?.message || String(error) });
   }
 };
