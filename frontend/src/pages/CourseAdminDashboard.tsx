@@ -296,6 +296,19 @@ const CourseAdminStudents: React.FC = () => {
     }
   };
 
+  // === Download CSV Template ===
+  const handleDownloadTemplate = () => {
+    const csvContent = `full_name,email\nJohn Doe,john.doe@example.com\nJane Smith,jane.smith@example.com\nAli Hassan,ali.hassan@example.com`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'zyntra_student_registration_template.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    setSnackbar({ open: true, message: "Template downloaded!" });
+  };
+
   // === Render Loading ===
   if (loading && students.length === 0) {
     return (
@@ -326,6 +339,19 @@ const CourseAdminStudents: React.FC = () => {
               Delete Selected ({numSelected})
             </Button>
           )}
+
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadTemplate}
+            sx={{
+              borderColor: '#111A50',
+              color: '#111A50',
+              '&:hover': { backgroundColor: 'rgba(17,26,80,0.05)', borderColor: '#080D2B' }
+            }}
+          >
+            Download Template
+          </Button>
 
           <Button
             variant="outlined"
