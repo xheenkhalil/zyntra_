@@ -535,7 +535,7 @@ const CourseAdminOverview: React.FC = () => {
             {activeTab === "overview" && (
                 <Box>
                     {/* KPI CARDS */}
-                    <Box className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+                    <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                         <MetricCard
                             title="Total Students"
                             value={metrics.totalStudents}
@@ -1095,23 +1095,42 @@ export default CourseAdminOverview;
 // =======================================================
 
 // --- Metric Card ---
-const MetricCard: React.FC<{ title: string; value: string | number; icon: React.ReactElement; iconBg: string; iconColor: string; subText: string; subTextColor: string }> =
-    ({ title, value, icon, iconBg, iconColor, subText, subTextColor }) => (
-        <Paper className="metric-card bg-white rounded-xl shadow-md p-4 border border-gray-100 hover:shadow-lg transition-all flex flex-col justify-between">
-            <Box className="flex items-center justify-between mb-2">
-                <Typography className="text-gray-550 text-xs font-semibold uppercase tracking-wider">{title}</Typography>
-                <Box className={`w-8 h-8 ${iconBg} ${iconColor} text-sm rounded-lg flex items-center justify-center flex-shrink-0`}>
-                    {icon}
-                </Box>
-            </Box>
-            <Box>
-                <Typography className="text-xl sm:text-2xl font-bold text-gray-900 leading-none">{value}</Typography>
-                <Typography className={`${subTextColor} text-[11px] font-semibold mt-1.5 flex items-center`}>
-                    {subText}
-                </Typography>
-            </Box>
-        </Paper>
-    );
+const MetricCard: React.FC<{
+    title: string;
+    value: string | number;
+    icon: React.ReactElement;
+    iconBg: string;
+    iconColor: string;
+    subText: string;
+    subTextColor: string;
+}> = ({ title, value, icon, iconBg, iconColor, subText, subTextColor }) => (
+    <div className="group relative bg-white rounded-2xl p-6 border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[140px] overflow-hidden">
+        {/* Subtle background glow on hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        
+        <div className="flex justify-between items-start mb-4 relative z-10">
+            <div className="flex flex-col space-y-1.5">
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider select-none leading-none">
+                    {title}
+                </span>
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#111A50] tracking-tight transition-transform duration-300 group-hover:translate-x-0.5">
+                    {value}
+                </span>
+            </div>
+            
+            <div className={`w-11 h-11 ${iconBg} ${iconColor} rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                <span className="text-lg">{icon}</span>
+            </div>
+        </div>
+        
+        <div className="flex items-center relative z-10 mt-auto">
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${subTextColor} bg-opacity-10 bg-current`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 animate-pulse" />
+                {subText}
+            </span>
+        </div>
+    </div>
+);
 
 // --- Chart Options ---
 const performanceChartOptions = () => ({
