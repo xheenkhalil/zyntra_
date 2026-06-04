@@ -484,6 +484,26 @@ const ExamBuilderPage: React.FC = () => {
     const [aiTopic, setAiTopic] = useState('');
     const [aiCount, setAiCount] = useState(5);
     const [aiLoading, setAiLoading] = useState(false);
+    const [aiSelectedTypes, setAiSelectedTypes] = useState<Record<QuestionType, { enabled: boolean; count: number }>>({
+        MCQ: { enabled: true, count: 5 },
+        MSQ: { enabled: false, count: 2 },
+        TRUE_FALSE: { enabled: false, count: 2 },
+        FILL_BLANK: { enabled: false, count: 2 },
+        ESSAY: { enabled: false, count: 1 },
+    });
+
+    const enabledTypeCount = Object.values(aiSelectedTypes).filter(v => v.enabled).length;
+    const totalAiQuestions = enabledTypeCount <= 1
+        ? aiCount
+        : Object.values(aiSelectedTypes).filter(v => v.enabled).reduce((sum, v) => sum + v.count, 0);
+
+    const questionTypeLabels: Record<QuestionType, string> = {
+        MCQ: 'Multiple Choice (MCQ)',
+        MSQ: 'Multiple Select (MSQ)',
+        TRUE_FALSE: 'True / False',
+        FILL_BLANK: 'Fill in the Blank',
+        ESSAY: 'Essay',
+    };
 
     // Settings Form State
     const [settingsForm, setSettingsForm] = useState({
@@ -552,11 +572,26 @@ const ExamBuilderPage: React.FC = () => {
 
     const handleGenerateAi = async () => {
         if (!aiTopic.trim()) return alert("Please enter a topic.");
+        const enabledTypes = Object.entries(aiSelectedTypes).filter(([, v]) => v.enabled);
+        if (enabledTypes.length === 0) return alert("Please select at least one question type.");
+
         setAiLoading(true);
         try {
+            // Build the questionTypes map: { MCQ: 3, TRUE_FALSE: 2, ... }
+            const questionTypes: Record<string, number> = {};
+            if (enabledTypes.length === 1) {
+                // Single type: use the total count
+                questionTypes[enabledTypes[0][0]] = aiCount;
+            } else {
+                // Multiple types: use per-type counts
+                for (const [type, val] of enabledTypes) {
+                    questionTypes[type] = val.count;
+                }
+            }
+
             await generateAiQuestions({
                 topic: aiTopic,
-                count: aiCount,
+                questionTypes,
                 examId: exam!.id
             });
             fetchExamData();
@@ -629,7 +664,11 @@ const ExamBuilderPage: React.FC = () => {
                         variant="outlined"
                         startIcon={<AutoAwesomeIcon />}
                         onClick={() => setAiDialogOpen(true)}
-                        className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                        sx={{
+                            borderColor: '#111A50',
+                            color: '#111A50',
+                            '&:hover': { backgroundColor: 'rgba(17,26,80,0.05)', borderColor: '#080D2B' }
+                        }}
                     >
                         Generate with AI
                     </Button>
@@ -782,7 +821,10 @@ const ExamBuilderPage: React.FC = () => {
 
             {/* --- AI GENERATION DIALOG --- */}
             <Dialog open={aiDialogOpen} onClose={() => setAiDialogOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Generate Questions with AI</DialogTitle>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AutoAwesomeIcon sx={{ color: '#111A50' }} />
+                    Generate Questions with AI
+                </DialogTitle>
                 <DialogContent>
                     <Box className="pt-4 flex flex-col gap-4">
                         <TextField
@@ -793,27 +835,85 @@ const ExamBuilderPage: React.FC = () => {
                             value={aiTopic}
                             onChange={(e) => setAiTopic(e.target.value)}
                             placeholder="e.g., 'Photosynthesis process', 'World War II', or paste text content..."
+                            sx={{ '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#111A50' }, '& .MuiInputLabel-root.Mui-focused': { color: '#111A50' } }}
                         />
-                        <TextField
-                            label="Number of Questions"
-                            type="number"
-                            fullWidth
-                            value={aiCount}
-                            onChange={(e) => setAiCount(Number(e.target.value))}
-                            inputProps={{ min: 1, max: 20 }}
-                        />
+
+                        {/* --- Question Type Selection --- */}
+                        <Box>
+                            <Typography variant="subtitle2" className="font-semibold text-gray-700 mb-2">
+                                Question Types
+                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                                {(Object.keys(aiSelectedTypes) as QuestionType[]).map((type) => (
+                                    <Box key={type} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={aiSelectedTypes[type].enabled}
+                                                    onChange={(e) => setAiSelectedTypes(prev => ({
+                                                        ...prev,
+                                                        [type]: { ...prev[type], enabled: e.target.checked }
+                                                    }))}
+                                                    sx={{ color: '#111A50', '&.Mui-checked': { color: '#111A50' } }}
+                                                    size="small"
+                                                />
+                                            }
+                                            label={<Typography variant="body2">{questionTypeLabels[type]}</Typography>}
+                                        />
+                                        {/* Show per-type count only when multiple types are selected */}
+                                        {enabledTypeCount > 1 && aiSelectedTypes[type].enabled && (
+                                            <TextField
+                                                type="number"
+                                                size="small"
+                                                value={aiSelectedTypes[type].count}
+                                                onChange={(e) => setAiSelectedTypes(prev => ({
+                                                    ...prev,
+                                                    [type]: { ...prev[type], count: Math.max(1, Number(e.target.value)) }
+                                                }))}
+                                                inputProps={{ min: 1, max: 20 }}
+                                                sx={{ width: 70, '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#111A50' } }}
+                                            />
+                                        )}
+                                    </Box>
+                                ))}
+                            </Paper>
+                        </Box>
+
+                        {/* Single total count when only 1 type is selected */}
+                        {enabledTypeCount <= 1 && (
+                            <TextField
+                                label="Number of Questions"
+                                type="number"
+                                fullWidth
+                                value={aiCount}
+                                onChange={(e) => setAiCount(Math.max(1, Number(e.target.value)))}
+                                inputProps={{ min: 1, max: 20 }}
+                                sx={{ '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#111A50' }, '& .MuiInputLabel-root.Mui-focused': { color: '#111A50' } }}
+                            />
+                        )}
+
+                        {/* Total summary when multiple types */}
+                        {enabledTypeCount > 1 && (
+                            <Typography variant="body2" sx={{ color: '#111A50', fontWeight: 600, textAlign: 'right' }}>
+                                Total: {totalAiQuestions} question{totalAiQuestions !== 1 ? 's' : ''}
+                            </Typography>
+                        )}
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAiDialogOpen(false)}>Cancel</Button>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={() => setAiDialogOpen(false)} sx={{ color: '#666' }}>Cancel</Button>
                     <Button
                         variant="contained"
                         onClick={handleGenerateAi}
-                        disabled={aiLoading}
+                        disabled={aiLoading || enabledTypeCount === 0}
                         startIcon={aiLoading ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        sx={{
+                            backgroundColor: '#111A50',
+                            '&:hover': { backgroundColor: '#080D2B' },
+                            '&.Mui-disabled': { backgroundColor: '#9ca3af', color: '#fff' }
+                        }}
                     >
-                        {aiLoading ? 'Generating...' : 'Generate'}
+                        {aiLoading ? 'Generating...' : `Generate ${totalAiQuestions} Question${totalAiQuestions !== 1 ? 's' : ''}`}
                     </Button>
                 </DialogActions>
             </Dialog>
