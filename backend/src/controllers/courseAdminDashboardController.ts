@@ -42,7 +42,7 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
         JOIN exams e ON es.exam_id = e.id
         LEFT JOIN proctor_flags pf ON pf.submission_id = es.id
         WHERE e.organization_id = $1 AND es.status = 'completed'
-          AND (es.warning_count > 0 OR pf.id IS NOT NULL)
+          AND pf.id IS NOT NULL
     `;
     const flaggedParams: any[] = [organizationId];
     if (examId && examId !== 'all') {
@@ -308,7 +308,7 @@ export const getExamsDetailedList = async (req: AuthRequest): Promise<any[]> => 
         ROUND(COALESCE(MAX(es.score_percentage), 0), 1)::float as high_score,
         ROUND(COALESCE(MIN(es.score_percentage), 0), 0)::float as low_score,
         COUNT(CASE WHEN es.score_percentage >= 70 THEN 1 END)::int as passed_count,
-        SUM(COALESCE(es.warning_count, 0))::int as total_warnings,
+        (SELECT COALESCE(SUM(pf.warning_count), 0)::int FROM proctor_flags pf JOIN exam_submissions es2 ON pf.submission_id = es2.id WHERE es2.exam_id = e.id) as total_warnings,
         (SELECT COUNT(*) FROM proctor_flags pf JOIN exam_submissions es2 ON pf.submission_id = es2.id WHERE es2.exam_id = e.id)::int as proctor_flags_count
     FROM exams e
     LEFT JOIN exam_submissions es ON e.id = es.exam_id AND es.status = 'completed'
@@ -355,7 +355,7 @@ export const getStudentsDetailedList = async (req: AuthRequest, examId?: string)
         ROUND(COALESCE(AVG(es.score_percentage), 0), 1)::float as average_score,
         ROUND(COALESCE(MAX(es.score_percentage), 0), 1)::float as highest_score,
         ROUND(COALESCE(MIN(es.score_percentage), 0), 1)::float as lowest_score,
-        SUM(COALESCE(es.warning_count, 0))::int as total_warnings,
+        (SELECT COALESCE(SUM(pf.warning_count), 0)::int FROM proctor_flags pf JOIN exam_submissions es2 ON pf.submission_id = es2.id WHERE es2.student_id = u.id) as total_warnings,
         (
             SELECT COUNT(*) 
             FROM proctor_flags pf 
@@ -536,4 +536,3 @@ export const getTeacherDashboardBatch = async (req: AuthRequest, res: Response) 
     res.status(500).json({ message: error.message || 'Failed to load dashboard data' });
   }
 };
-
