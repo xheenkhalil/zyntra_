@@ -254,7 +254,7 @@ const ExamBankPage: React.FC = () => {
             variant="h3"
             sx={{
               fontWeight: 800,
-              color: '#1e293b',
+              color: '#111A50',
             }}
           >
             Exam Bank
@@ -264,15 +264,15 @@ const ExamBankPage: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
             sx={{
-              background: '#1e3a8a',
+              background: '#111A50',
               color: 'white',
               px: 3,
               py: 1.5,
               borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(30, 58, 138, 0.3)',
+              boxShadow: '0 4px 12px rgba(17, 26, 80, 0.3)',
               '&:hover': {
-                background: '#1e40af',
-                boxShadow: '0 6px 16px rgba(30, 58, 138, 0.4)',
+                background: '#080D2B',
+                boxShadow: '0 6px 16px rgba(17, 26, 80, 0.4)',
               },
             }}
           >
@@ -357,10 +357,10 @@ const ExamBankPage: React.FC = () => {
             onClick={handleCreate}
             variant="contained"
             sx={{
-              background: '#1e3a8a',
+              background: '#111A50',
               fontWeight: 600,
               '&:hover': {
-                background: '#1e40af',
+                background: '#080D2B',
               },
             }}
           >

@@ -28,11 +28,10 @@ interface ExamCardProps {
         title: string;
         status: 'draft' | 'live' | 'completed' | 'archived';
         created_at: string;
-        // Extended properties for stats (to be fetched)
         total_questions?: number;
         question_types?: string[];
-        duration_minutes?: number; // Added this
-        time_limit?: number; // in minutes
+        duration_minutes?: number;
+        time_limit?: number;
         stats?: {
             registered?: number;
             completed?: number;
@@ -74,6 +73,21 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
         }
     };
 
+    const getStatusBg = (status: string) => {
+        switch (status) {
+            case 'live':
+                return 'rgba(16, 185, 129, 0.1)';
+            case 'draft':
+                return 'rgba(245, 158, 11, 0.1)';
+            case 'archived':
+                return 'rgba(107, 114, 128, 0.1)';
+            case 'completed':
+                return 'rgba(59, 130, 246, 0.1)';
+            default:
+                return 'rgba(107, 114, 128, 0.1)';
+        }
+    };
+
     const questionTypes = exam.question_types || ['MCQ'];
     const timeLimit = exam.duration_minutes || exam.time_limit || 60;
     const totalQuestions = exam.total_questions || 0;
@@ -82,19 +96,17 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
         <Box
             sx={{
                 position: 'relative',
-                background: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: '20px',
-                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '16px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
                 padding: '24px',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.25s ease',
                 overflow: 'hidden',
                 '&:hover': {
-                    transform: 'translateY(-6px)',
-                    boxShadow: '0 12px 40px 0 rgba(31, 38, 135, 0.25)',
-                    border: '1px solid rgba(99, 102, 241, 0.3)',
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 28px rgba(17, 26, 80, 0.12), 0 4px 8px rgba(0,0,0,0.06)',
+                    borderColor: '#111A50',
                 },
                 '&::before': {
                     content: '""',
@@ -119,13 +131,13 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                     label={exam.status.toUpperCase()}
                     size="small"
                     sx={{
-                        background: getStatusColor(exam.status),
-                        color: 'white',
-                        fontWeight: 'bold',
+                        background: getStatusBg(exam.status),
+                        color: getStatusColor(exam.status),
+                        fontWeight: 700,
                         fontSize: '0.7rem',
                         letterSpacing: '0.5px',
-                        border: 'none',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        border: `1px solid ${getStatusColor(exam.status)}`,
+                        boxShadow: 'none',
                     }}
                 />
             </Box>
@@ -135,21 +147,22 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                 variant="h5"
                 sx={{
                     fontWeight: 700,
-                    color: '#1e293b',
+                    color: '#111A50',
                     mb: 2,
-                    pr: 10, // Space for status badge
+                    pr: 10,
+                    lineHeight: 1.3,
                 }}
             >
                 {exam.title}
             </Typography>
 
             {/* Exam Details */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
                 {/* Questions Count */}
                 {totalQuestions > 0 && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <QuizIcon sx={{ fontSize: 18, color: '#6366f1' }} />
-                        <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                        <QuizIcon sx={{ fontSize: 18, color: '#111A50' }} />
+                        <Typography variant="body2" sx={{ color: '#334155', fontWeight: 600 }}>
                             {totalQuestions} {totalQuestions === 1 ? 'Question' : 'Questions'}
                         </Typography>
                     </Box>
@@ -164,10 +177,11 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                             size="small"
                             sx={{
                                 fontSize: '0.7rem',
-                                height: '20px',
-                                background: 'rgba(99, 102, 241, 0.1)',
-                                color: '#6366f1',
-                                fontWeight: 600,
+                                height: '22px',
+                                background: 'rgba(17, 26, 80, 0.08)',
+                                color: '#111A50',
+                                fontWeight: 700,
+                                border: '1px solid rgba(17, 26, 80, 0.15)',
                             }}
                         />
                     ))}
@@ -176,7 +190,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                 {/* Time Limit */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <AccessTimeIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
-                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ color: '#334155', fontWeight: 600 }}>
                         {timeLimit} min
                     </Typography>
                 </Box>
@@ -192,24 +206,26 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             cursor: 'pointer',
-                            padding: '8px 12px',
-                            borderRadius: '12px',
-                            background: 'rgba(99, 102, 241, 0.05)',
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0',
+                            background: '#f8fafc',
                             mb: 1,
                             transition: 'all 0.2s',
                             '&:hover': {
-                                background: 'rgba(99, 102, 241, 0.1)',
+                                background: '#eef2ff',
+                                borderColor: '#c7d2fe',
                             },
                         }}
                     >
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#6366f1' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#111A50' }}>
                             View Statistics
                         </Typography>
                         <ExpandMoreIcon
                             sx={{
                                 transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
                                 transition: 'transform 0.3s',
-                                color: '#6366f1',
+                                color: '#111A50',
                             }}
                         />
                     </Box>
@@ -218,8 +234,9 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                         <Box
                             sx={{
                                 padding: '16px',
-                                background: 'rgba(248, 250, 252, 0.8)',
-                                borderRadius: '12px',
+                                background: '#f8fafc',
+                                borderRadius: '10px',
+                                border: '1px solid #e2e8f0',
                                 mb: 2,
                             }}
                         >
@@ -227,7 +244,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                                 {/* Registered */}
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <PeopleIcon sx={{ fontSize: 20, color: '#3b82f6' }} />
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    <Typography variant="body2" sx={{ color: '#1e293b' }}>
                                         <strong>{exam.stats.registered || 0}</strong> Registered
                                     </Typography>
                                 </Box>
@@ -235,7 +252,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                                 {/* Completed */}
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <CheckCircleIcon sx={{ fontSize: 20, color: '#10b981' }} />
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    <Typography variant="body2" sx={{ color: '#1e293b' }}>
                                         <strong>{exam.stats.completed || 0}</strong> Completed
                                     </Typography>
                                 </Box>
@@ -243,7 +260,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                                 {/* Pending */}
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <PendingIcon sx={{ fontSize: 20, color: '#f59e0b' }} />
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    <Typography variant="body2" sx={{ color: '#1e293b' }}>
                                         <strong>{exam.stats.pending || 0}</strong> Pending
                                     </Typography>
                                 </Box>
@@ -251,7 +268,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                                 {/* Auto-submitted */}
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <SendIcon sx={{ fontSize: 20, color: '#8b5cf6' }} />
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    <Typography variant="body2" sx={{ color: '#1e293b' }}>
                                         <strong>{exam.stats.auto_submitted || 0}</strong> Auto-submitted
                                     </Typography>
                                 </Box>
@@ -268,7 +285,8 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                                                 cursor: 'pointer',
                                                 padding: '8px',
                                                 borderRadius: '8px',
-                                                background: 'rgba(239, 68, 68, 0.05)',
+                                                background: 'rgba(239, 68, 68, 0.06)',
+                                                border: '1px solid rgba(239, 68, 68, 0.15)',
                                                 '&:hover': {
                                                     background: 'rgba(239, 68, 68, 0.1)',
                                                 },
@@ -293,28 +311,28 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                 <Box
                     onClick={handleMenuOpen}
                     sx={{
-                        background: '#1e3a8a',
+                        background: '#111A50',
                         color: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 12px rgba(30, 58, 138, 0.3)',
+                        padding: '10px 22px',
+                        borderRadius: '10px',
+                        boxShadow: '0 2px 8px rgba(17, 26, 80, 0.25)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         '&:hover': {
-                            background: '#1e40af',
-                            transform: 'scale(1.05)',
+                            background: '#080D2B',
+                            transform: 'scale(1.03)',
                         },
                         transition: 'all 0.2s',
                     }}
                 >
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, letterSpacing: '0.3px' }}>
                         Explore ›
                     </Typography>
                 </Box>
 
                 {/* Date */}
-                <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
                     Created {new Date(exam.created_at).toLocaleDateString()}
                 </Typography>
             </Box>
@@ -328,6 +346,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                     sx: {
                         borderRadius: '12px',
                         boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        border: '1px solid #e2e8f0',
                         minWidth: 200,
                     },
                 }}
@@ -338,8 +357,8 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                         handleMenuClose();
                     }}
                 >
-                    <EditIcon sx={{ mr: 1.5, fontSize: 20, color: '#6366f1' }} />
-                    <Typography variant="body2">Edit / View</Typography>
+                    <EditIcon sx={{ mr: 1.5, fontSize: 20, color: '#111A50' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#1e293b' }}>Edit / View</Typography>
                 </MenuItem>
 
                 <Divider sx={{ my: 0.5 }} />
@@ -352,7 +371,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                         }}
                     >
                         <UnarchiveIcon sx={{ mr: 1.5, fontSize: 20, color: '#10b981' }} />
-                        <Typography variant="body2">Restore</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#1e293b' }}>Restore</Typography>
                     </MenuItem>
                 ) : (
                     <MenuItem
@@ -362,7 +381,7 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                         }}
                     >
                         <ArchiveIcon sx={{ mr: 1.5, fontSize: 20, color: '#f59e0b' }} />
-                        <Typography variant="body2">Archive</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#1e293b' }}>Archive</Typography>
                     </MenuItem>
                 )}
 
@@ -376,12 +395,12 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, onEdit, onDelete, onArchive, 
                     sx={{
                         color: '#ef4444',
                         '&:hover': {
-                            background: 'rgba(239, 68, 68, 0.1)',
+                            background: 'rgba(239, 68, 68, 0.08)',
                         },
                     }}
                 >
                     <DeleteIcon sx={{ mr: 1.5, fontSize: 20 }} />
-                    <Typography variant="body2">Delete</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Delete</Typography>
                 </MenuItem>
             </Menu>
         </Box>
