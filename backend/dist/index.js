@@ -26,6 +26,7 @@ const guestRoutes_1 = __importDefault(require("./routes/guestRoutes"));
 const superAdminGuestQuizRoutes_1 = __importDefault(require("./routes/superAdminGuestQuizRoutes"));
 const systemRoutes_1 = __importDefault(require("./routes/systemRoutes"));
 const proctoringRoutes_1 = __importDefault(require("./routes/proctoringRoutes"));
+const aiRoutes_1 = __importDefault(require("./routes/aiRoutes"));
 // Swagger Imports
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_1 = __importDefault(require("./swagger"));
@@ -99,6 +100,7 @@ app.use('/api/analytics', analyticsRoutes_1.default);
 app.use('/api/public', guestRoutes_1.default);
 app.use('/api/system', systemRoutes_1.default);
 app.use('/api/proctoring', proctoringRoutes_1.default);
+app.use('/api/ai', aiRoutes_1.default);
 // =====================================================
 // HEALTH CHECK ENDPOINT
 // =====================================================

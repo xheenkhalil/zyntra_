@@ -48,7 +48,7 @@ exports.sendEmail = sendEmail;
 /**
  * Send student login credentials (Student ID + login link).
  */
-const sendStudentCredentials = async (email, fullName, studentId) => {
+const sendStudentCredentials = async (email, fullName, studentId, organizationName = 'your institution') => {
     const loginUrl = `${FRONTEND_URL}/login`;
     const subject = 'Welcome to ZYNTRA — Your Student Login Credentials';
     const html = `
@@ -63,7 +63,7 @@ const sendStudentCredentials = async (email, fullName, studentId) => {
       <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
         <h2 style="color: #111A50; margin: 0 0 15px; font-size: 20px;">Welcome, ${fullName}!</h2>
         <p style="color: #4b5563; line-height: 1.6; margin: 0 0 20px;">
-          You have been registered as a student on ZYNTRA. Use the credentials below to log in and take your exams.
+          You have been registered as a student on ZYNTRA by <strong>${organizationName}</strong>. Use the credentials below to log in and take your exams.
         </p>
 
         <!-- Credentials Box -->
@@ -96,7 +96,7 @@ exports.sendStudentCredentials = sendStudentCredentials;
 /**
  * Send admin/teacher invite email with account setup link.
  */
-const sendAdminInviteEmail = async (email, fullName, inviteLink) => {
+const sendAdminInviteEmail = async (email, fullName, inviteLink, organizationName = 'your organization') => {
     const subject = 'You\'re Invited to ZYNTRA — Set Up Your Account';
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
@@ -110,7 +110,7 @@ const sendAdminInviteEmail = async (email, fullName, inviteLink) => {
       <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
         <h2 style="color: #111A50; margin: 0 0 15px; font-size: 20px;">Hello, ${fullName}!</h2>
         <p style="color: #4b5563; line-height: 1.6; margin: 0 0 10px;">
-          You have been invited to join <strong>ZYNTRA</strong> as an administrator for your organisation.
+          You have been invited to join <strong>ZYNTRA</strong> as an administrator for <strong>${organizationName}</strong>.
         </p>
         <p style="color: #4b5563; line-height: 1.6; margin: 0 0 20px;">
           Click the button below to set up your password and complete your account registration. This link expires in <strong>24 hours</strong>.

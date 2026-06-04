@@ -61,14 +61,17 @@ const createStudent = async (req, res) => {
         const newUser = newUserResult.rows[0];
         // Audit Log
         await logAudit('STUDENT_CREATED_INDIVIDUAL', `Student ${newUser.full_name} registered manually with ID: ${studentCode}`, teacherUserId, organizationId);
+        // Get Organization Name
+        const orgResult = await db_1.default.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+        const organizationName = orgResult.rows[0]?.name || 'your institution';
         // Automatically send student credentials email
         try {
             if (emailQueue_1.emailQueue) {
-                await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email, fullName, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email, fullName, studentCode, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
                 console.log(`[CourseAdmin] Queued student email for ${email}`);
             }
             else {
-                await (0, emailService_1.sendStudentCredentials)(email, fullName, studentCode);
+                await (0, emailService_1.sendStudentCredentials)(email, fullName, studentCode, organizationName);
                 console.log(`[CourseAdmin] Student credentials email sent synchronously to ${email}`);
             }
         }
@@ -92,7 +95,10 @@ exports.createStudent = createStudent;
 const bulkRegisterStudents = async (req, res) => {
     const teacherUserId = req.user?.userId;
     const organizationId = req.user?.organizationId;
-    const sendEmails = req.body.sendEmails === 'true'; // Check if email sending is requested
+    const sendEmails = req.body.sendEmails === 'true' || req.body.sendEmails === true;
+    // Get Organization Name
+    const orgResult = await db_1.default.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+    const organizationName = orgResult.rows[0]?.name || 'your institution';
     if (!req.file || req.file.mimetype !== 'text/csv') {
         return res.status(400).json({ message: 'A CSV file is required for bulk upload.' });
     }
@@ -145,11 +151,11 @@ const bulkRegisterStudents = async (req, res) => {
                     // Send email if requested
                     if (sendEmails) {
                         if (emailQueue_1.emailQueue) {
-                            await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email: student.email, fullName: student.full_name, studentCode } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                            await emailQueue_1.emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email: student.email, fullName: student.full_name, studentCode, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
                         }
                         else {
                             // Fallback: fire and forget if no Redis
-                            (0, emailService_1.sendStudentCredentials)(student.email, student.full_name, studentCode).catch(console.error);
+                            (0, emailService_1.sendStudentCredentials)(student.email, student.full_name, studentCode, organizationName).catch(console.error);
                         }
                     }
                 }

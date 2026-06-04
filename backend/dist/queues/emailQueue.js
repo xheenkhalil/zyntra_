@@ -53,13 +53,13 @@ if (connection) {
         console.log(`[EmailWorker] Processing job ${job.id} of type ${type}...`);
         try {
             if (type === 'sendStudentEmail') {
-                const { email, fullName, studentCode } = payload;
-                await emailService.sendStudentCredentials(email, fullName, studentCode);
+                const { email, fullName, studentCode, organizationName } = payload;
+                await emailService.sendStudentCredentials(email, fullName, studentCode, organizationName);
                 console.log(`[EmailWorker] Successfully sent student credentials to ${email}`);
             }
             else if (type === 'sendAdminInviteEmail') {
-                const { email, fullName, inviteLink } = payload;
-                await emailService.sendAdminInviteEmail(email, fullName, inviteLink);
+                const { email, fullName, inviteLink, organizationName } = payload;
+                await emailService.sendAdminInviteEmail(email, fullName, inviteLink, organizationName);
                 console.log(`[EmailWorker] Successfully sent admin invite to ${email}`);
             }
             else if (type === 'sendWelcomeEmail') {

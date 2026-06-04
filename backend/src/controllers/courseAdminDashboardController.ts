@@ -3,6 +3,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
+import { decrypt } from '../services/encryptionService';
 
 // ================== 1. GET DASHBOARD STATS (METRIC CARDS) ==================
 export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Promise<any> => {
@@ -34,8 +35,23 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
       submissionsParams.push(examId);
     }
 
+    // Proctoring integrity flagged count query
+    let flaggedQuery = `
+        SELECT COUNT(DISTINCT es.id) as flagged_count
+        FROM exam_submissions es
+        JOIN exams e ON es.exam_id = e.id
+        LEFT JOIN proctor_flags pf ON pf.submission_id = es.id
+        WHERE e.organization_id = $1 AND es.status = 'completed'
+          AND (es.warning_count > 0 OR pf.id IS NOT NULL)
+    `;
+    const flaggedParams: any[] = [organizationId];
+    if (examId && examId !== 'all') {
+      flaggedQuery += ` AND e.id = $2`;
+      flaggedParams.push(examId);
+    }
+
     // Use Promise.all for parallel execution
-    const [studentsResult, examsResult, submissionsResult, auditLogsResult, examsListResult] =
+    const [studentsResult, examsResult, submissionsResult, flaggedResult, auditLogsResult, examsListResult] =
       await Promise.all([
         // 1. Total Students (Global)
         pool.query(
@@ -52,7 +68,10 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
         // 3. Submissions Stats (Filtered)
         pool.query(submissionsQuery, submissionsParams),
 
-        // 4. Recent Activity (Audit Logs) - Global
+        // 4. Flagged Submissions (Filtered)
+        pool.query(flaggedQuery, flaggedParams),
+
+        // 5. Recent Activity (Audit Logs) - Global
         pool
           .query(
             `
@@ -69,10 +88,9 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
             return { rows: [] }; // Return empty to prevent 500 crash
           }),
 
-        // 5. Live Exams List for Filter
-        pool.query('SELECT id, title FROM exams WHERE organization_id = $1 AND status = $2', [
+        // 6. All Exams List for Filter (changed from 'live' to all so teacher can filter by ended/draft too)
+        pool.query('SELECT id, title FROM exams WHERE organization_id = $1', [
           organizationId,
-          'live',
         ]),
       ]);
 
@@ -85,6 +103,7 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
     const passed_count = parseInt(subStats.passed_count ?? '0', 10);
 
     const pass_rate = total_submissions > 0 ? (passed_count / total_submissions) * 100 : 0;
+    const flagged_count = parseInt(flaggedResult.rows[0]?.flagged_count ?? '0', 10);
 
     const recent_activity = auditLogsResult.rows.map((row: any) => ({
       action: row.action,
@@ -94,13 +113,70 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
 
     const exam_list = examsListResult.rows;
 
+    // Calculate Participation, Integrity Alert rates
+    const participation = total_students > 0 ? (total_submissions / total_students) * 100 : 0;
+    const alertRate = total_submissions > 0 ? (flagged_count / total_submissions) * 100 : 0;
+
+    // Dynamic AI Recommendations
+    const recommendations: string[] = [];
+    if (avg_score < 60 && total_submissions > 0) {
+      recommendations.push(`Average student score is low (${Math.round(avg_score)}%). Consider reviewing key topics or adjusting exam difficulty.`);
+    }
+    if (pass_rate < 50 && total_submissions > 0) {
+      recommendations.push(`More than half of the students failed to pass the exams (${Math.round(pass_rate)}%). Review question clarity or syllabus coverage.`);
+    }
+    if (participation < 70) {
+      recommendations.push(`Exam completion rate is currently at ${Math.round(participation)}%. Send a reminder to the remaining students to finish their attempts.`);
+    }
+    if (alertRate > 15) {
+      recommendations.push(`High rate of proctoring flags detected (${Math.round(alertRate)}%). Review flagged submissions in the proctoring dashboard.`);
+    }
+
+    // Query struggling students count (<50%) and excellent students count (>=80%)
+    let strugglingQuery = `
+      WITH student_avgs AS (
+          SELECT es.student_id, AVG(es.score_percentage) as avg_score
+          FROM exam_submissions es
+          JOIN exams e ON es.exam_id = e.id
+          WHERE e.organization_id = $1 AND es.status = 'completed'
+          ${examId && examId !== 'all' ? 'AND e.id = $2' : ''}
+          GROUP BY es.student_id
+      )
+      SELECT 
+          COUNT(CASE WHEN avg_score < 50 THEN 1 END) as struggling,
+          COUNT(CASE WHEN avg_score >= 80 THEN 1 END) as excellent
+      FROM student_avgs;
+    `;
+    const strugglingParams = [organizationId];
+    if (examId && examId !== 'all') {
+      strugglingParams.push(examId);
+    }
+    const strugglingResult = await pool.query(strugglingQuery, strugglingParams);
+    const struggling_count = parseInt(strugglingResult.rows[0]?.struggling ?? '0', 10);
+    const excellent_count = parseInt(strugglingResult.rows[0]?.excellent ?? '0', 10);
+
+    if (struggling_count > 0) {
+      recommendations.push(`${struggling_count} students are currently struggling (average score < 50%). Consider offering remediation or extra office hours.`);
+    }
+    if (excellent_count > 0) {
+      recommendations.push(`Great job! ${excellent_count} students have achieved excellent performance (average score >= 80%).`);
+    }
+    if (recommendations.length === 0) {
+      recommendations.push("All systems clear. Student performance is stable and average pass rates are healthy.");
+      recommendations.push("Proctoring integrity flags are within the normal range.");
+    }
+
     const stats = {
       totalStudents: total_students,
       activeExams: active_exams,
       averageScore: Math.round(avg_score),
       passRate: `${Math.round(pass_rate)}%`,
-      aiInsights: 23,
-      passRateChange: '+1.5%',
+      participationRate: `${Math.round(participation)}%`,
+      integrityAlertRate: `${Math.round(alertRate)}%`,
+      strugglingStudentsCount: struggling_count,
+      aiInsights: recommendations.length,
+      recommendationsList: recommendations,
+      passRateChange: total_submissions > 0 ? '+1.5%' : '0%',
       recentActivity: recent_activity,
       examList: exam_list,
     };
@@ -116,7 +192,7 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
 // ================== 2. GET PERFORMANCE CHART DATA (LINE) ==================
 export const getPerformanceChartData = async (req: AuthRequest, examId?: string): Promise<any> => {
   const organizationId = req.user?.organizationId;
-  if (!organizationId) throw new Error('Organization ID missing for ch');
+  if (!organizationId) throw new Error('Organization ID missing for chart data.');
 
   try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -207,25 +283,257 @@ export const getResultsDistribution = async (req: AuthRequest, examId?: string):
   }
 };
 
-// ===================================================== // 4. BATCH ENDPOINT - WITH REAL DATA
+// ================== 4. GET EXAMS DETAILED LIST (NEW) ==================
+export const getExamsDetailedList = async (req: AuthRequest): Promise<any[]> => {
+  const organizationId = req.user?.organizationId;
+  if (!organizationId) throw new Error('Organization ID missing.');
+
+  // First get total students count for participation rates
+  const studentsCountRes = await pool.query(
+    'SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2',
+    [organizationId, 'student']
+  );
+  const totalStudents = parseInt(studentsCountRes.rows[0]?.count ?? '0', 10);
+
+  const query = `
+    SELECT 
+        e.id,
+        e.title,
+        e.status,
+        e.created_at,
+        e.duration_minutes,
+        (SELECT COUNT(*) FROM questions q WHERE q.exam_id = e.id)::int as total_questions,
+        COUNT(es.id)::int as submissions_count,
+        ROUND(COALESCE(AVG(es.score_percentage), 0), 1)::float as average_score,
+        ROUND(COALESCE(MAX(es.score_percentage), 0), 1)::float as high_score,
+        ROUND(COALESCE(MIN(es.score_percentage), 0), 0)::float as low_score,
+        COUNT(CASE WHEN es.score_percentage >= 70 THEN 1 END)::int as passed_count,
+        SUM(COALESCE(es.warning_count, 0))::int as total_warnings,
+        (SELECT COUNT(*) FROM proctor_flags pf JOIN exam_submissions es2 ON pf.submission_id = es2.id WHERE es2.exam_id = e.id)::int as proctor_flags_count
+    FROM exams e
+    LEFT JOIN exam_submissions es ON e.id = es.exam_id AND es.status = 'completed'
+    WHERE e.organization_id = $1
+    GROUP BY e.id
+    ORDER BY e.created_at DESC;
+  `;
+  const result = await pool.query(query, [organizationId]);
+
+  return result.rows.map((row) => {
+    const submissionsCount = row.submissions_count;
+    const passedCount = row.passed_count;
+    const passRate = submissionsCount > 0 ? Math.round((passedCount / submissionsCount) * 100) : 0;
+    const completionRate = totalStudents > 0 ? Math.round((submissionsCount / totalStudents) * 100) : 0;
+
+    return {
+      ...row,
+      passRate: `${passRate}%`,
+      completionRate: `${completionRate}%`
+    };
+  });
+};
+
+// ================== 5. GET STUDENTS DETAILED LIST (NEW) ==================
+export const getStudentsDetailedList = async (req: AuthRequest, examId?: string): Promise<any[]> => {
+  const organizationId = req.user?.organizationId;
+  if (!organizationId) throw new Error('Organization ID missing.');
+
+  const params: any[] = [organizationId];
+  let examFilter = '';
+  if (examId && examId !== 'all') {
+    examFilter = 'AND es.exam_id = $2';
+    params.push(examId);
+  }
+
+  const query = `
+    SELECT 
+        u.id,
+        u.full_name,
+        u.email,
+        u.student_id,
+        u.status,
+        COUNT(es.id)::int as exams_attempted,
+        ROUND(COALESCE(AVG(es.score_percentage), 0), 1)::float as average_score,
+        ROUND(COALESCE(MAX(es.score_percentage), 0), 1)::float as highest_score,
+        ROUND(COALESCE(MIN(es.score_percentage), 0), 1)::float as lowest_score,
+        SUM(COALESCE(es.warning_count, 0))::int as total_warnings,
+        (
+            SELECT COUNT(*) 
+            FROM proctor_flags pf 
+            JOIN exam_submissions es2 ON pf.submission_id = es2.id 
+            WHERE es2.student_id = u.id ${examId && examId !== 'all' ? 'AND es2.exam_id = $2' : ''}
+        )::int as proctor_flags_count
+    FROM users u
+    LEFT JOIN exam_submissions es ON u.id = es.student_id AND es.status = 'completed' ${examFilter}
+    WHERE u.organization_id = $1 AND u.role = 'student'
+    GROUP BY u.id
+    ORDER BY u.full_name ASC;
+  `;
+  const result = await pool.query(query, params);
+
+  return result.rows.map((row) => {
+    const avgScore = row.average_score;
+    const examsAttempted = row.exams_attempted;
+    let performanceStatus = 'N/A';
+    if (examsAttempted > 0) {
+      if (avgScore < 50) performanceStatus = 'Struggling';
+      else if (avgScore < 80) performanceStatus = 'Average';
+      else performanceStatus = 'Excellent';
+    }
+
+    const isFlagged = row.total_warnings > 2 || row.proctor_flags_count > 2;
+    const riskStatus = examsAttempted > 0 ? (isFlagged ? 'Flagged' : 'Clear') : 'N/A';
+
+    return {
+      ...row,
+      performanceStatus,
+      riskStatus
+    };
+  });
+};
+
+// ================== 6. GET QUESTION DETAILED LIST (NEW) ==================
+export const getQuestionDetailedList = async (req: AuthRequest, examId: string): Promise<any[]> => {
+  const organizationId = req.user?.organizationId;
+  if (!organizationId) throw new Error('Organization ID missing.');
+
+  if (!examId || examId === 'all') {
+    return [];
+  }
+
+  // 1. Fetch questions for this exam
+  const questionsQuery = `
+    SELECT id, encrypted_data, question_type 
+    FROM questions 
+    WHERE exam_id = $1 
+    ORDER BY created_at ASC;
+  `;
+  // 2. Fetch completed submissions for this exam
+  const submissionsQuery = `
+    SELECT id, answers 
+    FROM exam_submissions 
+    WHERE exam_id = $1 AND status = 'completed';
+  `;
+
+  const [questionsRes, submissionsRes] = await Promise.all([
+    pool.query(questionsQuery, [examId]),
+    pool.query(submissionsQuery, [examId])
+  ]);
+
+  const questions = questionsRes.rows;
+  const submissions = submissionsRes.rows;
+
+  const questionAnalytics = questions.map((q) => {
+    let questionText = 'Decryption failed';
+    let questionType = q.question_type;
+    let correctCount = 0;
+    let answeredCount = 0;
+    let options = null;
+
+    try {
+      if (q.encrypted_data) {
+        const decrypted = JSON.parse(decrypt(q.encrypted_data));
+        questionText = decrypted.questionText || decrypted.question_text || '';
+        questionType = decrypted.questionType || decrypted.question_type || q.question_type;
+        options = decrypted.options || null;
+
+        // Check answers across all submissions
+        for (const sub of submissions) {
+          const studentAnswersObj = typeof sub.answers === 'string' ? JSON.parse(sub.answers) : sub.answers;
+          const studentAns = studentAnswersObj ? studentAnswersObj[q.id] : undefined;
+
+          if (studentAns !== undefined && studentAns !== null) {
+            answeredCount++;
+
+            switch (questionType) {
+              case 'MCQ':
+              case 'TRUE_FALSE': {
+                const correctOpt = decrypted.options?.find((opt: any) => opt.isCorrect)?.text;
+                if (correctOpt === studentAns) {
+                  correctCount++;
+                }
+                break;
+              }
+              case 'MSQ': {
+                const correctOpts = decrypted.options?.filter((opt: any) => opt.isCorrect).map((opt: any) => opt.text) || [];
+                const studentOpts = Array.isArray(studentAns) ? studentAns : [studentAns];
+                const isCorrect = correctOpts.length === studentOpts.length && 
+                                  correctOpts.every((ans: string) => studentOpts.includes(ans));
+                if (isCorrect) {
+                  correctCount++;
+                }
+                break;
+              }
+              case 'FILL_BLANK': {
+                if (decrypted.correctAnswer && studentAns.toLowerCase().trim() === decrypted.correctAnswer.toLowerCase().trim()) {
+                  correctCount++;
+                }
+                break;
+              }
+              case 'ESSAY': {
+                // Essays are manually graded
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Decryption failed for question ID ${q.id}:`, err);
+    }
+
+    const successRate = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+    let difficulty = 'N/A';
+    if (questionType !== 'ESSAY' && answeredCount > 0) {
+      if (successRate < 50) difficulty = 'Hard';
+      else if (successRate <= 80) difficulty = 'Medium';
+      else difficulty = 'Easy';
+    } else if (questionType === 'ESSAY') {
+      difficulty = 'Manual Review';
+    }
+
+    return {
+      id: q.id,
+      questionText,
+      questionType,
+      correctCount,
+      answeredCount,
+      successRate,
+      difficulty,
+      options
+    };
+  });
+
+  return questionAnalytics;
+};
+
+// ===================================================== 
+// 7. BATCH ENDPOINT - WITH REAL DATA
 // =====================================================
 export const getTeacherDashboardBatch = async (req: AuthRequest, res: Response) => {
   const examId = req.query.examId as string;
   console.log('[BATCH] ✅ Handler reached, User:', req.user, 'ExamFilter:', examId);
 
   try {
-    // Pass examId to getCourseAdminStats to filter metrics
     const stats = await getCourseAdminStats(req, examId);
     const performanceChart = await getPerformanceChartData(req, examId);
     const resultsChart = await getResultsDistribution(req, examId);
+
+    // Fetch analytical details for tables
+    const examsDetailedList = await getExamsDetailedList(req);
+    const studentsDetailedList = await getStudentsDetailedList(req, examId);
+    const questionDetailedList = await getQuestionDetailedList(req, examId);
 
     res.status(200).json({
       metrics: stats,
       performance: performanceChart,
       distribution: resultsChart,
+      examsDetailedList,
+      studentsDetailedList,
+      questionDetailedList
     });
   } catch (error: any) {
     console.error('❌❌❌ BATCH ERROR:', error.message);
     res.status(500).json({ message: error.message || 'Failed to load dashboard data' });
   }
 };
+

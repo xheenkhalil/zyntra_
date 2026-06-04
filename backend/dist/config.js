@@ -14,11 +14,11 @@ const config = {
     BREVO_API_KEY: process.env.BREVO_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     EMAIL_NAME: process.env.EMAIL_NAME,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     FRONTEND_URL: process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app',
 };
 // Update the check
-if (!config.DATABASE_URL || !config.JWT_SECRET || !config.OPENAI_API_KEY) {
-    throw new Error('DATABASE_URL, JWT_SECRET, or OPENAI_API_KEY is not defined in the .env file');
+if (!config.DATABASE_URL || !config.JWT_SECRET || !config.GEMINI_API_KEY) {
+    throw new Error('DATABASE_URL, JWT_SECRET, or GEMINI_API_KEY is not defined in the .env file');
 }
 exports.default = config;

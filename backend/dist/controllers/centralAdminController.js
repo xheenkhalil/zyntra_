@@ -79,14 +79,17 @@ const createCourseAdmin = async (req, res) => {
         ]);
         const user = result.rows[0];
         const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
+        // Get Organization Name
+        const orgResult = await db_1.default.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+        const organizationName = orgResult.rows[0]?.name || 'your organization';
         // Automatically send invite email via Brevo or queue
         try {
             if (emailQueue_1.emailQueue) {
-                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName, inviteLink: setupLink, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
                 console.log(`[CentralAdmin] Queued invite email for ${email}`);
             }
             else {
-                await emailService.sendAdminInviteEmail(email, fullName, setupLink);
+                await emailService.sendAdminInviteEmail(email, fullName, setupLink, organizationName);
                 console.log(`[CentralAdmin] Invite email sent synchronously to ${email}`);
             }
         }
@@ -276,15 +279,18 @@ const sendInviteEmail = async (req, res) => {
             await db_1.default.query('UPDATE users SET account_setup_token = $1, account_setup_expires = $2, status = $3 WHERE id = $4', [token, tokenExpires, 'pending_setup', userId]);
         }
         const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${token}`;
+        // Get Organization Name
+        const orgResult = await db_1.default.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+        const organizationName = orgResult.rows[0]?.name || 'your organization';
         // Actually send the email via Brevo or queue
         const userFullName = userResult.rows[0].full_name || 'Administrator';
         try {
             if (emailQueue_1.emailQueue) {
-                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                await emailQueue_1.emailQueue.add('sendAdminInviteEmail', { type: 'sendAdminInviteEmail', payload: { email, fullName: userFullName, inviteLink: setupLink, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
                 console.log(`[CentralAdmin] Queued invite re-send for ${email}`);
             }
             else {
-                await emailService.sendAdminInviteEmail(email, userFullName, setupLink);
+                await emailService.sendAdminInviteEmail(email, userFullName, setupLink, organizationName);
                 console.log(`[CentralAdmin] Invite re-sent synchronously to ${email}`);
             }
         }
