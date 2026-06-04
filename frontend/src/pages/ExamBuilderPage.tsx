@@ -31,6 +31,10 @@ import {
     InputAdornment,
     Snackbar,
     Slide,
+    Menu,
+    ListItemIcon,
+    ListItemText,
+    MenuItem as MuiMenuItem,
 } from '@mui/material';
 import {
     AddCircleOutline as AddIcon,
@@ -45,6 +49,7 @@ import {
     Description as DescriptionIcon,
     AutoAwesome as AutoAwesomeIcon,
     Functions as FunctionsIcon,
+    MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 
 // Import Services
@@ -481,6 +486,12 @@ const ExamBuilderPage: React.FC = () => {
     const [questionModalOpen, setQuestionModalOpen] = useState(false);
     const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
 
+    // Question 3-dot menu state
+    const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+    const [menuQuestion, setMenuQuestion] = useState<Question | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
     // AI Dialog State
     const [aiDialogOpen, setAiDialogOpen] = useState(false);
     const [aiTopic, setAiTopic] = useState('');
@@ -572,10 +583,12 @@ const ExamBuilderPage: React.FC = () => {
     };
 
     const handleDeleteQuestion = async (qId: string) => {
-        if (!window.confirm("Are you sure you want to delete this question?")) return;
+        setDeleteConfirmOpen(false);
+        setDeleteTargetId(null);
         try {
             await deleteQuestion(exam!.id, qId);
             fetchExamData();
+            showToast('Question deleted.', 'success');
         } catch (err) {
             showToast('Failed to delete question.', 'error');
         }
@@ -706,18 +719,13 @@ const ExamBuilderPage: React.FC = () => {
                                 key={q.id}
                                 className="hover:bg-blue-50 transition-colors group"
                                 secondaryAction={
-                                    <Box>
-                                        <Tooltip title="Edit">
-                                            <IconButton onClick={() => { setQuestionToEdit(q); setQuestionModalOpen(true); }}>
-                                                <EditIcon className="text-[#111A50]" />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Delete">
-                                            <IconButton onClick={() => handleDeleteQuestion(q.id)}>
-                                                <DeleteIcon className="text-red-500" />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Box>
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => { setMenuAnchor(e.currentTarget); setMenuQuestion(q); }}
+                                        sx={{ color: '#111A50' }}
+                                    >
+                                        <MoreVertIcon />
+                                    </IconButton>
                                 }
                             >
                                 <Box className="w-full pr-12">
@@ -752,6 +760,53 @@ const ExamBuilderPage: React.FC = () => {
                     )}
                 </List>
             </Paper>
+
+            {/* --- 3-DOT QUESTION MENU --- */}
+            <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={() => { setMenuAnchor(null); setMenuQuestion(null); }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 160, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' } } }}
+            >
+                <MuiMenuItem onClick={() => {
+                    if (menuQuestion) { setQuestionToEdit(menuQuestion); setQuestionModalOpen(true); }
+                    setMenuAnchor(null); setMenuQuestion(null);
+                }}>
+                    <ListItemIcon><EditIcon fontSize="small" sx={{ color: '#111A50' }} /></ListItemIcon>
+                    <ListItemText>Edit</ListItemText>
+                </MuiMenuItem>
+                <MuiMenuItem onClick={() => {
+                    if (menuQuestion) { setDeleteTargetId(menuQuestion.id); setDeleteConfirmOpen(true); }
+                    setMenuAnchor(null); setMenuQuestion(null);
+                }}>
+                    <ListItemIcon><DeleteIcon fontSize="small" sx={{ color: '#ef4444' }} /></ListItemIcon>
+                    <ListItemText sx={{ color: '#ef4444' }}>Delete</ListItemText>
+                </MuiMenuItem>
+            </Menu>
+
+            {/* --- DELETE CONFIRMATION DIALOG --- */}
+            <Dialog open={deleteConfirmOpen} onClose={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }} maxWidth="xs">
+                <DialogTitle sx={{ fontWeight: 600 }}>Delete Question?</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary">
+                        This action cannot be undone. Are you sure you want to permanently delete this question?
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={() => { setDeleteConfirmOpen(false); setDeleteTargetId(null); }} sx={{ color: '#666' }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => deleteTargetId && handleDeleteQuestion(deleteTargetId)}
+                        sx={{ backgroundColor: '#ef4444', '&:hover': { backgroundColor: '#dc2626' } }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* --- SETTINGS MODAL --- */}
             <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} fullWidth maxWidth="sm">
