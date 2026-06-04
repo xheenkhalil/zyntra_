@@ -43,7 +43,6 @@ import {
     FaUsers,
     FaFileAlt,
     FaChartLine,
-    FaCheckCircle,
     FaTachometerAlt,
     FaUserGraduate,
     FaClipboardList,
@@ -534,79 +533,47 @@ const CourseAdminOverview: React.FC = () => {
             {/* TAB CONTENT 1: OVERVIEW */}
             {activeTab === "overview" && (
                 <Box>
-                    {/* KPI CARDS */}
+                    {/* KPI CARDS (CONSOLIDATED) */}
                     <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                         <MetricCard
-                            title="Total Students"
+                            title="Total Enrolled"
                             value={metrics.totalStudents}
-                            subText="Enrolled"
+                            subText={`${metrics.strugglingStudentsCount} Struggling (<50%)`}
+                            subTextColor={metrics.strugglingStudentsCount > 0 ? "text-rose-700" : "text-green-700"}
+                            subTextBg={metrics.strugglingStudentsCount > 0 ? "bg-rose-50" : "bg-green-50"}
                             icon={<FaUsers />}
-                            iconBg="bg-blue-100"
+                            iconBg="bg-blue-50"
                             iconColor="text-[#111A50]"
-                            subTextColor="text-green-600"
                         />
                         <MetricCard
                             title="Active Exams"
                             value={metrics.activeExams}
-                            subText="Live Status"
+                            subText={`${metrics.participationRate} Participation`}
+                            subTextColor="text-indigo-700"
+                            subTextBg="bg-indigo-50"
                             icon={<FaFileAlt />}
-                            iconBg="bg-orange-100"
-                            iconColor="text-orange-600"
-                            subTextColor="text-orange-600"
+                            iconBg="bg-amber-50"
+                            iconColor="text-amber-700"
                         />
                         <MetricCard
                             title="Average Score"
                             value={`${metrics.averageScore}%`}
-                            subText="Overall Average"
+                            subText={`${metrics.passRate} Pass Rate`}
+                            subTextColor="text-emerald-700"
+                            subTextBg="bg-emerald-50"
                             icon={<FaChartLine />}
-                            iconBg="bg-green-100"
-                            iconColor="text-green-600"
-                            subTextColor="text-green-600"
-                        />
-                        <MetricCard
-                            title="Pass Rate"
-                            value={metrics.passRate}
-                            subText={`${metrics.passRateChange} vs prior`}
-                            icon={<FaCheckCircle />}
-                            iconBg="bg-teal-100"
-                            iconColor="text-teal-600"
-                            subTextColor="text-teal-600"
-                        />
-                        <MetricCard
-                            title="Participation"
-                            value={metrics.participationRate}
-                            subText="Completion Rate"
-                            icon={<FaClipboardList />}
-                            iconBg="bg-indigo-100"
-                            iconColor="text-[#111A50]"
-                            subTextColor="text-indigo-600"
+                            iconBg="bg-emerald-50"
+                            iconColor="text-emerald-700"
                         />
                         <MetricCard
                             title="Integrity Alerts"
                             value={metrics.integrityAlertRate}
                             subText="Flagged Submissions"
+                            subTextColor="text-red-700"
+                            subTextBg="bg-red-50"
                             icon={<FaShieldAlt />}
-                            iconBg="bg-red-100"
-                            iconColor="text-red-600"
-                            subTextColor="text-red-600"
-                        />
-                        <MetricCard
-                            title="Struggling Students"
-                            value={metrics.strugglingStudentsCount}
-                            subText="Avg Score < 50%"
-                            icon={<FaExclamationTriangle />}
-                            iconBg="bg-rose-100"
-                            iconColor="text-rose-600"
-                            subTextColor="text-rose-600"
-                        />
-                        <MetricCard
-                            title="AI Insights"
-                            value={metrics.aiInsights}
-                            subText="Recommendations"
-                            icon={<FaBrain />}
-                            iconBg="bg-purple-100"
-                            iconColor="text-purple-600"
-                            subTextColor="text-purple-600"
+                            iconBg="bg-red-50"
+                            iconColor="text-red-700"
                         />
                     </Box>
 
@@ -1103,7 +1070,8 @@ const MetricCard: React.FC<{
     iconColor: string;
     subText: string;
     subTextColor: string;
-}> = ({ title, value, icon, iconBg, iconColor, subText, subTextColor }) => (
+    subTextBg: string;
+}> = ({ title, value, icon, iconBg, iconColor, subText, subTextColor, subTextBg }) => (
     <div className="group relative bg-white rounded-2xl p-6 border border-slate-100 hover:border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[140px] overflow-hidden">
         {/* Subtle background glow on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -1124,7 +1092,7 @@ const MetricCard: React.FC<{
         </div>
         
         <div className="flex items-center relative z-10 mt-auto">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${subTextColor} bg-opacity-10 bg-current`}>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${subTextColor} ${subTextBg}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 animate-pulse" />
                 {subText}
             </span>
