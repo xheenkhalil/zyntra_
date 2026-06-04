@@ -29,6 +29,8 @@ import {
     Switch,
     Tooltip,
     InputAdornment,
+    Snackbar,
+    Slide,
 } from '@mui/material';
 import {
     AddCircleOutline as AddIcon,
@@ -505,6 +507,15 @@ const ExamBuilderPage: React.FC = () => {
         ESSAY: 'Essay',
     };
 
+    // Toast / Snackbar State
+    const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' | 'info' }>({
+        open: false, message: '', severity: 'info'
+    });
+    const showToast = (message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+        setToast({ open: true, message, severity });
+    };
+    const handleCloseToast = () => setToast(prev => ({ ...prev, open: false }));
+
     // Settings Form State
     const [settingsForm, setSettingsForm] = useState({
         duration: 60,
@@ -556,7 +567,7 @@ const ExamBuilderPage: React.FC = () => {
             fetchExamData();
         } catch (err) {
             console.error(err);
-            alert("Failed to update settings");
+            showToast('Failed to update settings.', 'error');
         }
     };
 
@@ -566,14 +577,14 @@ const ExamBuilderPage: React.FC = () => {
             await deleteQuestion(exam!.id, qId);
             fetchExamData();
         } catch (err) {
-            alert("Failed to delete question.");
+            showToast('Failed to delete question.', 'error');
         }
     };
 
     const handleGenerateAi = async () => {
-        if (!aiTopic.trim()) return alert("Please enter a topic.");
+        if (!aiTopic.trim()) { showToast('Please enter a topic.', 'warning'); return; }
         const enabledTypes = Object.entries(aiSelectedTypes).filter(([, v]) => v.enabled);
-        if (enabledTypes.length === 0) return alert("Please select at least one question type.");
+        if (enabledTypes.length === 0) { showToast('Please select at least one question type.', 'warning'); return; }
 
         setAiLoading(true);
         try {
@@ -598,7 +609,7 @@ const ExamBuilderPage: React.FC = () => {
             setAiDialogOpen(false);
         } catch (err) {
             console.error(err);
-            alert("Failed to generate questions.");
+            showToast('Failed to generate questions.', 'error');
         } finally {
             setAiLoading(false);
         }
@@ -917,6 +928,33 @@ const ExamBuilderPage: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* --- TOAST NOTIFICATIONS --- */}
+            <Snackbar
+                open={toast.open}
+                autoHideDuration={4000}
+                onClose={handleCloseToast}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                TransitionComponent={Slide}
+            >
+                <Alert
+                    onClose={handleCloseToast}
+                    severity={toast.severity}
+                    variant="filled"
+                    sx={{
+                        width: '100%',
+                        borderRadius: 2,
+                        fontWeight: 500,
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+                        ...(toast.severity === 'warning' && { backgroundColor: '#f59e0b' }),
+                        ...(toast.severity === 'error' && { backgroundColor: '#ef4444' }),
+                        ...(toast.severity === 'success' && { backgroundColor: '#111A50' }),
+                        ...(toast.severity === 'info' && { backgroundColor: '#111A50' }),
+                    }}
+                >
+                    {toast.message}
+                </Alert>
+            </Snackbar>
 
         </Box>
     );
