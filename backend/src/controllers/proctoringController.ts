@@ -1,47 +1,12 @@
 // backend/src/controllers/proctoringController.ts
 
 import { Request, Response } from 'express';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
+import config from '../config';
 import { analyzeImageFrame, closeExamSession } from '../services/zyntraAiService';
 
-// --- AWS Client Initialization ---
-const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
-
-const s3Client = new S3Client({
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
-
-const S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
-
 // --- Helper Functions ---
-
-const uploadBase64Image = async (base64Image: string, key: string): Promise<string> => {
-  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
-  const imageBuffer = Buffer.from(base64Data, 'base64');
-
-  if (!S3_BUCKET_NAME) throw new Error('S3 Bucket name not configured.');
-
-  const uploadParams = {
-    Bucket: S3_BUCKET_NAME,
-    Key: key,
-    Body: imageBuffer,
-    ContentType: 'image/jpeg',
-  };
-
-  try {
-    await s3Client.send(new PutObjectCommand(uploadParams));
-    return `https://${S3_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
-  } catch (err) {
-    console.error('S3 Upload Error:', err);
-    throw new Error(`Failed to upload image to S3: ${err}`);
-  }
-};
 
 const logAudit = async (
   action: string,
@@ -74,21 +39,11 @@ export const enrollIdentity = async (req: AuthRequest, res: Response) => {
   }
 
   const client = await pool.connect();
-  const uploadedUrls: string[] = [];
 
   try {
     await client.query('BEGIN');
 
-    // Step 1: Upload images to S3 for manual supervision verification
-    for (let i = 0; i < base64Images.length; i++) {
-      const fileKey = `proctor_source/${studentId}_source_${i}_${Date.now()}.jpeg`;
-
-      // Upload to S3
-      const publicUrl = await uploadBase64Image(base64Images[i], fileKey);
-      uploadedUrls.push(publicUrl);
-    }
-
-    // Step 2: Save profile to DB
+    // Save profile to DB, storing base64 reference images directly
     const saveQuery = `
             INSERT INTO proctor_profiles (user_id, reference_images, rekognition_collection_id)
             VALUES ($1, $2, $3)
@@ -98,13 +53,13 @@ export const enrollIdentity = async (req: AuthRequest, res: Response) => {
                 created_at = NOW()
             RETURNING *;
         `;
-    await client.query(saveQuery, [studentId, JSON.stringify(uploadedUrls), null]);
+    await client.query(saveQuery, [studentId, JSON.stringify(base64Images), null]);
 
     await client.query('COMMIT');
 
     res.status(200).json({
       message: 'Identity successfully enrolled.',
-      referenceUrls: uploadedUrls,
+      referenceUrls: base64Images,
     });
   } catch (error: any) {
     await client.query('ROLLBACK');
@@ -131,8 +86,6 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
   }
 
   const client = await pool.connect();
-  const TEST_IMAGE_S3_KEY = `proctor_tests/${studentId}_test_${Date.now()}.jpeg`;
-  let publicTestUrl: string = '';
 
   try {
     await client.query('BEGIN');
@@ -151,15 +104,17 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Step 2: Upload webcam frame to S3 for manual review history
-    publicTestUrl = await uploadBase64Image(base64Image, TEST_IMAGE_S3_KEY);
-
-    // Step 3: Get student's email for Zyntra session verification
+    // Step 2: Get student's email for Zyntra session verification
     const userResult = await client.query('SELECT email FROM users WHERE id = $1', [studentId]);
     const studentEmail = userResult.rows[0]?.email || studentId;
 
-    // Step 4: Perform Zyntra AI analysis (Fail-open resilience wrapper)
+    // Step 3: Perform Zyntra AI analysis (Fail-open resilience wrapper)
     const analysis = await analyzeImageFrame(submissionId, studentEmail, base64Image);
+
+    // Step 4: Construct snapshot URL from Zyntra AI's hosted storage if available
+    const snapshotUrl = (analysis && analysis.snapshot_id)
+      ? `${config.ZYNTRA_API_URL}/static/snapshots/${analysis.snapshot_id}.jpg`
+      : null;
 
     const violationsToRegister: { type: string; reason: string }[] = [];
 
@@ -207,7 +162,7 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
             submissionId,
             studentId,
             v.type,
-            publicTestUrl,
+            snapshotUrl,
             JSON.stringify({ reason: v.reason, analysisResponse: analysis }),
           ],
         );

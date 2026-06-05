@@ -16,7 +16,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.932.0",
     "@google/generative-ai": "^0.24.1",
     "@types/multer": "^2.0.0",
     "argon2": "^0.44.0",
