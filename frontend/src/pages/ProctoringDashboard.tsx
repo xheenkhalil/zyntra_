@@ -95,7 +95,9 @@ const ProctoringDashboard: React.FC = () => {
             setError('');
         } catch (err: any) {
             console.error("Proctoring load failed:", err);
-            if (!data) setError('Failed to load proctoring stream.');
+            const msg = err?.response?.data?.message || err?.message || 'Unknown error';
+            const status = err?.response?.status || '';
+            if (!data) setError(`Failed to load proctoring stream. ${status ? `(${status})` : ''} ${msg}`);
         } finally {
             setLoading(false);
         }
