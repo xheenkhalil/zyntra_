@@ -36,10 +36,24 @@ export interface AlertLog {
     warning_count: number;
 }
 
+export interface HistoryRecord {
+    submission_id: string;
+    full_name: string;
+    student_id: string;
+    email: string;
+    status: string;
+    score_percentage: number | null;
+    grade: string | null;
+    warning_count: number;
+    proctoring_report: any;
+    submitted_at: string;
+}
+
 export interface ProctoringBatchData {
     metrics: ProctoringMetrics;
     alerts: AlertLog[];
     candidates: CandidateFeed[];
+    history: HistoryRecord[];
     charts: {
         detection: { labels: string[]; data: number[] };
         threatLevel: { labels: string[]; critical: number[]; high: number[]; medium: number[] };
@@ -100,6 +114,18 @@ export const analyzeImage = async (submissionId: string, base64Image: string) =>
     const response = await apiClient.post('/proctoring/analyze-image', {
         submission_id: submissionId,
         base64Image
+    });
+    return response.data;
+};
+
+/**
+ * Registers a proctoring violation (tab switch, mouse leaving, etc.).
+ * Endpoint: PUT /api/proctoring/register-violation
+ */
+export const registerViolation = async (submissionId: string, violationType: string) => {
+    const response = await apiClient.put('/proctoring/register-violation', {
+        submissionId,
+        violationType
     });
     return response.data;
 };

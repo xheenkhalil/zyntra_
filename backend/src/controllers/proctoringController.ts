@@ -329,7 +329,7 @@ const getProctorAlerts = async (examId: string) => {
         JOIN users u ON es.student_id = u.id
         WHERE es.exam_id = $1
         ORDER BY pf.created_at DESC
-        LIMIT 5;
+        LIMIT 100;
     `;
   const alertsResult = await pool.query(alertsQuery, [examId]);
   return alertsResult.rows;
@@ -420,21 +420,68 @@ export const getExamProctoringBatch = async (req: AuthRequest, res: Response) =>
     const alerts = await getProctorAlerts(examId);
     const candidates = await getLiveProctorCandidates(examId);
 
+    // Real detection chart data from DB
+    const detectionQuery = `
+      SELECT pf.type, COUNT(*)::int AS count
+      FROM proctor_flags pf
+      JOIN exam_submissions es ON pf.submission_id = es.id
+      WHERE es.exam_id = $1
+      GROUP BY pf.type
+      ORDER BY count DESC;
+    `;
+    const detectionResult = await pool.query(detectionQuery, [examId]);
     const detectionChartData = {
-      labels: ['Multiple Faces', 'Tab Switching', 'Inactivity', 'Face Blurred', 'No Face Detected'],
-      data: [45, 78, 23, 34, 12],
+      labels: detectionResult.rows.length > 0 ? detectionResult.rows.map((r: any) => r.type) : ['No Data'],
+      data: detectionResult.rows.length > 0 ? detectionResult.rows.map((r: any) => r.count) : [0],
     };
+
+    // Real threat timeline data from DB
+    const threatQuery = `
+      SELECT 
+        to_char(date_trunc('minute', pf.created_at), 'HH24:MI') AS time_label,
+        COUNT(*) FILTER (WHERE pf.type IN ('SUBJECT_MISMATCH', 'NO_FACE_DETECTED'))::int AS critical,
+        COUNT(*) FILTER (WHERE pf.type IN ('MULTIPLE_PEOPLE', 'PHONE_DETECTED'))::int AS high,
+        COUNT(*) FILTER (WHERE pf.type IN ('LOOKING_AWAY', 'TAB_SWITCH', 'MOUSE_LEFT'))::int AS medium
+      FROM proctor_flags pf
+      JOIN exam_submissions es ON pf.submission_id = es.id
+      WHERE es.exam_id = $1
+      GROUP BY date_trunc('minute', pf.created_at)
+      ORDER BY date_trunc('minute', pf.created_at) ASC
+      LIMIT 20;
+    `;
+    const threatResult = await pool.query(threatQuery, [examId]);
     const threatChartData = {
-      labels: ['10:00', '10:15', '10:30', '10:45', '11:00', '11:15', '11:30'],
-      critical: [2, 3, 1, 4, 3, 2, 3],
-      high: [5, 7, 6, 8, 7, 6, 8],
-      medium: [8, 10, 9, 11, 10, 9, 12],
+      labels: threatResult.rows.length > 0 ? threatResult.rows.map((r: any) => r.time_label) : ['--'],
+      critical: threatResult.rows.length > 0 ? threatResult.rows.map((r: any) => r.critical) : [0],
+      high: threatResult.rows.length > 0 ? threatResult.rows.map((r: any) => r.high) : [0],
+      medium: threatResult.rows.length > 0 ? threatResult.rows.map((r: any) => r.medium) : [0],
     };
+
+    // Session history: completed/auto-submitted sessions
+    const historyQuery = `
+      SELECT 
+        es.id AS submission_id,
+        u.full_name,
+        u.student_id,
+        u.email,
+        es.status,
+        es.score_percentage,
+        es.grade,
+        es.warning_count,
+        es.proctoring_report,
+        es.submitted_at
+      FROM exam_submissions es
+      JOIN users u ON es.student_id = u.id
+      WHERE es.exam_id = $1 AND es.status IN ('completed', 'submitted_auto')
+      ORDER BY es.submitted_at DESC;
+    `;
+    const historyResult = await pool.query(historyQuery, [examId]);
 
     res.status(200).json({
       metrics: stats,
       alerts: alerts,
       candidates: candidates,
+      history: historyResult.rows,
       charts: {
         detection: detectionChartData,
         threatLevel: threatChartData,

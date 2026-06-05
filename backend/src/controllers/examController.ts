@@ -7,7 +7,7 @@ import { encrypt } from '../services/encryptionService';
 // Create Exam
 // ---------------------------------------------------------
 export const createExam = async (req: AuthRequest, res: Response) => {
-  const { title, instructions, duration_minutes, is_proctored } = req.body;
+  const { title, instructions, duration_minutes, is_proctored, proctoring_interval } = req.body;
   const courseAdminId = req.user?.userId;
   let organizationId = req.user?.organizationId;
 
@@ -27,8 +27,8 @@ export const createExam = async (req: AuthRequest, res: Response) => {
     }
 
     const query = `
-            INSERT INTO exams (title, instructions, duration_minutes, is_proctored, course_admin_id, organization_id)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO exams (title, instructions, duration_minutes, is_proctored, proctoring_interval, course_admin_id, organization_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
     // Ensure organizationId is null if undefined
@@ -37,6 +37,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       instructions || null,
       duration_minutes || 60,
       is_proctored || false,
+      proctoring_interval || 15,
       courseAdminId,
       organizationId || null,
     ]);
@@ -239,7 +240,7 @@ export const addQuestionToExam = async (req: AuthRequest, res: Response) => {
 // ---------------------------------------------------------
 export const updateExamSettings = async (req: AuthRequest, res: Response) => {
   const { examId } = req.params;
-  const { status, grading_scale, duration_minutes, instructions, is_proctored } = req.body;
+  const { status, grading_scale, duration_minutes, instructions, is_proctored, proctoring_interval } = req.body;
   const courseAdminId = req.user?.userId;
 
   if (
@@ -247,7 +248,8 @@ export const updateExamSettings = async (req: AuthRequest, res: Response) => {
     !grading_scale &&
     !duration_minutes &&
     !instructions &&
-    is_proctored === undefined
+    is_proctored === undefined &&
+    proctoring_interval === undefined
   ) {
     return res.status(400).json({ message: 'No settings provided to update.' });
   }
@@ -276,6 +278,10 @@ export const updateExamSettings = async (req: AuthRequest, res: Response) => {
     if (is_proctored !== undefined) {
       query += `, is_proctored = $${paramIndex++}`;
       queryParams.push(is_proctored);
+    }
+    if (proctoring_interval !== undefined) {
+      query += `, proctoring_interval = $${paramIndex++}`;
+      queryParams.push(proctoring_interval);
     }
 
     query += ` WHERE id = $${paramIndex++} AND course_admin_id = $${paramIndex++} RETURNING *`;

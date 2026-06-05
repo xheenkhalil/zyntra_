@@ -531,6 +531,7 @@ const ExamBuilderPage: React.FC = () => {
     const [settingsForm, setSettingsForm] = useState({
         duration: 60,
         isProctored: false,
+        proctoringInterval: 15,
         status: 'draft',
         gradingScale: { A: 90, B: 80, C: 70, D: 60, E: 50, F: 40 },
         instructions: ''
@@ -548,6 +549,7 @@ const ExamBuilderPage: React.FC = () => {
             setSettingsForm({
                 duration: data.duration_minutes || 60,
                 isProctored: data.is_proctored || false,
+                proctoringInterval: (data as any).proctoring_interval || 15,
                 status: data.status || 'draft',
                 gradingScale: data.grading_scale || { A: 90, B: 80, C: 70, D: 60, E: 50, F: 40 },
                 instructions: (data as any).instructions || ''
@@ -570,6 +572,7 @@ const ExamBuilderPage: React.FC = () => {
             await updateExamSettings(exam.id, {
                 duration_minutes: Number(settingsForm.duration),
                 is_proctored: settingsForm.isProctored,
+                proctoring_interval: settingsForm.proctoringInterval,
                 status: settingsForm.status,
                 grading_scale: settingsForm.gradingScale,
                 instructions: settingsForm.instructions
@@ -839,6 +842,19 @@ const ExamBuilderPage: React.FC = () => {
                                 }
                             />
                         </Box>
+
+                        {settingsForm.isProctored && (
+                            <TextField
+                                fullWidth
+                                type="number"
+                                label="Proctoring Check Interval (seconds)"
+                                helperText="How often the webcam captures a frame for AI analysis (10-60 seconds recommended)"
+                                value={settingsForm.proctoringInterval}
+                                onChange={(e) => setSettingsForm({ ...settingsForm, proctoringInterval: Math.max(5, Math.min(120, Number(e.target.value))) })}
+                                InputProps={{ inputProps: { min: 5, max: 120 } }}
+                                sx={{ mt: 2 }}
+                            />
+                        )}
 
                         <TextField
                             select

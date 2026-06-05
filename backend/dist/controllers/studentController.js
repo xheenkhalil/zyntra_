@@ -48,7 +48,7 @@ exports.getAvailableExams = getAvailableExams;
 const getExamInfo = async (req, res) => {
     const { examId } = req.params;
     try {
-        const query = "SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = 'live'";
+        const query = "SELECT id, title, instructions, duration_minutes, is_proctored, proctoring_interval FROM exams WHERE id = $1 AND status = 'live'";
         const result = await db_1.default.query(query, [examId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Exam not found' });
@@ -162,6 +162,7 @@ const startOrResumeExam = async (req, res) => {
                 title: exam.title,
                 instructions: exam.instructions,
                 duration_minutes: exam.duration_minutes,
+                proctoring_interval: exam.proctoring_interval || 15,
                 questions: sanitizedQuestions,
             },
             submission: {

@@ -69,7 +69,7 @@ export const getExamInfo = async (req: AuthRequest, res: Response) => {
 
   try {
     const query =
-      "SELECT id, title, instructions, duration_minutes, is_proctored FROM exams WHERE id = $1 AND status = 'live'";
+      "SELECT id, title, instructions, duration_minutes, is_proctored, proctoring_interval FROM exams WHERE id = $1 AND status = 'live'";
     const result = await pool.query(query, [examId]);
 
     if (result.rows.length === 0) {
@@ -199,6 +199,7 @@ export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
         title: exam.title,
         instructions: exam.instructions,
         duration_minutes: exam.duration_minutes,
+        proctoring_interval: exam.proctoring_interval || 15,
         questions: sanitizedQuestions,
       },
       submission: {

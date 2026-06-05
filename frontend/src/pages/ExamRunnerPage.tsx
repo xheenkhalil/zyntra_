@@ -7,7 +7,7 @@ import {
     RadioGroup, FormControlLabel, Radio, LinearProgress, Checkbox, FormGroup, TextField
 } from '@mui/material';
 import { startOrResumeExam, saveExamProgress, submitExam, getExamInfo } from '../services/studentService';
-import { checkEnrollmentStatus, analyzeImage } from '../services/proctoringService';
+import { checkEnrollmentStatus, analyzeImage, registerViolation } from '../services/proctoringService';
 import ProctoringEnrollment from '../components/ProctoringEnrollment';
 import ExamInstructionsDialog from '../components/ExamInstructionsDialog';
 import LatexRenderer from '../components/LatexRenderer';
@@ -63,6 +63,7 @@ const ExamRunnerPage: React.FC = () => {
     // Tab switching detection
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
     const [showTabWarning, setShowTabWarning] = useState(false);
+    const [proctoringInterval, setProctoringInterval] = useState(15);
 
     // Webcam ref for proctoring capture
     const webcamVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -115,6 +116,11 @@ const ExamRunnerPage: React.FC = () => {
                 setSubmission(data.submission);
                 setAnswers(data.submission.answers || {});
                 setTimeLeft(data.submission.time_remaining_seconds);
+
+                // Set the dynamic proctoring interval
+                if (data.exam.proctoring_interval) {
+                    setProctoringInterval(data.exam.proctoring_interval);
+                }
 
                 // Restore last question index if available
                 if (data.submission.last_question_index !== undefined) {
@@ -231,7 +237,7 @@ const ExamRunnerPage: React.FC = () => {
             .catch(err => console.error('Failed to access webcam:', err));
 
         captureAndAnalyzeImage();
-        proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, 15 * 1000);
+        proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, proctoringInterval * 1000);
 
         return () => {
             if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
@@ -240,7 +246,7 @@ const ExamRunnerPage: React.FC = () => {
                 tracks.forEach(track => track.stop());
             }
         };
-    }, [submission]);
+    }, [submission, proctoringInterval]);
 
     // --- Tab Switching Detection ---
     useEffect(() => {
@@ -250,6 +256,12 @@ const ExamRunnerPage: React.FC = () => {
                 setTabSwitchCount(newCount);
                 setShowTabWarning(true);
                 setTimeout(() => setShowTabWarning(false), 5000);
+
+                // Log to backend
+                registerViolation(submission.id, 'TAB_SWITCH').catch(err => 
+                    console.error('Failed to register tab switch:', err)
+                );
+
                 if (newCount >= 3) {
                     setTimeout(() => handleSubmit(), 2000);
                 }
@@ -258,6 +270,21 @@ const ExamRunnerPage: React.FC = () => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, [submission, exam, tabSwitchCount, handleSubmit]);
+
+    // --- Mouse Leave Window Detection ---
+    useEffect(() => {
+        const handleMouseLeave = (e: MouseEvent) => {
+            if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+                if (submission && exam) {
+                    registerViolation(submission.id, 'MOUSE_LEFT').catch(err =>
+                        console.error('Failed to register mouse leave:', err)
+                    );
+                }
+            }
+        };
+        document.addEventListener('mouseleave', handleMouseLeave);
+        return () => document.removeEventListener('mouseleave', handleMouseLeave);
+    }, [submission, exam]);
 
     // --- UI Handlers ---
     const handleSelectOption = (questionId: string, value: string) => {
