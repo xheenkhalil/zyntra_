@@ -70,7 +70,8 @@ exports.enrollIdentity = enrollIdentity;
  */
 const analyzeTestImage = async (req, res) => {
     const studentId = req.user?.userId;
-    const { base64Image, submissionId } = req.body;
+    const { base64Image } = req.body;
+    const submissionId = req.body.submissionId || req.body.submission_id;
     if (!studentId)
         return res.status(401).json({ message: 'Authentication required.' });
     if (!base64Image || !submissionId) {
@@ -168,7 +169,8 @@ exports.analyzeTestImage = analyzeTestImage;
  */
 const registerViolation = async (req, res) => {
     const studentId = req.user?.userId;
-    const { submissionId, violationType } = req.body;
+    const submissionId = req.body.submissionId || req.body.submission_id;
+    const violationType = req.body.violationType || req.body.violation_type;
     const MAX_WARNINGS = 3;
     if (!studentId)
         return res.status(401).json({ message: 'Authentication required.' });

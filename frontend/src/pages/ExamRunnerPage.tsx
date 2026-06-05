@@ -376,7 +376,7 @@ const ExamRunnerPage: React.FC = () => {
 
     return (
         <>
-            <video ref={webcamVideoRef} style={{ display: 'none' }} />
+            <video ref={webcamVideoRef} style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }} />
             {showTabWarning && (
                 <Alert severity={tabSwitchCount >= 3 ? "error" : "warning"} sx={{ position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, minWidth: 400 }}>
                     {tabSwitchCount >= 3 ? `⚠️ CRITICAL: 3 tab switches detected. Auto-submitting.` : `⚠️ Warning: Tab switching detected (${tabSwitchCount}/3).`}

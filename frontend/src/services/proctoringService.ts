@@ -112,6 +112,7 @@ export const checkEnrollmentStatus = async () => {
  */
 export const analyzeImage = async (submissionId: string, base64Image: string) => {
     const response = await apiClient.post('/proctoring/analyze-image', {
+        submissionId,
         submission_id: submissionId,
         base64Image
     });
