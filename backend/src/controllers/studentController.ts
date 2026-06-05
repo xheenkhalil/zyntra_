@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
 import { decrypt } from '../services/encryptionService';
+import { startExamSession, closeExamSession } from '../services/zyntraAiService';
 
 // --- define the shape of our data for TypeScript ---
 interface Option {
@@ -148,6 +149,18 @@ export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
       submission = newSubmissionResult.rows[0];
     }
 
+    // --- ZYNTRA AI PROCTORING SESSION START/RESUME ---
+    if (exam.is_proctored) {
+      try {
+        const userQuery = 'SELECT email FROM users WHERE id = $1';
+        const userRes = await client.query(userQuery, [studentId]);
+        const studentEmail = userRes.rows[0]?.email || studentId;
+        await startExamSession(submission.id, studentEmail);
+      } catch (err: any) {
+        console.error('[Zyntra] Failed to start exam session wrapper:', err.message);
+      }
+    }
+
     // --- 3. Fetch & Decrypt Questions for Student Runner ---
     const questionsResult = await client.query<QuestionFromDB>(
       'SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1 ORDER BY created_at ASC',
@@ -289,7 +302,7 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
 
     // 2. Fetch Exam Settings and ALL encrypted Questions
     const [examResult, questionsResult] = await Promise.all([
-      client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
+      client.query('SELECT grading_scale, is_proctored FROM exams WHERE id = $1', [examId]),
       client.query<QuestionFromDB>(
         'SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1',
         [examId],
@@ -297,6 +310,7 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
     ]);
 
     const gradingScale = examResult.rows[0].grading_scale;
+    const isProctored = examResult.rows[0].is_proctored;
 
     let score = 0;
     let totalQuestions = questionsResult.rows.length;
@@ -362,18 +376,32 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // End proctoring session if exam is proctored
+    let proctoringReport = null;
+    if (isProctored) {
+      try {
+        const report = await closeExamSession(submissionId);
+        if (report) {
+          proctoringReport = JSON.stringify(report);
+        }
+      } catch (err: any) {
+        console.error('[Zyntra] Failed to end proctor session on submit:', err.message);
+      }
+    }
+
     // 5. Update Submission Record
     const updateSubmissionQuery = `
             UPDATE exam_submissions
-            SET score_percentage = $1, grade = $2, answers = $3, status = 'completed'
+            SET score_percentage = $1, grade = $2, answers = $3, status = 'completed', proctoring_report = $5
             WHERE id = $4
-            RETURNING id, score_percentage, grade, submitted_at;
+            RETURNING id, score_percentage, grade, submitted_at, proctoring_report;
         `;
     const finalResult = await client.query(updateSubmissionQuery, [
       scorePercentage.toFixed(2),
       finalGrade,
       JSON.stringify(answers),
       submissionId,
+      proctoringReport,
     ]);
 
     await client.query('COMMIT');

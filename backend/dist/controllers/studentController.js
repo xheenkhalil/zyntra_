@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getExamInfo = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
 const encryptionService_1 = require("../services/encryptionService");
+const zyntraAiService_1 = require("../services/zyntraAiService");
 // fetches all exams with 'live' status for the student's organization.
 const getAvailableExams = async (req, res) => {
     const studentId = req.user?.userId;
@@ -115,6 +116,18 @@ const startOrResumeExam = async (req, res) => {
             `;
             const newSubmissionResult = await client.query(startQuery, [examId, studentId, startTime]);
             submission = newSubmissionResult.rows[0];
+        }
+        // --- ZYNTRA AI PROCTORING SESSION START/RESUME ---
+        if (exam.is_proctored) {
+            try {
+                const userQuery = 'SELECT email FROM users WHERE id = $1';
+                const userRes = await client.query(userQuery, [studentId]);
+                const studentEmail = userRes.rows[0]?.email || studentId;
+                await (0, zyntraAiService_1.startExamSession)(submission.id, studentEmail);
+            }
+            catch (err) {
+                console.error('[Zyntra] Failed to start exam session wrapper:', err.message);
+            }
         }
         // --- 3. Fetch & Decrypt Questions for Student Runner ---
         const questionsResult = await client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1 ORDER BY created_at ASC', [examId]);
@@ -246,10 +259,11 @@ const submitExam = async (req, res) => {
         const examId = submissionResult.rows[0].exam_id;
         // 2. Fetch Exam Settings and ALL encrypted Questions
         const [examResult, questionsResult] = await Promise.all([
-            client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
+            client.query('SELECT grading_scale, is_proctored FROM exams WHERE id = $1', [examId]),
             client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [examId]),
         ]);
         const gradingScale = examResult.rows[0].grading_scale;
+        const isProctored = examResult.rows[0].is_proctored;
         let score = 0;
         let totalQuestions = questionsResult.rows.length;
         // 3. Grade Each Question
@@ -303,18 +317,32 @@ const submitExam = async (req, res) => {
                 }
             }
         }
+        // End proctoring session if exam is proctored
+        let proctoringReport = null;
+        if (isProctored) {
+            try {
+                const report = await (0, zyntraAiService_1.closeExamSession)(submissionId);
+                if (report) {
+                    proctoringReport = JSON.stringify(report);
+                }
+            }
+            catch (err) {
+                console.error('[Zyntra] Failed to end proctor session on submit:', err.message);
+            }
+        }
         // 5. Update Submission Record
         const updateSubmissionQuery = `
             UPDATE exam_submissions
-            SET score_percentage = $1, grade = $2, answers = $3, status = 'completed'
+            SET score_percentage = $1, grade = $2, answers = $3, status = 'completed', proctoring_report = $5
             WHERE id = $4
-            RETURNING id, score_percentage, grade, submitted_at;
+            RETURNING id, score_percentage, grade, submitted_at, proctoring_report;
         `;
         const finalResult = await client.query(updateSubmissionQuery, [
             scorePercentage.toFixed(2),
             finalGrade,
             JSON.stringify(answers),
             submissionId,
+            proctoringReport,
         ]);
         await client.query('COMMIT');
         res.status(201).json({

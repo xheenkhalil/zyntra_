@@ -13,11 +13,13 @@ const config = {
   EMAIL_NAME: process.env.EMAIL_NAME,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   FRONTEND_URL: process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app',
+  ZYNTRA_API_URL: process.env.ZYNTRA_API_URL || 'https://zyntra-ai-hio1.onrender.com',
+  ZYNTRA_API_KEY: process.env.ZYNTRA_API_KEY || '',
 };
 
 // Update the check
-if (!config.DATABASE_URL || !config.JWT_SECRET || !config.GEMINI_API_KEY) {
-  throw new Error('DATABASE_URL, JWT_SECRET, or GEMINI_API_KEY is not defined in the .env file');
+if (!config.DATABASE_URL || !config.JWT_SECRET || !config.GEMINI_API_KEY || !config.ZYNTRA_API_KEY) {
+  throw new Error('DATABASE_URL, JWT_SECRET, GEMINI_API_KEY, or ZYNTRA_API_KEY is not defined in the .env file');
 }
 
 export default config;

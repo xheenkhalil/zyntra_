@@ -159,7 +159,7 @@ const EnrollmentTestPage: React.FC = () => {
             {imageUrls.length > 0 && (
               <Alert severity="success" className="mt-4">
                 <Typography variant="subtitle2" className="font-bold">Success!</Typography>
-                <Typography variant="body2">Your biometric profile has been created in AWS Rekognition.</Typography>
+                <Typography variant="body2">Your biometric profile has been created successfully.</Typography>
                 <Box className="mt-2 flex gap-2 overflow-x-auto">
                   {imageUrls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noreferrer">

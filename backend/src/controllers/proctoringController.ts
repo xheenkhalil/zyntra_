@@ -2,27 +2,14 @@
 
 import { Request, Response } from 'express';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import {
-  RekognitionClient,
-  CreateCollectionCommand,
-  CompareFacesCommand,
-  IndexFacesCommand,
-} from '@aws-sdk/client-rekognition';
 import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
+import { analyzeImageFrame, closeExamSession } from '../services/zyntraAiService';
 
 // --- AWS Client Initialization ---
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 
 const s3Client = new S3Client({
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
-
-const rekognitionClient = new RekognitionClient({
   region: AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
@@ -87,55 +74,21 @@ export const enrollIdentity = async (req: AuthRequest, res: Response) => {
   }
 
   const client = await pool.connect();
-  const collectionId = `ZYNTRA_USER_${studentId.replace(/-/g, '')}`;
   const uploadedUrls: string[] = [];
 
   try {
     await client.query('BEGIN');
 
-    // Step 1: Create/Check Rekognition Collection
-    try {
-      await rekognitionClient.send(new CreateCollectionCommand({ CollectionId: collectionId }));
-      console.log(`Created Rekognition Collection: ${collectionId}`);
-    } catch (e: any) {
-      if (e.name !== 'ResourceAlreadyExistsException') {
-        console.error('Rekognition CreateCollection Error:', e);
-        throw new Error(`Failed to init face collection: ${e.message}`);
-      }
-    }
-
-    // Step 2: Upload images and Index Faces
+    // Step 1: Upload images to S3 for manual supervision verification
     for (let i = 0; i < base64Images.length; i++) {
       const fileKey = `proctor_source/${studentId}_source_${i}_${Date.now()}.jpeg`;
 
       // Upload to S3
       const publicUrl = await uploadBase64Image(base64Images[i], fileKey);
       uploadedUrls.push(publicUrl);
-
-      // Index Face in Rekognition
-      try {
-        await rekognitionClient.send(
-          new IndexFacesCommand({
-            CollectionId: collectionId,
-            Image: {
-              S3Object: {
-                Bucket: S3_BUCKET_NAME,
-                Name: fileKey,
-              },
-            },
-            ExternalImageId: fileKey.replace(/\//g, '_'),
-            MaxFaces: 1,
-            QualityFilter: 'AUTO',
-            DetectionAttributes: ['DEFAULT'],
-          }),
-        );
-      } catch (rekError: any) {
-        console.error('Rekognition Indexing Error:', rekError);
-        throw new Error(`Failed to index face ${i}: ${rekError.message}`);
-      }
     }
 
-    // Step 3: Save profile to DB
+    // Step 2: Save profile to DB
     const saveQuery = `
             INSERT INTO proctor_profiles (user_id, reference_images, rekognition_collection_id)
             VALUES ($1, $2, $3)
@@ -145,13 +98,12 @@ export const enrollIdentity = async (req: AuthRequest, res: Response) => {
                 created_at = NOW()
             RETURNING *;
         `;
-    await client.query(saveQuery, [studentId, JSON.stringify(uploadedUrls), collectionId]);
+    await client.query(saveQuery, [studentId, JSON.stringify(uploadedUrls), null]);
 
     await client.query('COMMIT');
 
     res.status(200).json({
       message: 'Identity successfully enrolled.',
-      collectionId: collectionId,
       referenceUrls: uploadedUrls,
     });
   } catch (error: any) {
@@ -179,16 +131,13 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
   }
 
   const client = await pool.connect();
-  const HIGH_CONFIDENCE_THRESHOLD = 90;
   const TEST_IMAGE_S3_KEY = `proctor_tests/${studentId}_test_${Date.now()}.jpeg`;
-
-  let flagAction: string | null = null;
-  let flagReason: string = 'OK';
   let publicTestUrl: string = '';
 
   try {
     await client.query('BEGIN');
 
+    // Step 1: Verify student profile exists
     const profileResult = await client.query(
       'SELECT reference_images FROM proctor_profiles WHERE user_id = $1',
       [studentId],
@@ -202,64 +151,76 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const referenceUrl = profileResult.rows[0].reference_images[0];
-    const sourceKey = referenceUrl.split('.com/')[1];
-
+    // Step 2: Upload webcam frame to S3 for manual review history
     publicTestUrl = await uploadBase64Image(base64Image, TEST_IMAGE_S3_KEY);
 
-    const compareParams = {
-      SourceImage: {
-        S3Object: {
-          Bucket: S3_BUCKET_NAME,
-          Name: sourceKey,
-        },
-      },
-      TargetImage: {
-        S3Object: {
-          Bucket: S3_BUCKET_NAME,
-          Name: TEST_IMAGE_S3_KEY,
-        },
-      },
-      SimilarityThreshold: HIGH_CONFIDENCE_THRESHOLD,
-    };
+    // Step 3: Get student's email for Zyntra session verification
+    const userResult = await client.query('SELECT email FROM users WHERE id = $1', [studentId]);
+    const studentEmail = userResult.rows[0]?.email || studentId;
 
-    const comparison = await rekognitionClient.send(new CompareFacesCommand(compareParams));
-    const faceMatch = comparison.FaceMatches?.[0];
+    // Step 4: Perform Zyntra AI analysis (Fail-open resilience wrapper)
+    const analysis = await analyzeImageFrame(submissionId, studentEmail, base64Image);
 
-    // Analysis Logic
-    if (!comparison.FaceMatches?.length && !comparison.UnmatchedFaces?.length) {
-      flagAction = 'NO_FACE_DETECTED';
-      flagReason = 'No face found in frame.';
-    } else if (comparison.UnmatchedFaces && comparison.UnmatchedFaces.length > 0) {
-      flagAction = 'SUBJECT_MISMATCH';
-      const sim = faceMatch ? faceMatch.Similarity : 0;
-      flagReason = `Face mismatch. Similarity: ${sim?.toFixed(1)}%`;
+    const violationsToRegister: { type: string; reason: string }[] = [];
+
+    if (analysis) {
+      // Map Zyntra AI metrics to DB flag types
+      if (analysis.face_match === false) {
+        violationsToRegister.push({
+          type: 'SUBJECT_MISMATCH',
+          reason: `Face mismatch. Score similarity: ${(analysis.face_score * 100).toFixed(1)}%`
+        });
+      }
+
+      if (analysis.violations && Array.isArray(analysis.violations)) {
+        for (const violation of analysis.violations) {
+          if (violation === 'LOOKING_AWAY') {
+            violationsToRegister.push({ type: 'LOOKING_AWAY', reason: 'Gaze deviation (looking away).' });
+          } else if (violation === 'PHONE_DETECTED' || analysis.phone_detected) {
+            violationsToRegister.push({ type: 'PHONE_DETECTED', reason: 'Mobile device detected in frame.' });
+          } else if (violation === 'MULTIPLE_PEOPLE' || analysis.person_count > 1) {
+            violationsToRegister.push({ type: 'MULTIPLE_PEOPLE', reason: `Multiple people detected (${analysis.person_count} found).` });
+          } else if (violation === 'NO_FACE_DETECTED' || analysis.person_count === 0) {
+            violationsToRegister.push({ type: 'NO_FACE_DETECTED', reason: 'No face detected in camera feed.' });
+          } else if (violation === 'FACE_MISMATCH') {
+            // Only add if not already captured by face_match check
+            const alreadyAdded = violationsToRegister.some(v => v.type === 'SUBJECT_MISMATCH');
+            if (!alreadyAdded) {
+              violationsToRegister.push({ type: 'SUBJECT_MISMATCH', reason: 'Identity mismatch detected.' });
+            }
+          }
+        }
+      }
     }
 
-    if (flagAction) {
-      await logAudit(flagAction, flagReason, studentId, undefined);
-      await client.query(
-        `
-                INSERT INTO proctor_flags (submission_id, student_id, type, image_url, warning_count, analysis_data)
-                VALUES ($1, $2, $3, $4, 1, $5)
-                ON CONFLICT DO NOTHING;
-            `,
-        [
-          submissionId,
-          studentId,
-          flagAction,
-          publicTestUrl,
-          JSON.stringify({ reason: flagReason, confidence: faceMatch?.Similarity || 0 }),
-        ],
-      );
+    // Step 5: Save detected violations as flags in DB
+    if (violationsToRegister.length > 0) {
+      for (const v of violationsToRegister) {
+        await logAudit(v.type, v.reason, studentId, undefined);
+        await client.query(
+          `
+            INSERT INTO proctor_flags (submission_id, student_id, type, image_url, warning_count, analysis_data)
+            VALUES ($1, $2, $3, $4, 1, $5)
+            ON CONFLICT DO NOTHING;
+          `,
+          [
+            submissionId,
+            studentId,
+            v.type,
+            publicTestUrl,
+            JSON.stringify({ reason: v.reason, analysisResponse: analysis }),
+          ],
+        );
+      }
     }
 
     await client.query('COMMIT');
-    res.status(200).json({ status: flagAction ? 'FLAGGED' : 'VERIFIED' });
+    res.status(200).json({ status: violationsToRegister.length > 0 ? 'FLAGGED' : 'VERIFIED' });
   } catch (error: any) {
     await client.query('ROLLBACK');
     console.error('Image Analysis Error:', error);
-    res.status(500).json({ message: `Analysis failed: ${error.message}` });
+    // Fail-open: allow student to proceed even if AI analysis encounters an error
+    res.status(200).json({ status: 'VERIFIED', warning: `Analysis server error: ${error.message}` });
   } finally {
     client.release();
   }
@@ -321,6 +282,13 @@ export const registerViolation = async (req: AuthRequest, res: Response) => {
             `,
         [newWarnings, submissionId],
       );
+
+      // Finalize the Zyntra AI session when auto-submitted due to limit
+      try {
+        await closeExamSession(submissionId);
+      } catch (err: any) {
+        console.error('[Zyntra] Failed to close session on auto-submit:', err.message);
+      }
 
       await client.query('COMMIT');
       return res.status(200).json({ status: 'AUTO_SUBMITTED' });

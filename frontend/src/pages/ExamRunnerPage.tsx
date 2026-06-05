@@ -231,7 +231,7 @@ const ExamRunnerPage: React.FC = () => {
             .catch(err => console.error('Failed to access webcam:', err));
 
         captureAndAnalyzeImage();
-        proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, 10 * 60 * 1000);
+        proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, 15 * 1000);
 
         return () => {
             if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
