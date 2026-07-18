@@ -60,6 +60,7 @@ const ExamRunnerPage: React.FC = () => {
     const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [webcamReady, setWebcamReady] = useState(false);
+    const [examFinished, setExamFinished] = useState(false);
     const submittingRef = useRef(false);
 
     // Tab switching detection
@@ -171,7 +172,7 @@ const ExamRunnerPage: React.FC = () => {
     };
 
     useInterval(async () => {
-        if (submission && timeLeft !== null) {
+        if (submission && timeLeft !== null && !submittingRef.current && !examFinished) {
             try {
                 // @ts-ignore
                 await saveExamProgress(submission.id, {
@@ -193,12 +194,20 @@ const ExamRunnerPage: React.FC = () => {
         try {
             // @ts-ignore
             await submitExam(submission.id, answers);
+            setExamFinished(true);
             navigate('/student/submission-complete');
         } catch (err: unknown) {
-            submittingRef.current = false; // Allow retry on genuine error
-            type ErrorWithResponse = { response?: { data?: { message?: string } } };
-            if (err && typeof err === 'object' && 'response' in err && (err as ErrorWithResponse).response?.data?.message) {
-                setError((err as ErrorWithResponse).response!.data!.message!);
+            type ErrorWithResponse = { response?: { data?: { message?: string }; status?: number } };
+            const axiosErr = err as ErrorWithResponse;
+            // If 404 → the exam was already auto-submitted by the backend (violations/timer)
+            if (axiosErr?.response?.status === 404) {
+                setExamFinished(true);
+                navigate('/student/submission-complete');
+                return;
+            }
+            submittingRef.current = false;
+            if (axiosErr?.response?.data?.message) {
+                setError(axiosErr.response.data.message);
             } else {
                 setError('Failed to submit exam.');
             }
@@ -272,41 +281,64 @@ const ExamRunnerPage: React.FC = () => {
     // --- Tab Switching Detection ---
     useEffect(() => {
         const handleVisibilityChange = () => {
-            if (document.hidden && submission && exam) {
+            if (document.hidden && submission && exam && !submittingRef.current && !examFinished) {
                 const newCount = tabSwitchCount + 1;
                 setTabSwitchCount(newCount);
                 setShowTabWarning(true);
                 setTimeout(() => setShowTabWarning(false), 5000);
 
-                // Log to backend
-                registerViolation(submission.id, 'TAB_SWITCH').catch(err => 
-                    console.error('Failed to register tab switch:', err)
-                );
-
-                if (newCount >= 3 && !submittingRef.current) {
-                    submittingRef.current = true; // Lock immediately to prevent duplicate triggers
-                    setTimeout(() => handleSubmit(), 2000);
-                }
+                // Log to backend — the backend handles auto-submit when warnings >= 3
+                registerViolation(submission.id, 'TAB_SWITCH')
+                    .then(response => {
+                        if (response?.status === 'AUTO_SUBMITTED') {
+                            // Backend has auto-submitted this exam
+                            submittingRef.current = true;
+                            setExamFinished(true);
+                            navigate('/student/submission-complete');
+                        }
+                    })
+                    .catch(err => {
+                        // If 404, exam is already no longer active
+                        if (err?.response?.status === 404) {
+                            submittingRef.current = true;
+                            setExamFinished(true);
+                            navigate('/student/submission-complete');
+                        } else {
+                            console.error('Failed to register tab switch:', err);
+                        }
+                    });
             }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [submission, exam, tabSwitchCount, handleSubmit]);
+    }, [submission, exam, tabSwitchCount, navigate, examFinished]);
 
     // --- Mouse Leave Window Detection ---
     useEffect(() => {
         const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
-                if (submission && exam) {
-                    registerViolation(submission.id, 'MOUSE_LEFT').catch(err =>
-                        console.error('Failed to register mouse leave:', err)
-                    );
+                if (submission && exam && !submittingRef.current && !examFinished) {
+                    registerViolation(submission.id, 'MOUSE_LEFT')
+                        .then(response => {
+                            if (response?.status === 'AUTO_SUBMITTED') {
+                                submittingRef.current = true;
+                                setExamFinished(true);
+                                navigate('/student/submission-complete');
+                            }
+                        })
+                        .catch(err => {
+                            if (err?.response?.status === 404) {
+                                submittingRef.current = true;
+                                setExamFinished(true);
+                                navigate('/student/submission-complete');
+                            }
+                        });
                 }
             }
         };
         document.addEventListener('mouseleave', handleMouseLeave);
         return () => document.removeEventListener('mouseleave', handleMouseLeave);
-    }, [submission, exam]);
+    }, [submission, exam, navigate, examFinished]);
 
     // --- UI Handlers ---
     const handleSelectOption = (questionId: string, value: string) => {

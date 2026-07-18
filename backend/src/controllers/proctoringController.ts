@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import pool from '../services/db';
 import config from '../config';
 import { analyzeImageFrame, closeExamSession } from '../services/zyntraAiService';
+import { gradeSubmission } from './studentController';
 
 // --- Helper Functions ---
 
@@ -231,21 +232,41 @@ export const registerViolation = async (req: AuthRequest, res: Response) => {
     );
 
     if (newWarnings >= MAX_WARNINGS) {
-      await client.query(
-        `
-                UPDATE exam_submissions 
-                SET status = 'submitted_auto', submitted_at = NOW(), warning_count = $1 
-                WHERE id = $2;
-            `,
-        [newWarnings, submissionId],
+      // Fetch the student's current answers so we can grade them
+      const answersResult = await client.query(
+        'SELECT answers FROM exam_submissions WHERE id = $1',
+        [submissionId],
       );
+      const savedAnswers = answersResult.rows[0]?.answers || {};
 
-      // Finalize the Zyntra AI session when auto-submitted due to limit
+      // Grade the exam with whatever answers the student has so far
+      let scorePercentage = 0;
+      let finalGrade = 'F';
       try {
-        await closeExamSession(submissionId);
+        const gradeResult = await gradeSubmission(client, submission.exam_id, savedAnswers);
+        scorePercentage = gradeResult.scorePercentage;
+        finalGrade = gradeResult.finalGrade;
+      } catch (gradeErr) {
+        console.error('[Proctoring] Failed to grade auto-submitted exam:', gradeErr);
+      }
+
+      // Finalize the Zyntra AI session
+      let proctoringReport = null;
+      try {
+        const report = await closeExamSession(submissionId);
+        if (report) proctoringReport = JSON.stringify(report);
       } catch (err: any) {
         console.error('[Zyntra] Failed to close session on auto-submit:', err.message);
       }
+
+      // Update with grade, score, and flagged status
+      await client.query(
+        `UPDATE exam_submissions 
+         SET status = 'submitted_auto', submitted_at = NOW(), warning_count = $1,
+             score_percentage = $3, grade = $4, proctoring_report = $5
+         WHERE id = $2`,
+        [newWarnings, submissionId, scorePercentage.toFixed(2), finalGrade, proctoringReport],
+      );
 
       await client.query('COMMIT');
       return res.status(200).json({ status: 'AUTO_SUBMITTED' });

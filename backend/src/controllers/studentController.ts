@@ -418,3 +418,63 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
     client.release();
   }
 };
+
+// Shared grading logic used by both manual submit and auto-submit
+export const gradeSubmission = async (
+  client: any,
+  examId: string,
+  answers: { [key: string]: string | string[] }
+): Promise<{ scorePercentage: number; finalGrade: string }> => {
+  const [examResult, questionsResult] = await Promise.all([
+    client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
+    client.query(
+      'SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1',
+      [examId],
+    ),
+  ]);
+
+  const gradingScale = examResult.rows[0]?.grading_scale;
+  let score = 0;
+  const totalQuestions = questionsResult.rows.length;
+
+  for (const q of questionsResult.rows) {
+    if (!q.encrypted_data) continue;
+    const decryptedContent: DecryptedQuestionContent = JSON.parse(decrypt(q.encrypted_data));
+    const studentAnswer = answers[q.id];
+    if (!studentAnswer) continue;
+
+    switch (decryptedContent.questionType) {
+      case 'MCQ':
+      case 'TRUE_FALSE': {
+        const correctAnswer = decryptedContent.options?.find((opt) => opt.isCorrect)?.text;
+        if (correctAnswer === studentAnswer) score++;
+        break;
+      }
+      case 'MSQ': {
+        const correctAnswers = decryptedContent.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
+        const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
+        if (correctAnswers.length === studentAnswers.length && correctAnswers.every((ans) => studentAnswers.includes(ans))) score++;
+        break;
+      }
+      case 'FILL_BLANK': {
+        if (studentAnswer.toString().toLowerCase().trim() === decryptedContent.correctAnswer?.toLowerCase().trim()) score++;
+        break;
+      }
+      case 'ESSAY':
+        break;
+    }
+  }
+
+  const scorePercentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+  let finalGrade = 'F';
+  if (gradingScale) {
+    const sortedGrades = Object.entries(gradingScale).sort((a, b) => Number(b[1]) - Number(a[1]));
+    for (const [grade, minScore] of sortedGrades) {
+      if (scorePercentage >= Number(minScore)) {
+        finalGrade = grade;
+        break;
+      }
+    }
+  }
+  return { scorePercentage, finalGrade };
+};
