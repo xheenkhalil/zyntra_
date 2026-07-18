@@ -53,7 +53,7 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
     const exams = result.rows.map((row) => ({
       ...row,
       total_questions: parseInt(row.total_questions || '0'),
-      question_types: row.question_types || [],
+      question_types: (row.question_types || []).filter((t: string | null) => t !== null),
     }));
 
     res.status(200).json(exams);

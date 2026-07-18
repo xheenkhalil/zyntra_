@@ -92,9 +92,9 @@ const StudentDashboard: React.FC = () => {
                                         Question Types
                                     </Typography>
                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                        {exam.question_types.length > 0 ? (
-                                            exam.question_types.map((type, idx) => (
-                                                <Chip key={idx} label={type.replace('_', ' ')} size="small" sx={{ bgcolor: 'rgba(17, 26, 80, 0.1)', color: '#111A50', fontWeight: 600, borderRadius: '6px' }} />
+                                        {exam.question_types.filter(Boolean).length > 0 ? (
+                                            exam.question_types.filter(Boolean).map((type, idx) => (
+                                                <Chip key={idx} label={String(type).replace('_', ' ')} size="small" sx={{ bgcolor: 'rgba(17, 26, 80, 0.1)', color: '#111A50', fontWeight: 600, borderRadius: '6px' }} />
                                             ))
                                         ) : (
                                             <Typography variant="body2" color="text.secondary">N/A</Typography>
