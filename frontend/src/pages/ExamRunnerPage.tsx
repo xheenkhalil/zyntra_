@@ -185,7 +185,7 @@ const ExamRunnerPage: React.FC = () => {
                 console.error('Failed to save progress:', error);
             }
         }
-    }, 15000);
+    }, (examFinished || submittingRef.current) ? null : 15000);
 
     // --- Final Submission ---
     const handleSubmit = useMemo(() => async () => {
@@ -222,7 +222,7 @@ const ExamRunnerPage: React.FC = () => {
 
     // --- Proctoring: Continuous Capture ---
     const captureAndAnalyzeImage = async () => {
-        if (!webcamVideoRef.current || !submission) return;
+        if (!webcamVideoRef.current || !submission || examFinished || submittingRef.current) return;
 
         try {
             const video = webcamVideoRef.current;
@@ -244,7 +244,7 @@ const ExamRunnerPage: React.FC = () => {
     };
 
     useEffect(() => {
-        if (!submission || !webcamVideoRef.current) return;
+        if (!submission || !webcamVideoRef.current || examFinished || submittingRef.current) return;
 
         // For non-proctored exams, mark webcam as ready immediately
         if (!examInfo?.is_proctored) {
@@ -276,7 +276,7 @@ const ExamRunnerPage: React.FC = () => {
                 tracks.forEach(track => track.stop());
             }
         };
-    }, [submission, proctoringInterval, examInfo?.is_proctored]);
+    }, [submission, proctoringInterval, examInfo?.is_proctored, examFinished]);
 
     // --- Tab Switching Detection ---
     useEffect(() => {
