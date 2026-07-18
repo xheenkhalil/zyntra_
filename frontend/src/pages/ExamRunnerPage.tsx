@@ -59,6 +59,8 @@ const ExamRunnerPage: React.FC = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [webcamReady, setWebcamReady] = useState(false);
+    const submittingRef = useRef(false);
 
     // Tab switching detection
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -95,12 +97,15 @@ const ExamRunnerPage: React.FC = () => {
     // --- 2. Start Exam (After Instructions & Enrollment) ---
     useEffect(() => {
         // Only start if:
-        // 1. We have examId
-        // 2. Instructions are acknowledged (or don't exist)
-        // 3. User is enrolled
+        // 1. We have examId and examInfo
+        // 2. User is enrolled (only required for proctored exams)
+        // 3. Instructions are acknowledged (or don't exist)
         // 4. We haven't started yet (!exam)
 
-        if (!examId || !isEnrolled || !examInfo) return;
+        if (!examId || !examInfo) return;
+
+        // For proctored exams, wait for enrollment
+        if (examInfo.is_proctored && !isEnrolled) return;
 
         // If instructions exist but not acknowledged, wait.
         if (examInfo.instructions && !instructionsAcknowledged) return;
@@ -141,13 +146,16 @@ const ExamRunnerPage: React.FC = () => {
     }, [examId, isEnrolled, instructionsAcknowledged, examInfo, exam]);
 
     // --- Timer Logic ---
+    // Timer only starts counting down once the proctoring webcam is ready
+    // (or immediately for non-proctored exams)
     useEffect(() => {
         if (timeLeft === null || timeLeft <= 0) return;
+        if (examInfo?.is_proctored && !webcamReady) return;
         const timerId = setInterval(() => {
             setTimeLeft(prevTime => (prevTime ? prevTime - 1 : 0));
         }, 1000);
         return () => clearInterval(timerId);
-    }, [timeLeft]);
+    }, [timeLeft, webcamReady, examInfo?.is_proctored]);
 
     // --- Autosave Logic ---
     const useInterval = (callback: () => void, delay: number | null) => {
@@ -180,12 +188,14 @@ const ExamRunnerPage: React.FC = () => {
 
     // --- Final Submission ---
     const handleSubmit = useMemo(() => async () => {
-        if (!submission) return;
+        if (!submission || submittingRef.current) return;
+        submittingRef.current = true;
         try {
             // @ts-ignore
             await submitExam(submission.id, answers);
             navigate('/student/submission-complete');
         } catch (err: unknown) {
+            submittingRef.current = false; // Allow retry on genuine error
             type ErrorWithResponse = { response?: { data?: { message?: string } } };
             if (err && typeof err === 'object' && 'response' in err && (err as ErrorWithResponse).response?.data?.message) {
                 setError((err as ErrorWithResponse).response!.data!.message!);
@@ -227,17 +237,28 @@ const ExamRunnerPage: React.FC = () => {
     useEffect(() => {
         if (!submission || !webcamVideoRef.current) return;
 
+        // For non-proctored exams, mark webcam as ready immediately
+        if (!examInfo?.is_proctored) {
+            setWebcamReady(true);
+            return;
+        }
+
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 if (webcamVideoRef.current) {
                     webcamVideoRef.current.srcObject = stream;
                     webcamVideoRef.current.play();
                 }
-            })
-            .catch(err => console.error('Failed to access webcam:', err));
+                setWebcamReady(true);
 
-        captureAndAnalyzeImage();
-        proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, proctoringInterval * 1000);
+                // Only start proctoring captures after webcam stream is active
+                captureAndAnalyzeImage();
+                proctoringIntervalRef.current = setInterval(captureAndAnalyzeImage, proctoringInterval * 1000);
+            })
+            .catch(err => {
+                console.error('Failed to access webcam:', err);
+                setWebcamReady(true); // Still allow exam to proceed
+            });
 
         return () => {
             if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
@@ -246,7 +267,7 @@ const ExamRunnerPage: React.FC = () => {
                 tracks.forEach(track => track.stop());
             }
         };
-    }, [submission, proctoringInterval]);
+    }, [submission, proctoringInterval, examInfo?.is_proctored]);
 
     // --- Tab Switching Detection ---
     useEffect(() => {
@@ -262,7 +283,8 @@ const ExamRunnerPage: React.FC = () => {
                     console.error('Failed to register tab switch:', err)
                 );
 
-                if (newCount >= 3) {
+                if (newCount >= 3 && !submittingRef.current) {
+                    submittingRef.current = true; // Lock immediately to prevent duplicate triggers
                     setTimeout(() => handleSubmit(), 2000);
                 }
             }
@@ -345,25 +367,21 @@ const ExamRunnerPage: React.FC = () => {
     if (loading && !exam) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
     if (error) return <Alert severity="error" sx={{ mt: 4, mx: 'auto', maxWidth: 600 }}>{error}</Alert>;
 
-    // 2. Instructions (First Step)
-    if (examInfo?.instructions && !instructionsAcknowledged) {
-        return (
-            <>
-                {/* Keep webcam hidden but present if we want to start it early, but here we don't need it yet until capture step */}
-                {/* Actually, user said "render instructions before capturing". So no capture yet. */}
-                <ExamInstructionsDialog
-                    open={true}
-                    instructions={examInfo.instructions}
-                    examTitle={examInfo.title}
-                    onContinue={() => setInstructionsAcknowledged(true)}
-                />
-            </>
-        );
+    // 2. Enrollment / Capture (First Step — webcam permission happens here)
+    if (examInfo?.is_proctored && isEnrolled === false) {
+        return <ProctoringEnrollment onComplete={() => setIsEnrolled(true)} />;
     }
 
-    // 3. Enrollment / Capture (Second Step)
-    if (isEnrolled === false) {
-        return <ProctoringEnrollment onComplete={() => setIsEnrolled(true)} />;
+    // 3. Instructions (Second Step — timer starts only after "Continue to Exam")
+    if (examInfo?.instructions && !instructionsAcknowledged) {
+        return (
+            <ExamInstructionsDialog
+                open={true}
+                instructions={examInfo.instructions}
+                examTitle={examInfo.title}
+                onContinue={() => setInstructionsAcknowledged(true)}
+            />
+        );
     }
 
     // 4. Exam UI (Third Step)
