@@ -14,7 +14,7 @@ async function generateWithFallback(systemPrompt: string, userPrompt: string) {
     'gemini-2.5-flash',
     'gemini-flash-latest',
     'gemini-3.5-flash',
-    'gemini-2.0-flash'
+    'gemini-2.0-flash',
   ];
   let lastError: any;
 
@@ -32,12 +32,16 @@ async function generateWithFallback(systemPrompt: string, userPrompt: string) {
       let content = response.response.text();
       if (!content) throw new Error('AI returned an empty response.');
 
-      content = content.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+      content = content
+        .replace(/^```json\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
 
       const result = JSON.parse(content);
       const questions = result.questions || result;
 
-      if (!Array.isArray(questions)) throw new Error('AI did not return a valid array of questions.');
+      if (!Array.isArray(questions))
+        throw new Error('AI did not return a valid array of questions.');
 
       return questions;
     } catch (error: any) {
@@ -59,7 +63,10 @@ function buildSystemPrompt(requestedTypes: string[]): string {
     ESSAY: `For ESSAY: The object must have "type": "ESSAY" and "questionText": string. Do NOT include "options" or "correctAnswer". Essay questions are open-ended and graded manually.`,
   };
 
-  const schemaInstructions = requestedTypes.map(t => typeSchemas[t]).filter(Boolean).join('\n');
+  const schemaInstructions = requestedTypes
+    .map((t) => typeSchemas[t])
+    .filter(Boolean)
+    .join('\n');
 
   return `You are an expert quiz generation assistant. Your task is to generate a list of questions on a given topic.
 You MUST respond with ONLY a valid JSON object containing a single key "questions" which is an array of question objects.
@@ -74,7 +81,11 @@ IMPORTANT: Follow the exact schema for each type. Do not add extra fields.`;
 }
 
 // Build the user prompt with per-type counts
-function buildUserPrompt(topic: string, difficulty: string, questionTypes: Record<string, number>): string {
+function buildUserPrompt(
+  topic: string,
+  difficulty: string,
+  questionTypes: Record<string, number>,
+): string {
   const parts = Object.entries(questionTypes)
     .map(([type, count]) => `${count} ${type}`)
     .join(', ');
@@ -107,12 +118,20 @@ async function saveQuestionToDb(examId: string, q: any) {
   await pool.query(
     `INSERT INTO questions (exam_id, question_text, options, question_type, encrypted_data)
      VALUES ($1, $2, $3, $4, $5)`,
-    [examId, q.questionText, JSON.stringify(finalOptions), type, encryptedData]
+    [examId, q.questionText, JSON.stringify(finalOptions), type, encryptedData],
   );
 }
 
 export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
-  const { topic, difficulty = 'Medium', count, numQuestions, numOptions = 4, examId, questionTypes } = req.body;
+  const {
+    topic,
+    difficulty = 'Medium',
+    count,
+    numQuestions,
+    numOptions = 4,
+    examId,
+    questionTypes,
+  } = req.body;
 
   if (!topic) {
     return res.status(400).json({ message: 'Topic is required.' });
@@ -143,7 +162,12 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
     res.status(200).json(questions);
   } catch (error: any) {
     console.error('Error generating AI questions:', error);
-    res.status(500).json({ message: 'Failed to generate questions from AI.', error: error?.message || String(error) });
+    res
+      .status(500)
+      .json({
+        message: 'Failed to generate questions from AI.',
+        error: error?.message || String(error),
+      });
   }
 };
 
@@ -180,7 +204,11 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
 
     // Build type breakdown
     let typeBreakdown: Record<string, number>;
-    if (questionTypes && typeof questionTypes === 'object' && Object.keys(questionTypes).length > 0) {
+    if (
+      questionTypes &&
+      typeof questionTypes === 'object' &&
+      Object.keys(questionTypes).length > 0
+    ) {
       typeBreakdown = questionTypes;
     } else {
       const targetCount = count || numQuestions || 5;
@@ -206,6 +234,11 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     res.status(200).json(questions);
   } catch (error: any) {
     console.error('Error generating from document:', error);
-    res.status(500).json({ message: 'Failed to generate questions from document.', error: error?.message || String(error) });
+    res
+      .status(500)
+      .json({
+        message: 'Failed to generate questions from document.',
+        error: error?.message || String(error),
+      });
   }
 };

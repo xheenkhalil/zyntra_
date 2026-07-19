@@ -240,7 +240,14 @@ export const addQuestionToExam = async (req: AuthRequest, res: Response) => {
 // ---------------------------------------------------------
 export const updateExamSettings = async (req: AuthRequest, res: Response) => {
   const { examId } = req.params;
-  const { status, grading_scale, duration_minutes, instructions, is_proctored, proctoring_interval } = req.body;
+  const {
+    status,
+    grading_scale,
+    duration_minutes,
+    instructions,
+    is_proctored,
+    proctoring_interval,
+  } = req.body;
   const courseAdminId = req.user?.userId;
 
   if (

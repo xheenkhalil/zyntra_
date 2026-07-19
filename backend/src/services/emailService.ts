@@ -20,7 +20,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'accept': 'application/json',
+        accept: 'application/json',
         'api-key': BREVO_API_KEY,
         'content-type': 'application/json',
       },
@@ -109,7 +109,7 @@ export const sendAdminInviteEmail = async (
   inviteLink: string,
   organizationName: string = 'your organization',
 ) => {
-  const subject = 'You\'re Invited to ZYNTRA — Set Up Your Account';
+  const subject = "You're Invited to ZYNTRA — Set Up Your Account";
   const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <!-- Header -->
@@ -165,13 +165,9 @@ export const sendAdminInviteEmail = async (
 /**
  * Send a welcome email after account setup, detailing role capabilities.
  */
-export const sendWelcomeEmail = async (
-  email: string,
-  fullName: string,
-  role: string,
-) => {
+export const sendWelcomeEmail = async (email: string, fullName: string, role: string) => {
   const loginUrl = `${FRONTEND_URL}/login`;
-  
+
   let roleTitle = 'Administrator';
   let roleCapabilities = '';
 

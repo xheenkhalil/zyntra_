@@ -204,11 +204,9 @@ export const deleteGuestQuiz = async (req: AuthRequest, res: Response) => {
 
     await client.query('COMMIT');
 
-    res
-      .status(200)
-      .json({
-        message: 'Guest quiz and all associated questions/submissions deleted successfully.',
-      });
+    res.status(200).json({
+      message: 'Guest quiz and all associated questions/submissions deleted successfully.',
+    });
   } catch (error: any) {
     await client.query('ROLLBACK');
     console.error('Error deleting guest quiz:', error);

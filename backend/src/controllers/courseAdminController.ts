@@ -84,20 +84,29 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
     );
 
     // Get Organization Name
-    const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+    const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [
+      organizationId,
+    ]);
     const organizationName = orgResult.rows[0]?.name || 'your institution';
 
     // Automatically send student credentials email
     try {
       if (emailQueue) {
-        await emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email, fullName, studentCode, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        await emailQueue.add(
+          'sendStudentEmail',
+          { type: 'sendStudentEmail', payload: { email, fullName, studentCode, organizationName } },
+          { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
+        );
         console.log(`[CourseAdmin] Queued student email for ${email}`);
       } else {
         await sendStudentCredentials(email, fullName, studentCode, organizationName);
         console.log(`[CourseAdmin] Student credentials email sent synchronously to ${email}`);
       }
     } catch (emailErr) {
-      console.error('[CourseAdmin] Failed to send/queue student email, but student was created:', emailErr);
+      console.error(
+        '[CourseAdmin] Failed to send/queue student email, but student was created:',
+        emailErr,
+      );
     }
 
     res.status(201).json({
@@ -119,7 +128,9 @@ export const bulkRegisterStudents = async (req: AuthRequest, res: Response) => {
   const sendEmails = req.body.sendEmails === 'true' || req.body.sendEmails === true;
 
   // Get Organization Name
-  const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+  const orgResult = await pool.query('SELECT name FROM organizations WHERE id = $1', [
+    organizationId,
+  ]);
   const organizationName = orgResult.rows[0]?.name || 'your institution';
 
   if (!req.file || req.file.mimetype !== 'text/csv') {
@@ -188,10 +199,27 @@ export const bulkRegisterStudents = async (req: AuthRequest, res: Response) => {
           // Send email if requested
           if (sendEmails) {
             if (emailQueue) {
-               await emailQueue.add('sendStudentEmail', { type: 'sendStudentEmail', payload: { email: student.email, fullName: student.full_name, studentCode, organizationName } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+              await emailQueue.add(
+                'sendStudentEmail',
+                {
+                  type: 'sendStudentEmail',
+                  payload: {
+                    email: student.email,
+                    fullName: student.full_name,
+                    studentCode,
+                    organizationName,
+                  },
+                },
+                { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
+              );
             } else {
-               // Fallback: fire and forget if no Redis
-               sendStudentCredentials(student.email, student.full_name, studentCode, organizationName).catch(console.error);
+              // Fallback: fire and forget if no Redis
+              sendStudentCredentials(
+                student.email,
+                student.full_name,
+                studentCode,
+                organizationName,
+              ).catch(console.error);
             }
           }
         } else {

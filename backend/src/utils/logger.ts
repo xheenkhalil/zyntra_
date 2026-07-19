@@ -14,7 +14,7 @@ const logger = winston.createLogger({
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     errors({ stack: true }), // Enable stack trace logging
-    logFormat
+    logFormat,
   ),
   transports: [
     // Console transport

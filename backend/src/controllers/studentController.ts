@@ -32,7 +32,9 @@ export const getAvailableExams = async (req: AuthRequest, res: Response) => {
   try {
     // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
     if (!organizationId && studentId) {
-      const userRes = await pool.query('SELECT organization_id FROM users WHERE id = $1', [studentId]);
+      const userRes = await pool.query('SELECT organization_id FROM users WHERE id = $1', [
+        studentId,
+      ]);
       if (userRes.rows.length > 0) {
         organizationId = userRes.rows[0].organization_id;
       }
@@ -115,12 +117,10 @@ export const startOrResumeExam = async (req: AuthRequest, res: Response) => {
           [studentId],
         );
         if (proctorCheck.rows.length === 0) {
-          return res
-            .status(403)
-            .json({
-              message:
-                'Proctoring required: You must complete face enrollment before starting this exam.',
-            });
+          return res.status(403).json({
+            message:
+              'Proctoring required: You must complete face enrollment before starting this exam.',
+          });
         }
       } catch (err: any) {
         if (err.code === '42P01') {
@@ -300,11 +300,9 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
     const submissionResult = await client.query(submissionQuery, [submissionId, studentId]);
 
     if (submissionResult.rows.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message: 'In-progress submission not found. It may have been completed or expired.',
-        });
+      return res.status(404).json({
+        message: 'In-progress submission not found. It may have been completed or expired.',
+      });
     }
 
     const examId = submissionResult.rows[0].exam_id;
@@ -431,14 +429,13 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
 export const gradeSubmission = async (
   client: any,
   examId: string,
-  answers: { [key: string]: string | string[] }
+  answers: { [key: string]: string | string[] },
 ): Promise<{ scorePercentage: number; finalGrade: string }> => {
   const [examResult, questionsResult] = await Promise.all([
     client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
-    client.query(
-      'SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1',
-      [examId],
-    ),
+    client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [
+      examId,
+    ]),
   ]);
 
   const gradingScale = examResult.rows[0]?.grading_scale;
@@ -459,13 +456,22 @@ export const gradeSubmission = async (
         break;
       }
       case 'MSQ': {
-        const correctAnswers = decryptedContent.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
+        const correctAnswers =
+          decryptedContent.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
         const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
-        if (correctAnswers.length === studentAnswers.length && correctAnswers.every((ans) => studentAnswers.includes(ans))) score++;
+        if (
+          correctAnswers.length === studentAnswers.length &&
+          correctAnswers.every((ans) => studentAnswers.includes(ans))
+        )
+          score++;
         break;
       }
       case 'FILL_BLANK': {
-        if (studentAnswer.toString().toLowerCase().trim() === decryptedContent.correctAnswer?.toLowerCase().trim()) score++;
+        if (
+          studentAnswer.toString().toLowerCase().trim() ===
+          decryptedContent.correctAnswer?.toLowerCase().trim()
+        )
+          score++;
         break;
       }
       case 'ESSAY':

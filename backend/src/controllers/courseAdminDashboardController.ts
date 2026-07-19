@@ -51,48 +51,52 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
     }
 
     // Use Promise.all for parallel execution
-    const [studentsResult, examsResult, submissionsResult, flaggedResult, auditLogsResult, examsListResult] =
-      await Promise.all([
-        // 1. Total Students (Global)
-        pool.query(
-          'SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2',
-          [organizationId, 'student'],
-        ),
+    const [
+      studentsResult,
+      examsResult,
+      submissionsResult,
+      flaggedResult,
+      auditLogsResult,
+      examsListResult,
+    ] = await Promise.all([
+      // 1. Total Students (Global)
+      pool.query('SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2', [
+        organizationId,
+        'student',
+      ]),
 
-        // 2. Active Exams (Global)
-        pool.query(
-          'SELECT COUNT(id) as count FROM exams WHERE organization_id = $1 AND status = $2',
-          [organizationId, 'live'],
-        ),
+      // 2. Active Exams (Global)
+      pool.query(
+        'SELECT COUNT(id) as count FROM exams WHERE organization_id = $1 AND status = $2',
+        [organizationId, 'live'],
+      ),
 
-        // 3. Submissions Stats (Filtered)
-        pool.query(submissionsQuery, submissionsParams),
+      // 3. Submissions Stats (Filtered)
+      pool.query(submissionsQuery, submissionsParams),
 
-        // 4. Flagged Submissions (Filtered)
-        pool.query(flaggedQuery, flaggedParams),
+      // 4. Flagged Submissions (Filtered)
+      pool.query(flaggedQuery, flaggedParams),
 
-        // 5. Recent Activity (Audit Logs) - Global
-        pool
-          .query(
-            `
+      // 5. Recent Activity (Audit Logs) - Global
+      pool
+        .query(
+          `
                 SELECT action, details, created_at 
                 FROM audit_logs 
                 WHERE organization_id = $1 
                 ORDER BY created_at DESC 
                 LIMIT 5
             `,
-            [organizationId],
-          )
-          .catch((err) => {
-            console.error('❌❌❌ AUDIT LOGS QUERY FAILED:', err.message);
-            return { rows: [] }; // Return empty to prevent 500 crash
-          }),
+          [organizationId],
+        )
+        .catch((err) => {
+          console.error('❌❌❌ AUDIT LOGS QUERY FAILED:', err.message);
+          return { rows: [] }; // Return empty to prevent 500 crash
+        }),
 
-        // 6. All Exams List for Filter (changed from 'live' to all so teacher can filter by ended/draft too)
-        pool.query('SELECT id, title FROM exams WHERE organization_id = $1', [
-          organizationId,
-        ]),
-      ]);
+      // 6. All Exams List for Filter (changed from 'live' to all so teacher can filter by ended/draft too)
+      pool.query('SELECT id, title FROM exams WHERE organization_id = $1', [organizationId]),
+    ]);
 
     const total_students = parseInt(studentsResult.rows[0]?.count ?? '0', 10);
     const active_exams = parseInt(examsResult.rows[0]?.count ?? '0', 10);
@@ -120,16 +124,24 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
     // Dynamic AI Recommendations
     const recommendations: string[] = [];
     if (avg_score < 60 && total_submissions > 0) {
-      recommendations.push(`Average student score is low (${Math.round(avg_score)}%). Consider reviewing key topics or adjusting exam difficulty.`);
+      recommendations.push(
+        `Average student score is low (${Math.round(avg_score)}%). Consider reviewing key topics or adjusting exam difficulty.`,
+      );
     }
     if (pass_rate < 50 && total_submissions > 0) {
-      recommendations.push(`More than half of the students failed to pass the exams (${Math.round(pass_rate)}%). Review question clarity or syllabus coverage.`);
+      recommendations.push(
+        `More than half of the students failed to pass the exams (${Math.round(pass_rate)}%). Review question clarity or syllabus coverage.`,
+      );
     }
     if (participation < 70) {
-      recommendations.push(`Exam completion rate is currently at ${Math.round(participation)}%. Send a reminder to the remaining students to finish their attempts.`);
+      recommendations.push(
+        `Exam completion rate is currently at ${Math.round(participation)}%. Send a reminder to the remaining students to finish their attempts.`,
+      );
     }
     if (alertRate > 15) {
-      recommendations.push(`High rate of proctoring flags detected (${Math.round(alertRate)}%). Review flagged submissions in the proctoring dashboard.`);
+      recommendations.push(
+        `High rate of proctoring flags detected (${Math.round(alertRate)}%). Review flagged submissions in the proctoring dashboard.`,
+      );
     }
 
     // Query struggling students count (<50%) and excellent students count (>=80%)
@@ -156,14 +168,20 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
     const excellent_count = parseInt(strugglingResult.rows[0]?.excellent ?? '0', 10);
 
     if (struggling_count > 0) {
-      recommendations.push(`${struggling_count} students are currently struggling (average score < 50%). Consider offering remediation or extra office hours.`);
+      recommendations.push(
+        `${struggling_count} students are currently struggling (average score < 50%). Consider offering remediation or extra office hours.`,
+      );
     }
     if (excellent_count > 0) {
-      recommendations.push(`Great job! ${excellent_count} students have achieved excellent performance (average score >= 80%).`);
+      recommendations.push(
+        `Great job! ${excellent_count} students have achieved excellent performance (average score >= 80%).`,
+      );
     }
     if (recommendations.length === 0) {
-      recommendations.push("All systems clear. Student performance is stable and average pass rates are healthy.");
-      recommendations.push("Proctoring integrity flags are within the normal range.");
+      recommendations.push(
+        'All systems clear. Student performance is stable and average pass rates are healthy.',
+      );
+      recommendations.push('Proctoring integrity flags are within the normal range.');
     }
 
     const stats = {
@@ -291,7 +309,7 @@ export const getExamsDetailedList = async (req: AuthRequest): Promise<any[]> => 
   // First get total students count for participation rates
   const studentsCountRes = await pool.query(
     'SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2',
-    [organizationId, 'student']
+    [organizationId, 'student'],
   );
   const totalStudents = parseInt(studentsCountRes.rows[0]?.count ?? '0', 10);
 
@@ -322,18 +340,22 @@ export const getExamsDetailedList = async (req: AuthRequest): Promise<any[]> => 
     const submissionsCount = row.submissions_count;
     const passedCount = row.passed_count;
     const passRate = submissionsCount > 0 ? Math.round((passedCount / submissionsCount) * 100) : 0;
-    const completionRate = totalStudents > 0 ? Math.round((submissionsCount / totalStudents) * 100) : 0;
+    const completionRate =
+      totalStudents > 0 ? Math.round((submissionsCount / totalStudents) * 100) : 0;
 
     return {
       ...row,
       passRate: `${passRate}%`,
-      completionRate: `${completionRate}%`
+      completionRate: `${completionRate}%`,
     };
   });
 };
 
 // ================== 5. GET STUDENTS DETAILED LIST (NEW) ==================
-export const getStudentsDetailedList = async (req: AuthRequest, examId?: string): Promise<any[]> => {
+export const getStudentsDetailedList = async (
+  req: AuthRequest,
+  examId?: string,
+): Promise<any[]> => {
   const organizationId = req.user?.organizationId;
   if (!organizationId) throw new Error('Organization ID missing.');
 
@@ -386,7 +408,7 @@ export const getStudentsDetailedList = async (req: AuthRequest, examId?: string)
     return {
       ...row,
       performanceStatus,
-      riskStatus
+      riskStatus,
     };
   });
 };
@@ -416,7 +438,7 @@ export const getQuestionDetailedList = async (req: AuthRequest, examId: string):
 
   const [questionsRes, submissionsRes] = await Promise.all([
     pool.query(questionsQuery, [examId]),
-    pool.query(submissionsQuery, [examId])
+    pool.query(submissionsQuery, [examId]),
   ]);
 
   const questions = questionsRes.rows;
@@ -438,7 +460,8 @@ export const getQuestionDetailedList = async (req: AuthRequest, examId: string):
 
         // Check answers across all submissions
         for (const sub of submissions) {
-          const studentAnswersObj = typeof sub.answers === 'string' ? JSON.parse(sub.answers) : sub.answers;
+          const studentAnswersObj =
+            typeof sub.answers === 'string' ? JSON.parse(sub.answers) : sub.answers;
           const studentAns = studentAnswersObj ? studentAnswersObj[q.id] : undefined;
 
           if (studentAns !== undefined && studentAns !== null) {
@@ -454,17 +477,24 @@ export const getQuestionDetailedList = async (req: AuthRequest, examId: string):
                 break;
               }
               case 'MSQ': {
-                const correctOpts = decrypted.options?.filter((opt: any) => opt.isCorrect).map((opt: any) => opt.text) || [];
+                const correctOpts =
+                  decrypted.options
+                    ?.filter((opt: any) => opt.isCorrect)
+                    .map((opt: any) => opt.text) || [];
                 const studentOpts = Array.isArray(studentAns) ? studentAns : [studentAns];
-                const isCorrect = correctOpts.length === studentOpts.length && 
-                                  correctOpts.every((ans: string) => studentOpts.includes(ans));
+                const isCorrect =
+                  correctOpts.length === studentOpts.length &&
+                  correctOpts.every((ans: string) => studentOpts.includes(ans));
                 if (isCorrect) {
                   correctCount++;
                 }
                 break;
               }
               case 'FILL_BLANK': {
-                if (decrypted.correctAnswer && studentAns.toLowerCase().trim() === decrypted.correctAnswer.toLowerCase().trim()) {
+                if (
+                  decrypted.correctAnswer &&
+                  studentAns.toLowerCase().trim() === decrypted.correctAnswer.toLowerCase().trim()
+                ) {
                   correctCount++;
                 }
                 break;
@@ -499,14 +529,14 @@ export const getQuestionDetailedList = async (req: AuthRequest, examId: string):
       answeredCount,
       successRate,
       difficulty,
-      options
+      options,
     };
   });
 
   return questionAnalytics;
 };
 
-// ===================================================== 
+// =====================================================
 // 7. BATCH ENDPOINT - WITH REAL DATA
 // =====================================================
 export const getTeacherDashboardBatch = async (req: AuthRequest, res: Response) => {
@@ -529,7 +559,7 @@ export const getTeacherDashboardBatch = async (req: AuthRequest, res: Response) 
       distribution: resultsChart,
       examsDetailedList,
       studentsDetailedList,
-      questionDetailedList
+      questionDetailedList,
     });
   } catch (error: any) {
     console.error('❌❌❌ BATCH ERROR:', error.message);

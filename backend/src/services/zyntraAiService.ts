@@ -46,7 +46,10 @@ export const startExamSession = async (examSessionId: string, studentEmail: stri
     console.log(`[Zyntra] Session initialized successfully: ${examSessionId}`);
     return response.data;
   } catch (error: any) {
-    console.error('[Zyntra] Failed to initialize proctoring session:', error.response?.data || error.message);
+    console.error(
+      '[Zyntra] Failed to initialize proctoring session:',
+      error.response?.data || error.message,
+    );
     // Fail-open strategy: log and return null (resilient)
     return null;
   }
@@ -58,12 +61,12 @@ export const startExamSession = async (examSessionId: string, studentEmail: stri
 export const analyzeImageFrame = async (
   examSessionId: string,
   studentEmail: string,
-  imageBase64: string
+  imageBase64: string,
 ): Promise<ZyntraAnalyzeResponse | null> => {
   try {
     // Ensure image has the data URI scheme prefix
-    const fullImageBase64 = imageBase64.startsWith('data:') 
-      ? imageBase64 
+    const fullImageBase64 = imageBase64.startsWith('data:')
+      ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
     const response = await zyntraClient.post('/analyze', {
@@ -73,7 +76,10 @@ export const analyzeImageFrame = async (
     });
     return response.data;
   } catch (error: any) {
-    console.error('[Zyntra] Failed to analyze proctoring snapshot:', error.response?.data || error.message);
+    console.error(
+      '[Zyntra] Failed to analyze proctoring snapshot:',
+      error.response?.data || error.message,
+    );
     // Fail-open strategy
     return null;
   }
@@ -82,13 +88,18 @@ export const analyzeImageFrame = async (
 /**
  * Finalizes and closes the proctored exam session on Zyntra AI, compiling the audit logs
  */
-export const closeExamSession = async (examSessionId: string): Promise<ZyntraEndResponse | null> => {
+export const closeExamSession = async (
+  examSessionId: string,
+): Promise<ZyntraEndResponse | null> => {
   try {
     const response = await zyntraClient.post(`/session/end/${examSessionId}`);
     console.log(`[Zyntra] Session ended successfully: ${examSessionId}`);
     return response.data;
   } catch (error: any) {
-    console.error('[Zyntra] Failed to end proctoring session:', error.response?.data || error.message);
+    console.error(
+      '[Zyntra] Failed to end proctoring session:',
+      error.response?.data || error.message,
+    );
     return null;
   }
 };

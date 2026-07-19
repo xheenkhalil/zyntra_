@@ -114,9 +114,10 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
     const analysis = await analyzeImageFrame(submissionId, studentEmail, base64Image);
 
     // Step 4: Construct snapshot URL from Zyntra AI's hosted storage if available
-    const snapshotUrl = (analysis && analysis.snapshot_id)
-      ? `${config.ZYNTRA_API_URL}/static/snapshots/${analysis.snapshot_id}.jpg`
-      : null;
+    const snapshotUrl =
+      analysis && analysis.snapshot_id
+        ? `${config.ZYNTRA_API_URL}/static/snapshots/${analysis.snapshot_id}.jpg`
+        : null;
 
     const violationsToRegister: { type: string; reason: string }[] = [];
 
@@ -125,25 +126,40 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
       if (analysis.face_match === false) {
         violationsToRegister.push({
           type: 'SUBJECT_MISMATCH',
-          reason: `Face mismatch. Score similarity: ${(analysis.face_score * 100).toFixed(1)}%`
+          reason: `Face mismatch. Score similarity: ${(analysis.face_score * 100).toFixed(1)}%`,
         });
       }
 
       if (analysis.violations && Array.isArray(analysis.violations)) {
         for (const violation of analysis.violations) {
           if (violation === 'LOOKING_AWAY') {
-            violationsToRegister.push({ type: 'LOOKING_AWAY', reason: 'Gaze deviation (looking away).' });
+            violationsToRegister.push({
+              type: 'LOOKING_AWAY',
+              reason: 'Gaze deviation (looking away).',
+            });
           } else if (violation === 'PHONE_DETECTED' || analysis.phone_detected) {
-            violationsToRegister.push({ type: 'PHONE_DETECTED', reason: 'Mobile device detected in frame.' });
+            violationsToRegister.push({
+              type: 'PHONE_DETECTED',
+              reason: 'Mobile device detected in frame.',
+            });
           } else if (violation === 'MULTIPLE_PEOPLE' || analysis.person_count > 1) {
-            violationsToRegister.push({ type: 'MULTIPLE_PEOPLE', reason: `Multiple people detected (${analysis.person_count} found).` });
+            violationsToRegister.push({
+              type: 'MULTIPLE_PEOPLE',
+              reason: `Multiple people detected (${analysis.person_count} found).`,
+            });
           } else if (violation === 'NO_FACE_DETECTED' || analysis.person_count === 0) {
-            violationsToRegister.push({ type: 'NO_FACE_DETECTED', reason: 'No face detected in camera feed.' });
+            violationsToRegister.push({
+              type: 'NO_FACE_DETECTED',
+              reason: 'No face detected in camera feed.',
+            });
           } else if (violation === 'FACE_MISMATCH') {
             // Only add if not already captured by face_match check
-            const alreadyAdded = violationsToRegister.some(v => v.type === 'SUBJECT_MISMATCH');
+            const alreadyAdded = violationsToRegister.some((v) => v.type === 'SUBJECT_MISMATCH');
             if (!alreadyAdded) {
-              violationsToRegister.push({ type: 'SUBJECT_MISMATCH', reason: 'Identity mismatch detected.' });
+              violationsToRegister.push({
+                type: 'SUBJECT_MISMATCH',
+                reason: 'Identity mismatch detected.',
+              });
             }
           }
         }
@@ -177,7 +193,9 @@ export const analyzeTestImage = async (req: AuthRequest, res: Response) => {
     await client.query('ROLLBACK');
     console.error('Image Analysis Error:', error);
     // Fail-open: allow student to proceed even if AI analysis encounters an error
-    res.status(200).json({ status: 'VERIFIED', warning: `Analysis server error: ${error.message}` });
+    res
+      .status(200)
+      .json({ status: 'VERIFIED', warning: `Analysis server error: ${error.message}` });
   } finally {
     client.release();
   }
@@ -533,12 +551,10 @@ export const getExamProctoringBatch = async (req: AuthRequest, res: Response) =>
   } catch (error: any) {
     console.error('Error fetching proctoring dashboard data:', error);
     console.error('Stack trace:', error.stack);
-    res
-      .status(500)
-      .json({
-        message: 'Internal server error while loading dashboard data.',
-        error: error.message,
-      });
+    res.status(500).json({
+      message: 'Internal server error while loading dashboard data.',
+      error: error.message,
+    });
   }
 };
 
