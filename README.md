@@ -90,13 +90,22 @@ The frontend will be accessible at `http://localhost:5173`.
 - `/backend`: The Express server. Contains authentication, proctoring controllers, DB services, and AI integration.
 - `zyntra-ai.md` / `zyntra_pricing_model.md`: Root documentation and architecture notes regarding the AI engine.
 
-## Acknowledgments & Credits 🤝
+## Acknowledgments & AI Collaboration History 🤝
 
-This project's foundation was significantly shaped during its early phases by AI collaborators. Special thanks and credits to:
-- **Codex**: The very first builder of this project. Codex was instrumental during the initial conceptualization, foundational coding, and the early stages of development.
-- **ChatGPT**: Actively contributed alongside Codex from the planning phase straight through to the core architecture design, feature ideation, and initial construction, until the project was transitioned to its current state.
+This project was built from the ground up through a highly collaborative process with AI agents. Special recognition goes to **Codex** and **GPT-5.6 (ChatGPT)**, who served as the foundational architects and initial developers of Zyntra Exams. 
 
-These AI models laid the critical groundwork that made Zyntra Exams possible.
+### How Codex and GPT-5.6 Accelerated the Workflow
+From the very beginning of the planning phase, these AI models drastically accelerated development by:
+- **Rapid Prototyping**: Codex instantly generated boilerplate code for the React frontend and Express backend, allowing the project to bypass hours of initial setup.
+- **Complex Algorithm Generation**: Codex was instrumental in writing the foundational algorithms required for calculating dynamic grading scales and processing evaluation logic for complex question types (like MSQs and Fill-in-the-Blanks).
+- **Architectural Brainstorming**: GPT-5.6 helped outline the core, robust full-stack architecture, including mapping out how data should flow between the backend, the database, and the AI proctoring services.
+
+### Key Decisions Guided by AI
+- **Proctoring Engine Design**: GPT-5.6 and Codex were heavily involved in conceptualizing the automated proctoring mechanism. They guided the integration logic for continuous webcam monitoring and tab/mouse-leave violation tracking.
+- **Technology Stack Selection**: The decision to utilize Vite for ultra-fast frontend tooling, Material UI for a polished UI, and Redis/BullMQ for handling asynchronous tasks was cemented during initial planning discussions with ChatGPT.
+- **Database Schema Planning**: Codex provided the foundational structure for the PostgreSQL database schema, effectively establishing the relationships between organizations, courses, exams, and candidate submissions.
+
+The project was securely transitioned to its current phase only after Codex and GPT-5.6 had established a solid, working codebase. Their early contributions remain a core part of the platform's DNA.
 
 ## License
 Proprietary / Internal - All rights reserved.
