@@ -90,5 +90,13 @@ The frontend will be accessible at `http://localhost:5173`.
 - `/backend`: The Express server. Contains authentication, proctoring controllers, DB services, and AI integration.
 - `zyntra-ai.md` / `zyntra_pricing_model.md`: Root documentation and architecture notes regarding the AI engine.
 
+## Acknowledgments & Credits 🤝
+
+This project's foundation was significantly shaped during its early phases by AI collaborators. Special thanks and credits to:
+- **Codex**: The very first builder of this project. Codex was instrumental during the initial conceptualization, foundational coding, and the early stages of development.
+- **ChatGPT**: Actively contributed alongside Codex from the planning phase straight through to the core architecture design, feature ideation, and initial construction, until the project was transitioned to its current state.
+
+These AI models laid the critical groundwork that made Zyntra Exams possible.
+
 ## License
 Proprietary / Internal - All rights reserved.
