@@ -162,12 +162,10 @@ export const generateAiQuestions = async (req: AuthRequest, res: Response) => {
     res.status(200).json(questions);
   } catch (error: any) {
     console.error('Error generating AI questions:', error);
-    res
-      .status(500)
-      .json({
-        message: 'Failed to generate questions from AI.',
-        error: error?.message || String(error),
-      });
+    res.status(500).json({
+      message: 'Failed to generate questions from AI.',
+      error: error?.message || String(error),
+    });
   }
 };
 
@@ -234,11 +232,9 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     res.status(200).json(questions);
   } catch (error: any) {
     console.error('Error generating from document:', error);
-    res
-      .status(500)
-      .json({
-        message: 'Failed to generate questions from document.',
-        error: error?.message || String(error),
-      });
+    res.status(500).json({
+      message: 'Failed to generate questions from document.',
+      error: error?.message || String(error),
+    });
   }
 };

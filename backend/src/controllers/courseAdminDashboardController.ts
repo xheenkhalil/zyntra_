@@ -145,7 +145,7 @@ export const getCourseAdminStats = async (req: AuthRequest, examId?: string): Pr
     }
 
     // Query struggling students count (<50%) and excellent students count (>=80%)
-    let strugglingQuery = `
+    const strugglingQuery = `
       WITH student_avgs AS (
           SELECT es.student_id, AVG(es.score_percentage) as avg_score
           FROM exam_submissions es

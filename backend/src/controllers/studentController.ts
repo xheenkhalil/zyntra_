@@ -320,7 +320,7 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
     const isProctored = examResult.rows[0].is_proctored;
 
     let score = 0;
-    let totalQuestions = questionsResult.rows.length;
+    const totalQuestions = questionsResult.rows.length;
 
     // 3. Grade Each Question
     for (const q of questionsResult.rows) {

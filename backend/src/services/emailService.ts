@@ -168,8 +168,8 @@ export const sendAdminInviteEmail = async (
 export const sendWelcomeEmail = async (email: string, fullName: string, role: string) => {
   const loginUrl = `${FRONTEND_URL}/login`;
 
-  let roleTitle = 'Administrator';
-  let roleCapabilities = '';
+  let roleTitle: string;
+  let roleCapabilities: string;
 
   if (role === 'centraladmin') {
     roleTitle = 'Organization Administrator';

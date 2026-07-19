@@ -433,15 +433,15 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
   const offset = (pageNum - 1) * limitNum;
 
   const queryParams: any[] = [];
-  let whereClauses: string[] = [];
+  const whereClauses: string[] = [];
 
   if (role) {
-    queryParams.push(role as string);
+    queryParams.push(role);
     whereClauses.push(`u.role = $${queryParams.length}`);
   }
 
   if (organizationId) {
-    queryParams.push(organizationId as string);
+    queryParams.push(organizationId);
     whereClauses.push(`u.organization_id = $${queryParams.length}`);
   }
 
