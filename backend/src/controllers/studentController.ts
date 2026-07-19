@@ -27,9 +27,17 @@ interface QuestionFromDB {
 // fetches all exams with 'live' status for the student's organization.
 export const getAvailableExams = async (req: AuthRequest, res: Response) => {
   const studentId = req.user?.userId;
-  const organizationId = req.user?.organizationId;
+  let organizationId = req.user?.organizationId;
 
   try {
+    // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
+    if (!organizationId && studentId) {
+      const userRes = await pool.query('SELECT organization_id FROM users WHERE id = $1', [studentId]);
+      if (userRes.rows.length > 0) {
+        organizationId = userRes.rows[0].organization_id;
+      }
+    }
+
     const query = `
             SELECT 
                 e.id, 
