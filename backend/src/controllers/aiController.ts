@@ -288,6 +288,12 @@ export const generateCertificationAssessment = async (req: AuthRequest, res: Res
   const { moduleId } = req.body;
   if (!moduleId) return res.status(400).json({ message: 'moduleId is required.' });
 
+  // Validate UUID format to prevent DB errors from temporary IDs
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(moduleId)) {
+    return res.status(400).json({ message: 'Invalid module ID. Please save the certification first before generating assessments.' });
+  }
+
   try {
     // Get module and its settings
     const moduleRes = await pool.query(`SELECT * FROM certification_modules WHERE id = $1`, [moduleId]);

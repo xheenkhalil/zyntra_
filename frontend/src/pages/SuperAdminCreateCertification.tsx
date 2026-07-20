@@ -143,8 +143,8 @@ const SuperAdminCreateCertification: React.FC = () => {
   };
 
   const handleGenerateAssessment = async (moduleId: string) => {
-    if (moduleId.length < 10) {
-      alert("Please save the certification first before generating assessments.");
+    if (moduleId.length < 10 || moduleId.startsWith('ai-') || !moduleId.includes('-')) {
+      alert("Please save the certification first before generating assessments. The module must exist in the database.");
       return;
     }
     setGeneratingAi(moduleId);
