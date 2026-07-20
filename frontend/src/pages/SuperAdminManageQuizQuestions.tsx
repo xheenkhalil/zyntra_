@@ -26,6 +26,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
 import {
   getGuestQuizById,
   addGuestQuizQuestion,
@@ -145,6 +148,27 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
         updatedOptions[0].isCorrect = true;
       }
       setNewOptions(updatedOptions);
+    }
+  };
+
+  // --- AI Generation ---
+  const handleGenerateAi = async () => {
+    if (!quiz) return;
+    setSaving(true);
+    setSnackbar({ open: true, message: 'Generating 5 AI questions...' });
+    try {
+      await axios.post(`${API_URL}/superadmin/ai/guest-quiz-questions`, {
+        topic: `${quiz.category} - ${quiz.title}`,
+        count: 5,
+        quizId: quiz.id
+      }, { withCredentials: true });
+      setSnackbar({ open: true, message: 'AI Generation complete! Refreshing...' });
+      await fetchQuizAndQuestions();
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: 'Failed to generate AI questions' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -268,9 +292,22 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
         {/* --- FIX: Replaced <Grid item> with <Box> and Tailwind col-span classes --- */}
         <Box className="lg:col-span-5">
           <Paper className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 sticky top-24">
-            <Typography variant="h6" className="font-semibold text-gray-900 mb-6">
-              {formTitle}
-            </Typography>
+            <Box className="flex justify-between items-center mb-6">
+              <Typography variant="h6" className="font-semibold text-gray-900">
+                {formTitle}
+              </Typography>
+              {!editingQuestion && (
+                <Button 
+                  variant="contained" 
+                  color="secondary" 
+                  size="small"
+                  onClick={handleGenerateAi}
+                  disabled={saving || loading}
+                >
+                  Generate AI Questions
+                </Button>
+              )}
+            </Box>
 
             <Box component="form" onSubmit={handleAddUpdateQuestion}>
               <TextField

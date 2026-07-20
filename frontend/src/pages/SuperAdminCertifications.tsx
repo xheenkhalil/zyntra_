@@ -3,6 +3,8 @@ import { Typography, Box, Button, Table, TableBody, TableCell, TableContainer, T
 import { Edit, Delete, Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
 import type { Certification } from '../types/certification';
 
 const SuperAdminCertifications: React.FC = () => {
@@ -15,7 +17,7 @@ const SuperAdminCertifications: React.FC = () => {
 
   const fetchCertifications = async () => {
     try {
-      const res = await axios.get('/api/certifications', { withCredentials: true });
+      const res = await axios.get(`${API_URL}/certifications`, { withCredentials: true });
       if (Array.isArray(res.data)) {
         setCertifications(res.data);
       } else {
@@ -30,16 +32,16 @@ const SuperAdminCertifications: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this certification?')) return;
     try {
-      await axios.delete(`/api/certifications/${id}`, { withCredentials: true });
+      await axios.delete(`${API_URL}/certifications/${id}`, { withCredentials: true });
       fetchCertifications();
     } catch (error) {
-      console.error('Error deleting certification', error);
+      console.error(`Error deleting certification', error);
     }
   };
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display=`flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" fontWeight="bold">Certifications</Typography>
         <Button 
           variant="contained" 

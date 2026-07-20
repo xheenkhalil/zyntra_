@@ -3,6 +3,8 @@ import { Box, Typography, Paper, List, ListItem, ListItemText, Collapse, Button,
 import { ExpandLess, ExpandMore, CheckCircle, Menu as MenuIcon, Lock, Assignment } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
 import type { Certification, CertificationUnit } from '../types/certification';
 import ModuleAssessment from '../components/certification/ModuleAssessment';
 
@@ -33,27 +35,27 @@ const CourseViewerPage: React.FC = () => {
 
   const fetchCourseDetails = async () => {
     try {
-      const res = await axios.get(`/api/certifications/${id}`);
+      const res = await axios.get(`${API_URL}/certifications/${id}`);
       setCertification(res.data);
       if (res.data.modules?.length > 0 && res.data.modules[0].units?.length > 0) {
         setActiveUnit(res.data.modules[0].units[0]);
         setOpenModules({ [res.data.modules[0].id]: true });
       }
     } catch (error) {
-      console.error('Error fetching course', error);
+      console.error(`Error fetching course', error);
     }
   };
 
   const fetchProgress = async () => {
     try {
       // Get enrollment progress if logged in
-      const res = await axios.get(`/api/certifications/${id}/enrollment`, { withCredentials: true });
+      const res = await axios.get(`${API_URL}/certifications/${id}/enrollment`, { withCredentials: true });
       if (res.data.enrolled) {
         setCompletedUnits(res.data.completed_units || []);
         setModuleProgress(res.data.module_progress || []);
       }
     } catch (error) {
-      console.error('User not enrolled or not logged in', error);
+      console.error(`User not enrolled or not logged in', error);
     }
   };
 
@@ -76,10 +78,10 @@ const CourseViewerPage: React.FC = () => {
   const markComplete = async () => {
     if (!activeUnit) return;
     try {
-      await axios.post(`/api/certifications/units/${activeUnit.id}/complete`, { is_completed: true }, { withCredentials: true });
+      await axios.post(`${API_URL}/certifications/units/${activeUnit.id}/complete`, { is_completed: true }, { withCredentials: true });
       setCompletedUnits(prev => [...new Set([...prev, activeUnit.id])]);
     } catch (error) {
-      console.error('Failed to mark complete. Please login and enroll.', error);
+      console.error(`Failed to mark complete. Please login and enroll.', error);
       alert('You must be logged in and enrolled to track progress.');
     }
   };
@@ -93,7 +95,7 @@ const CourseViewerPage: React.FC = () => {
 
   const sidebarContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#f8fafc', borderRight: '1px solid #e2e8f0' }}>
-      <Box p={3} borderBottom="1px solid #e2e8f0">
+      <Box p={3} borderBottom=`1px solid #e2e8f0">
         <Typography variant="h6" fontWeight="bold" color="primary">{certification.title}</Typography>
         <Box mt={2}>
           <Box display="flex" justifyContent="space-between" mb={1}>

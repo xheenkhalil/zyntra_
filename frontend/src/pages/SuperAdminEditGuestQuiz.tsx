@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
 import { getGuestQuizById, updateGuestQuiz } from '../services/superAdminGuestQuizService';
 // --- NEW: Added icons ---
 import { FaArrowLeft, FaSave, FaEdit } from 'react-icons/fa';
@@ -112,7 +114,7 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
     formData.append('image', file);
 
     try {
-      const res = await axios.post('/api/upload/image', formData, {
+      const res = await axios.post(`${API_URL}/upload/image`, formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -127,7 +129,7 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
 
   if (loading)
     return (
-      <Box className="flex justify-center items-center h-[calc(100vh-200px)]">
+      <Box className=`flex justify-center items-center h-[calc(100vh-200px)]">
         <CircularProgress />
       </Box>
     );
