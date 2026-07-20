@@ -63,6 +63,22 @@ router.post('/login', authController_1.loginUser);
 router.post('/setup-account', authController_1.setupAccount);
 /**
  * @swagger
+ * /api/auth/register/send-otp:
+ *   post:
+ *     summary: Send OTP for registration
+ *     tags: [Auth]
+ */
+router.post('/register/send-otp', authController_1.sendRegistrationOTP);
+/**
+ * @swagger
+ * /api/auth/register/verify-otp-and-create:
+ *   post:
+ *     summary: Verify OTP and complete registration
+ *     tags: [Auth]
+ */
+router.post('/register/verify-otp-and-create', authController_1.verifyOTPAndRegister);
+/**
+ * @swagger
  * /api/auth/logout:
  *   post:
  *     summary: Logout the current user

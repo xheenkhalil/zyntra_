@@ -37,7 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.changeMyPassword = exports.updateMyProfile = exports.getMe = exports.setupAccount = exports.loginUser = void 0;
+exports.verifyOTPAndRegister = exports.sendRegistrationOTP = exports.logoutUser = exports.changeMyPassword = exports.updateMyProfile = exports.getMe = exports.setupAccount = exports.loginUser = void 0;
 const db_1 = __importDefault(require("../services/db"));
 const argon2_1 = __importDefault(require("argon2"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -45,6 +45,7 @@ const config_1 = __importDefault(require("../config"));
 const passwordValidator_1 = require("../utils/passwordValidator");
 const emailQueue_1 = require("../queues/emailQueue");
 const emailService = __importStar(require("../services/emailService"));
+const validators_1 = require("../utils/validators");
 // ===========================================
 // LOGIN CONTROLLER
 // ===========================================
@@ -347,3 +348,138 @@ const logoutUser = async (req, res) => {
     res.status(200).json({ message: 'Logout successful' });
 };
 exports.logoutUser = logoutUser;
+// ===========================================
+// NEW: SEND REGISTRATION OTP
+// ===========================================
+const sendRegistrationOTP = async (req, res) => {
+    const { email, role } = req.body; // role is 'centraladmin' (Org) or 'courseadmin' (Teacher)
+    if (!email || !role) {
+        return res.status(400).json({ message: 'Email and role are required.' });
+    }
+    // If Organization, reject generic emails
+    if (role === 'centraladmin' && (0, validators_1.isGenericEmail)(email)) {
+        return res.status(400).json({ message: 'Organizations must use a custom domain email, not a generic provider (e.g. Gmail).' });
+    }
+    try {
+        // Check if email already exists
+        const userCheck = await db_1.default.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(409).json({ message: 'An account with this email already exists.' });
+        }
+        // Generate 6 digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Save to email_verifications table
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+        await db_1.default.query('INSERT INTO email_verifications (email, otp, expires_at) VALUES ($1, $2, $3)', [email, otp, expiresAt]);
+        // Send via email queue or direct
+        if (emailQueue_1.emailQueue) {
+            await emailQueue_1.emailQueue.add('sendRegistrationOTP', {
+                type: 'sendRegistrationOTP',
+                payload: { email, otp, role },
+            }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+        }
+        else {
+            await emailService.sendRegistrationOTP(email, otp, role);
+        }
+        res.status(200).json({ message: 'OTP sent successfully.' });
+    }
+    catch (error) {
+        console.error('Send OTP Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.sendRegistrationOTP = sendRegistrationOTP;
+// ===========================================
+// NEW: VERIFY OTP AND REGISTER
+// ===========================================
+const verifyOTPAndRegister = async (req, res) => {
+    const { email, otp, password, role, 
+    // Org specific
+    organizationName, website, size, industry, 
+    // Teacher specific
+    fullName, schoolName, location, subject, phone } = req.body;
+    if (!email || !otp || !password || !role) {
+        return res.status(400).json({ message: 'Missing required fields.' });
+    }
+    // Password Strength
+    const { valid, errors } = (0, passwordValidator_1.validatePassword)(password);
+    if (!valid) {
+        return res.status(400).json({ message: 'Password does not meet requirements: ' + errors.join(' ') });
+    }
+    const client = await db_1.default.connect();
+    try {
+        await client.query('BEGIN');
+        // 1. Verify OTP
+        const otpCheck = await client.query('SELECT id FROM email_verifications WHERE email = $1 AND otp = $2 AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1', [email, otp]);
+        if (otpCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Invalid or expired OTP.' });
+        }
+        // 2. Check email uniqueness again to be safe
+        const userCheck = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            await client.query('ROLLBACK');
+            return res.status(409).json({ message: 'Account already exists.' });
+        }
+        const passwordHash = await argon2_1.default.hash(password);
+        let organizationId = null;
+        if (role === 'centraladmin') {
+            // Organization Registration
+            const orgResult = await client.query('INSERT INTO organizations (name, email, website, size, industry, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id', [organizationName, email, website, size, industry, 'active']);
+            organizationId = orgResult.rows[0].id;
+            // Create User
+            const userResult = await client.query('INSERT INTO users (full_name, email, password_hash, role, organization_id, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, full_name, email, role, status', [organizationName + ' Admin', email, passwordHash, 'centraladmin', organizationId, 'active']);
+        }
+        else if (role === 'courseadmin') {
+            // Teacher Registration
+            // Auto-generate an organization for them so logic works
+            const orgResult = await client.query('INSERT INTO organizations (name, status) VALUES ($1, $2) RETURNING id', [`${fullName || 'Teacher'}'s Classroom`, 'active']);
+            organizationId = orgResult.rows[0].id;
+            const userResult = await client.query('INSERT INTO users (full_name, email, password_hash, role, organization_id, status, location, subject, phone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, full_name, email, role, status', [fullName, email, passwordHash, 'courseadmin', organizationId, 'active', location, subject, phone]);
+        }
+        else {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Invalid role specified.' });
+        }
+        // Mark OTP as used (by deleting it)
+        await client.query('DELETE FROM email_verifications WHERE email = $1', [email]);
+        await client.query('COMMIT');
+        // Automatically log them in by fetching the newly created user
+        const newUser = await db_1.default.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = newUser.rows[0];
+        const tokenPayload = {
+            userId: user.id,
+            role: user.role,
+            organizationId: user.organization_id,
+        };
+        if (!config_1.default.JWT_SECRET)
+            throw new Error('JWT_SECRET is not defined');
+        const token = jsonwebtoken_1.default.sign(tokenPayload, config_1.default.JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.status(201).json({
+            message: 'Registration successful!',
+            user: {
+                id: user.id,
+                fullName: user.full_name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                organizationId: user.organization_id,
+            },
+        });
+    }
+    catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Registration Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+    finally {
+        client.release();
+    }
+};
+exports.verifyOTPAndRegister = verifyOTPAndRegister;

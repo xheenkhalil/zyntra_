@@ -480,7 +480,7 @@ export const verifyOTPAndRegister = async (req: Request, res: Response) => {
       // Auto-generate an organization for them so logic works
       const orgResult = await client.query(
         'INSERT INTO organizations (name, status) VALUES ($1, $2) RETURNING id',
-        [\`\${fullName || 'Teacher'}'s Classroom\`, 'active']
+        [`${fullName || 'Teacher'}'s Classroom`, 'active']
       );
       organizationId = orgResult.rows[0].id;
 
