@@ -34,8 +34,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EmailIcon from "@mui/icons-material/Email";
 import SearchIcon from "@mui/icons-material/Search";
-
-
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import BulkTeacherUploadDialog from "../components/BulkTeacherUploadDialog";
 import {
   getCourseAdmins,
   createCourseAdmin,
@@ -58,6 +58,7 @@ const CentralAdminCourseAdmins: React.FC = () => {
   const [courseAdmins, setCourseAdmins] = useState<CourseAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<SnackbarState>({ open: false, message: "" });
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -261,6 +262,9 @@ const CentralAdminCourseAdmins: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
+          <Button variant="outlined" startIcon={<GroupAddIcon />} onClick={() => setBulkUploadOpen(true)}>
+            Bulk Add Teachers
+          </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
             Invite Course Admin
           </Button>
@@ -441,6 +445,15 @@ const CentralAdminCourseAdmins: React.FC = () => {
       </Dialog>
 
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ open: false, message: "" })} message={snackbar.message} />
+
+      <BulkTeacherUploadDialog 
+          open={bulkUploadOpen} 
+          onClose={() => setBulkUploadOpen(false)} 
+          onSuccess={() => {
+              setBulkUploadOpen(false);
+              fetchCourseAdmins();
+          }}
+      />
     </Container>
   );
 };
