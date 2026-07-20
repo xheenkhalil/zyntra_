@@ -27,8 +27,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import {
   getGuestQuizById,
   addGuestQuizQuestion,
@@ -157,7 +158,7 @@ const SuperAdminManageQuizQuestions: React.FC = () => {
     setSaving(true);
     setSnackbar({ open: true, message: 'Generating 5 AI questions...' });
     try {
-      await axios.post(`${API_URL}/api/superadmin/ai/guest-quiz-questions`, {
+      await axios.post(`${API_BASE_URL}/superadmin/ai/guest-quiz-questions`, {
         topic: `${quiz.category} - ${quiz.title}`,
         count: 5,
         quizId: quiz.id

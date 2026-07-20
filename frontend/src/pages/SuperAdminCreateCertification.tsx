@@ -3,8 +3,9 @@ import { Box, Typography, TextField, Button, Paper, IconButton, Switch, FormCont
 import { Add, Delete, DragIndicator, AutoAwesome } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import type { Certification, CertificationUnit, CertificationModule } from '../types/certification';
 
 const SuperAdminCreateCertification: React.FC = () => {
@@ -32,7 +33,7 @@ const SuperAdminCreateCertification: React.FC = () => {
 
   const fetchCertification = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/certifications/${id}`, { withCredentials: true });
+      const res = await axios.get(`${API_BASE_URL}/certifications/${id}`, { withCredentials: true });
       setCertification(res.data);
     } catch (error) {
       console.error('Error fetching certification', error);
@@ -96,9 +97,9 @@ const SuperAdminCreateCertification: React.FC = () => {
   const handleSave = async () => {
     try {
       if (isEditing) {
-        await axios.put(`${API_URL}/api/certifications/${id}`, certification, { withCredentials: true });
+        await axios.put(`${API_BASE_URL}/certifications/${id}`, certification, { withCredentials: true });
       } else {
-        await axios.post(API_URL + '/api/certifications', certification, { withCredentials: true });
+        await axios.post(API_BASE_URL + '/certifications', certification, { withCredentials: true });
       }
       navigate('/superadmin/certifications');
     } catch (error) {
@@ -116,7 +117,7 @@ const SuperAdminCreateCertification: React.FC = () => {
     formData.append('image', file);
 
     try {
-      const res = await axios.post(API_URL + '/api/upload/image', formData, {
+      const res = await axios.post(API_BASE_URL + '/upload/image', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -136,7 +137,7 @@ const SuperAdminCreateCertification: React.FC = () => {
     }
     setGeneratingAi(moduleId);
     try {
-      await axios.post(API_URL + '/api/superadmin/ai/certification-assessment', { moduleId }, { withCredentials: true });
+      await axios.post(API_BASE_URL + '/superadmin/ai/certification-assessment', { moduleId }, { withCredentials: true });
       alert("Assessment questions generated successfully!");
     } catch (error) {
       console.error('Failed to generate assessment', error);

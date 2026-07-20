@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Paper, Radio, RadioGroup, FormControlLabel, FormControl, Alert, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 
 interface Question {
   id: string;
@@ -31,7 +32,7 @@ const ModuleAssessment: React.FC<ModuleAssessmentProps> = ({ certificationId, mo
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/api/certifications/modules/${moduleId}/assessment`, { withCredentials: true });
+      const res = await axios.get(`${API_BASE_URL}/certifications/modules/${moduleId}/assessment`, { withCredentials: true });
       setQuestions(res.data);
       setResult(null);
       setAnswers({});

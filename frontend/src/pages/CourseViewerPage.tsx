@@ -3,8 +3,9 @@ import { Box, Typography, Paper, List, ListItem, ListItemText, Collapse, Button,
 import { ExpandLess, ExpandMore, CheckCircle, Menu as MenuIcon, Lock, Assignment } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import type { Certification, CertificationUnit } from '../types/certification';
 import ModuleAssessment from '../components/certification/ModuleAssessment';
 
@@ -35,7 +36,7 @@ const CourseViewerPage: React.FC = () => {
 
   const fetchCourseDetails = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/certifications/${id}`);
+      const res = await axios.get(`${API_BASE_URL}/certifications/${id}`);
       setCertification(res.data);
       if (res.data.modules?.length > 0 && res.data.modules[0].units?.length > 0) {
         setActiveUnit(res.data.modules[0].units[0]);
@@ -49,7 +50,7 @@ const CourseViewerPage: React.FC = () => {
   const fetchProgress = async () => {
     try {
       // Get enrollment progress if logged in
-      const res = await axios.get(`${API_URL}/api/certifications/${id}/enrollment`, { withCredentials: true });
+      const res = await axios.get(`${API_BASE_URL}/certifications/${id}/enrollment`, { withCredentials: true });
       if (res.data.enrolled) {
         setCompletedUnits(res.data.completed_units || []);
         setModuleProgress(res.data.module_progress || []);
@@ -78,7 +79,7 @@ const CourseViewerPage: React.FC = () => {
   const markComplete = async () => {
     if (!activeUnit) return;
     try {
-      await axios.post(`${API_URL}/api/certifications/units/${activeUnit.id}/complete`, { is_completed: true }, { withCredentials: true });
+      await axios.post(`${API_BASE_URL}/certifications/units/${activeUnit.id}/complete`, { is_completed: true }, { withCredentials: true });
       setCompletedUnits(prev => [...new Set([...prev, activeUnit.id])]);
     } catch (error) {
       console.error('Failed to mark complete. Please login and enroll.', error);

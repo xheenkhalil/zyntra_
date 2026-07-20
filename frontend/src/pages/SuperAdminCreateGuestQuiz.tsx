@@ -14,8 +14,9 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import { createGuestQuiz } from '../services/superAdminGuestQuizService';
 // --- NEW: Added icons for buttons ---
 import { FaArrowLeft, FaPlusCircle } from 'react-icons/fa';
@@ -49,7 +50,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
       if (autoGenerateAi) {
         setSuccess(`Quiz "${newQuiz.title}" created! Generating AI questions...`);
         try {
-          await axios.post(API_URL + '/api/superadmin/ai/guest-quiz-questions', {
+          await axios.post(API_BASE_URL + '/superadmin/ai/guest-quiz-questions', {
             topic: `${category} - ${title}`,
             count: questionCount,
             quizId: newQuiz.id
@@ -93,7 +94,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
     formData.append('image', file);
 
     try {
-      const res = await axios.post(API_URL + '/api/upload/image', formData, {
+      const res = await axios.post(API_BASE_URL + '/upload/image', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });

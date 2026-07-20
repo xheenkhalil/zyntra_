@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaGraduationCap, FaChevronRight } from 'react-icons/fa';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import type { Certification } from '../../types/certification';
 
 const CertificationCoursesSection: React.FC = () => {
@@ -17,7 +18,7 @@ const CertificationCoursesSection: React.FC = () => {
   const fetchCertifications = async () => {
     try {
       // Assuming public endpoint to get published certifications
-      const res = await axios.get(API_URL + '/api/certifications');
+      const res = await axios.get(API_BASE_URL + '/certifications');
       // Filter for published ones only just in case
       setCertifications(res.data.filter((c: Certification) => c.is_published));
     } catch (error) {

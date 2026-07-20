@@ -3,8 +3,9 @@ import { Typography, Box, Button, Table, TableBody, TableCell, TableContainer, T
 import { Edit, Delete, Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
+
 import type { Certification } from '../types/certification';
 
 const SuperAdminCertifications: React.FC = () => {
@@ -17,7 +18,7 @@ const SuperAdminCertifications: React.FC = () => {
 
   const fetchCertifications = async () => {
     try {
-      const res = await axios.get(API_URL + '/api/certifications', { withCredentials: true });
+      const res = await axios.get(API_BASE_URL + '/certifications', { withCredentials: true });
       if (Array.isArray(res.data)) {
         setCertifications(res.data);
       } else {
@@ -32,7 +33,7 @@ const SuperAdminCertifications: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this certification?')) return;
     try {
-      await axios.delete(`${API_URL}/api/certifications/${id}`, { withCredentials: true });
+      await axios.delete(`${API_BASE_URL}/certifications/${id}`, { withCredentials: true });
       fetchCertifications();
     } catch (error) {
       console.error('Error deleting certification', error);
