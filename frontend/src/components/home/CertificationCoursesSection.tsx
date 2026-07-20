@@ -49,7 +49,12 @@ const CertificationCoursesSection: React.FC = () => {
             >
               {cert.image_url ? (
                 <div className="h-48 w-full bg-gray-200 overflow-hidden relative">
-                  <img src={cert.image_url} alt={cert.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                  <img 
+                    src={cert.image_url} 
+                    alt={cert.title} 
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[#111A50] font-bold text-sm shadow-sm">
                     ${cert.price}
                   </div>

@@ -5,15 +5,40 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
-
 import type { Certification, CertificationUnit } from '../types/certification';
 import ModuleAssessment from '../components/certification/ModuleAssessment';
+
+// Convert YouTube/Vimeo watch URLs to embeddable URLs
+const getEmbedUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // YouTube: https://www.youtube.com/watch?v=VIDEO_ID
+  const ytWatchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/watch\?.+&v=)([a-zA-Z0-9_-]+)/);
+  if (ytWatchMatch) return `https://www.youtube.com/embed/${ytWatchMatch[1]}`;
+
+  // YouTube short URL: https://youtu.be/VIDEO_ID
+  const ytShortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (ytShortMatch) return `https://www.youtube.com/embed/${ytShortMatch[1]}`;
+
+  // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
+  const ytShortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+  if (ytShortsMatch) return `https://www.youtube.com/embed/${ytShortsMatch[1]}`;
+
+  // Already an embed URL or Vimeo embed — return as-is
+  if (url.includes('/embed/') || url.includes('player.vimeo.com')) return url;
+
+  // Vimeo: https://vimeo.com/VIDEO_ID
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+
+  return url;
+};
 
 const CourseViewerPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [certification, setCertification] = useState<Certification | null>(null);
   const [activeUnit, setActiveUnit] = useState<CertificationUnit | null>(null);
-  const [activeAssessment, setActiveAssessment] = useState<string | null>(null); // moduleId
+  const [activeAssessment, setActiveAssessment] = useState<string | null>(null);
   const [openModules, setOpenModules] = useState<{ [key: string]: boolean }>({});
   const [completedUnits, setCompletedUnits] = useState<string[]>([]);
   const [moduleProgress, setModuleProgress] = useState<{ module_id: string, passed: boolean }[]>([]);
@@ -49,7 +74,6 @@ const CourseViewerPage: React.FC = () => {
 
   const fetchProgress = async () => {
     try {
-      // Get enrollment progress if logged in
       const res = await axios.get(`${API_BASE_URL}/certifications/${id}/enrollment`, { withCredentials: true });
       if (res.data.enrolled) {
         setCompletedUnits(res.data.completed_units || []);
@@ -109,7 +133,6 @@ const CourseViewerPage: React.FC = () => {
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <List component="nav" disablePadding>
           {certification.modules?.map((mod, idx) => {
-            // Determine if module is locked
             let isLocked = false;
             if (idx > 0) {
               const prevMod = certification.modules![idx - 1];
@@ -214,7 +237,7 @@ const CourseViewerPage: React.FC = () => {
             {activeUnit.video_url && (
               <Box sx={{ position: 'relative', pt: '56.25%', mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: 3 }}>
                 <iframe 
-                  src={activeUnit.video_url} 
+                  src={getEmbedUrl(activeUnit.video_url)} 
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} 
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen 
