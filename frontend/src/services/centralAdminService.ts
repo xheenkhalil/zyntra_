@@ -111,6 +111,23 @@ export const sendInviteEmail = async (userId: string) => {
   }
 };
 
+export const bulkUploadCourseAdmins = async (file: File | null, rawData: string) => {
+  try {
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    if (rawData) formData.append('rawData', rawData);
+
+    const response = await apiClient.post('/centraladmin/course-admins/bulk-register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to bulk upload course admins.');
+  }
+};
+
 export const getOrganizationStats = async () => {
   try {
     const response = await apiClient.get('/centraladmin/stats');

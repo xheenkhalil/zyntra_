@@ -18,10 +18,13 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    Button
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import { getOrganizationUsers } from "../services/centralAdminService";
+import BulkTeacherUploadDialog from "../components/BulkTeacherUploadDialog";
 
 interface User {
     id: string;
@@ -40,6 +43,8 @@ const CentralAdminUsers: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
 
     const [selectedRole, setSelectedRole] = useState("");
+    const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -54,7 +59,7 @@ const CentralAdminUsers: React.FC = () => {
             }
         };
         fetchUsers();
-    }, [selectedRole]);
+    }, [selectedRole, refreshTrigger]);
 
     const filteredUsers = users.filter((user) =>
         user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,6 +79,17 @@ const CentralAdminUsers: React.FC = () => {
                 <Typography variant="body2" color="textSecondary">
                     View all users (Course Admins and Students) within your organization.
                 </Typography>
+            </Box>
+
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    startIcon={<GroupAddIcon />}
+                    onClick={() => setBulkUploadOpen(true)}
+                >
+                    Bulk Add Teachers
+                </Button>
             </Box>
 
             <Paper sx={{ p: 2, mb: 3, display: 'flex', gap: 2 }}>
@@ -152,6 +168,12 @@ const CentralAdminUsers: React.FC = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <BulkTeacherUploadDialog 
+                open={bulkUploadOpen} 
+                onClose={() => setBulkUploadOpen(false)} 
+                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+            />
         </Container>
     );
 };

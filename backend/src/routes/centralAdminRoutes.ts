@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   createCourseAdmin,
   getCourseAdminsForOrg,
@@ -11,15 +12,18 @@ import {
   getOrganizationLogs,
   getOrganizationExams,
   getOrganizationUsers,
+  bulkCreateCourseAdmins,
 } from '../controllers/centralAdminController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(protect, authorize('centraladmin'));
 
 // === Base CRUD Routes ===
 router.route('/course-admins').post(createCourseAdmin).get(getCourseAdminsForOrg);
+router.post('/course-admins/bulk-register', upload.single('file'), bulkCreateCourseAdmins);
 
 router.route('/course-admins/:userId').put(updateCourseAdmin).delete(deleteCourseAdmin);
 

@@ -1,12 +1,18 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
 const centralAdminController_1 = require("../controllers/centralAdminController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 router.use(authMiddleware_1.protect, (0, authMiddleware_1.authorize)('centraladmin'));
 // === Base CRUD Routes ===
 router.route('/course-admins').post(centralAdminController_1.createCourseAdmin).get(centralAdminController_1.getCourseAdminsForOrg);
+router.post('/course-admins/bulk-register', upload.single('file'), centralAdminController_1.bulkCreateCourseAdmins);
 router.route('/course-admins/:userId').put(centralAdminController_1.updateCourseAdmin).delete(centralAdminController_1.deleteCourseAdmin);
 // === Status Management Routes ===
 router.put('/course-admins/:userId/archive', centralAdminController_1.archiveCourseAdmin);

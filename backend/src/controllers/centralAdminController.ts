@@ -5,6 +5,7 @@ import argon2 from 'argon2';
 import crypto from 'crypto';
 import * as emailService from '../services/emailService';
 import { emailQueue } from '../queues/emailQueue';
+const csv = require('csv-parser');
 
 /**
  * Create a new Course Admin and return a setup link.
@@ -512,5 +513,145 @@ export const getOrganizationUsers = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Error fetching org users:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const bulkCreateCourseAdmins = async (req: AuthRequest, res: Response) => {
+  const organizationId = req.user?.organizationId;
+  const rawData = req.body.rawData;
+  const file = req.file;
+
+  if (!organizationId) {
+    return res.status(403).json({ message: 'Forbidden: No organization context detected.' });
+  }
+
+  interface TeacherCsvRow {
+    full_name: string;
+    email: string;
+  }
+
+  let parsedTeachers: TeacherCsvRow[] = [];
+
+  if (file && file.mimetype === 'text/csv') {
+    const fileBuffer = file.buffer;
+    const parseCsv = new Promise<TeacherCsvRow[]>((resolve, reject) => {
+      const results: TeacherCsvRow[] = [];
+      const parser = csv();
+      parser.on('data', (data: any) => {
+        const fullName = data.full_name || data.ful_name || data['Full Name'] || data['Name'] || data['name'];
+        const email = data.email || data['Email'] || data['E-mail'] || data['e-mail'];
+        if (fullName?.trim() && email?.trim()) {
+          results.push({ full_name: fullName.trim(), email: email.trim() });
+        }
+      });
+      parser.on('error', (err: Error) => reject(new Error(`CSV Parsing Error: ${err.message}`)));
+      parser.on('end', () => resolve(results));
+      parser.write(fileBuffer);
+      parser.end();
+    });
+    try {
+      parsedTeachers = await parseCsv;
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  } else if (rawData) {
+    const lines = rawData.split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const parts = line.split(/[,|\t]/);
+      if (parts.length >= 2) {
+        parsedTeachers.push({
+          full_name: parts[0].trim(),
+          email: parts[1].trim()
+        });
+      }
+    }
+  } else {
+    return res.status(400).json({ message: 'A CSV file or raw data is required for bulk upload.' });
+  }
+
+  if (parsedTeachers.length === 0) {
+    return res.status(400).json({ message: 'No valid teacher data found.' });
+  }
+
+  const client = await pool.connect();
+  let registeredCount = 0;
+  let errors = 0;
+
+  try {
+    const orgResult = await client.query('SELECT name FROM organizations WHERE id = $1', [organizationId]);
+    const organizationName = orgResult.rows[0]?.name || 'your organization';
+
+    await client.query('BEGIN');
+
+    const insertQuery = `
+      INSERT INTO users (full_name, email, username, password_hash, role, organization_id, account_setup_token, account_setup_expires, status)
+      VALUES ($1, $2, $3, $4, 'courseadmin', $5, $6, $7, 'pending_setup')
+      ON CONFLICT (email) DO NOTHING
+      RETURNING id, full_name, email, username;
+    `;
+
+    for (const teacher of parsedTeachers) {
+      const baseUsername = teacher.full_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const randomSuffix = crypto.randomInt(1000, 9999);
+      let username = `${baseUsername}${randomSuffix}`;
+      if (!baseUsername) {
+         username = `teacher${randomSuffix}${crypto.randomInt(10, 99)}`;
+      }
+
+      const setupToken = crypto.randomUUID();
+      const setupTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const placeholderPassword = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await argon2.hash(placeholderPassword);
+
+      try {
+        const result = await client.query(insertQuery, [
+          teacher.full_name,
+          teacher.email,
+          username,
+          passwordHash,
+          organizationId,
+          setupToken,
+          setupTokenExpires
+        ]);
+
+        if ((result.rowCount ?? 0) > 0) {
+          registeredCount++;
+          const setupLink = `${process.env.FRONTEND_URL || 'https://zyntraexams.vercel.app'}/setup-account?token=${setupToken}`;
+
+          if (emailQueue) {
+            await emailQueue.add(
+              'sendAdminInviteEmail',
+              { type: 'sendAdminInviteEmail', payload: { email: teacher.email, fullName: teacher.full_name, inviteLink: setupLink, organizationName } },
+              { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
+            );
+          } else {
+            emailService.sendAdminInviteEmail(teacher.email, teacher.full_name, setupLink, organizationName).catch(console.error);
+          }
+        } else {
+          errors++;
+        }
+      } catch (err: any) {
+        if (err.code === '23505') {
+            errors++;
+        } else {
+            errors++;
+            console.error(`Error processing teacher ${teacher.email}:`, err);
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({
+      message: `${registeredCount} teachers registered successfully.`,
+      registeredCount,
+      skippedCount: errors,
+    });
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('Bulk registration failed:', err);
+    res.status(500).json({ message: 'Internal server error during bulk registration.' });
+  } finally {
+    client.release();
   }
 };
