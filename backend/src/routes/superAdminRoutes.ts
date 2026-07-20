@@ -23,6 +23,7 @@ import {
   updateUserStatus,
   updateUserRole,
 } from '../controllers/superAdminController';
+import { generateGuestQuizQuestions, generateCertificationAssessment } from '../controllers/aiController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -82,7 +83,17 @@ router.get('/users', getAllUsers);
 // PUT /api/superadmin/users/:id/status
 router.put('/users/:id/status', updateUserStatus);
 
-// PUT /api/superadmin/users/:id/role
-router.put('/users/:id/role', updateUserRole);
+// POST /api/superadmin/users/:userId/role
+router.put('/users/:userId/role', updateUserRole);
+
+// =====================================
+// AI GENERATION ROUTES
+// =====================================
+
+// POST /api/superadmin/ai/guest-quiz-questions
+router.post('/ai/guest-quiz-questions', generateGuestQuizQuestions);
+
+// POST /api/superadmin/ai/certification-assessment
+router.post('/ai/certification-assessment', generateCertificationAssessment);
 
 export default router;

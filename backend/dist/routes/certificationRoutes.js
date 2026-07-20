@@ -11,6 +11,8 @@ router.get('/:id', certificationController_1.getCertificationById);
 router.post('/:id/enroll', authMiddleware_1.protect, certificationController_1.enrollUser);
 router.get('/:id/enrollment', authMiddleware_1.protect, certificationController_1.getEnrollmentStatus);
 router.post('/units/:unit_id/complete', authMiddleware_1.protect, certificationController_1.markUnitCompleted);
+router.get('/modules/:moduleId/assessment', authMiddleware_1.protect, certificationController_1.getModuleAssessment);
+router.post('/:certification_id/modules/:moduleId/assessment', authMiddleware_1.protect, certificationController_1.submitModuleAssessment);
 // Admin Routes
 router.post('/', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('superadmin'), certificationController_1.createCertification);
 router.put('/:id', authMiddleware_1.protect, (0, authMiddleware_1.authorize)('superadmin'), certificationController_1.updateCertification);

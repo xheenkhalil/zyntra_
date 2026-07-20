@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, List, ListItem, ListItemText, Collapse, Button, LinearProgress, Drawer, IconButton, useMediaQuery, useTheme } from '@mui/material';
-import { ExpandLess, ExpandMore, CheckCircle, Menu as MenuIcon } from '@mui/icons-material';
+import { ExpandLess, ExpandMore, CheckCircle, Menu as MenuIcon, Lock, Assignment } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import type { Certification, CertificationUnit } from '../types/certification';
+import type { Certification, CertificationUnit, CertificationModule } from '../types/certification';
+import ModuleAssessment from '../components/certification/ModuleAssessment';
 
 const CourseViewerPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [certification, setCertification] = useState<Certification | null>(null);
   const [activeUnit, setActiveUnit] = useState<CertificationUnit | null>(null);
+  const [activeAssessment, setActiveAssessment] = useState<string | null>(null); // moduleId
   const [openModules, setOpenModules] = useState<{ [key: string]: boolean }>({});
   const [completedUnits, setCompletedUnits] = useState<string[]>([]);
+  const [moduleProgress, setModuleProgress] = useState<{ module_id: string, passed: boolean }[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -47,6 +50,7 @@ const CourseViewerPage: React.FC = () => {
       const res = await axios.get(`/api/certifications/${id}/enrollment`, { withCredentials: true });
       if (res.data.enrolled) {
         setCompletedUnits(res.data.completed_units || []);
+        setModuleProgress(res.data.module_progress || []);
       }
     } catch (error) {
       console.error('User not enrolled or not logged in', error);
@@ -59,6 +63,13 @@ const CourseViewerPage: React.FC = () => {
 
   const handleUnitClick = (unit: CertificationUnit) => {
     setActiveUnit(unit);
+    setActiveAssessment(null);
+    if (isMobile) setIsSidebarOpen(false);
+  };
+
+  const handleAssessmentClick = (moduleId: string) => {
+    setActiveAssessment(moduleId);
+    setActiveUnit(null);
     if (isMobile) setIsSidebarOpen(false);
   };
 
@@ -94,32 +105,60 @@ const CourseViewerPage: React.FC = () => {
       </Box>
       <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
         <List component="nav" disablePadding>
-          {certification.modules?.map((mod, idx) => (
-            <React.Fragment key={mod.id}>
-              <ListItem onClick={() => toggleModule(mod.id)} sx={{ cursor: 'pointer', bgcolor: openModules[mod.id] ? '#f1f5f9' : 'transparent', borderBottom: '1px solid #e2e8f0' }}>
-                <ListItemText primary={<Typography fontWeight="bold">Module {idx + 1}: {mod.title}</Typography>} />
-                {openModules[mod.id] ? <ExpandLess /> : <ExpandMore />}
-              </ListItem>
-              <Collapse in={openModules[mod.id]} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {mod.units?.map((unit, uIdx) => {
-                    const isCompleted = completedUnits.includes(unit.id);
-                    const isActive = activeUnit?.id === unit.id;
-                    return (
+          {certification.modules?.map((mod, idx) => {
+            // Determine if module is locked
+            let isLocked = false;
+            if (idx > 0) {
+              const prevMod = certification.modules![idx - 1];
+              const prevUnitsCompleted = prevMod.units?.every(u => completedUnits.includes(u.id));
+              const prevAssessmentPassed = !prevMod.has_assessment || moduleProgress.some(mp => mp.module_id === prevMod.id && mp.passed);
+              isLocked = !(prevUnitsCompleted && prevAssessmentPassed);
+            }
+
+            return (
+              <React.Fragment key={mod.id}>
+                <ListItem 
+                  onClick={() => !isLocked && toggleModule(mod.id)} 
+                  sx={{ 
+                    cursor: isLocked ? 'not-allowed' : 'pointer', 
+                    bgcolor: openModules[mod.id] ? '#f1f5f9' : 'transparent', 
+                    borderBottom: '1px solid #e2e8f0',
+                    opacity: isLocked ? 0.6 : 1
+                  }}
+                >
+                  <ListItemText primary={<Typography fontWeight="bold">Module {idx + 1}: {mod.title}</Typography>} />
+                  {isLocked ? <Lock sx={{ color: 'text.secondary', fontSize: 20 }} /> : (openModules[mod.id] ? <ExpandLess /> : <ExpandMore />)}
+                </ListItem>
+                <Collapse in={openModules[mod.id] && !isLocked} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {mod.units?.map((unit, uIdx) => {
+                      const isCompleted = completedUnits.includes(unit.id);
+                      const isActive = activeUnit?.id === unit.id;
+                      return (
+                        <ListItem 
+                          key={unit.id} 
+                          onClick={() => handleUnitClick(unit)}
+                          sx={{ cursor: 'pointer', pl: 4, bgcolor: isActive ? '#e0f2fe' : 'transparent', '&:hover': { bgcolor: '#f1f5f9' } }}
+                        >
+                          <CheckCircle sx={{ fontSize: 18, mr: 1, color: isCompleted ? '#22c55e' : '#cbd5e1' }} />
+                          <ListItemText primary={<Typography variant="body2" fontWeight={isActive ? 'bold' : 'normal'}>{idx+1}.{uIdx+1} {unit.title}</Typography>} />
+                        </ListItem>
+                      );
+                    })}
+                    {mod.has_assessment && (
                       <ListItem 
-                        key={unit.id} 
-                        onClick={() => handleUnitClick(unit)}
-                        sx={{ cursor: 'pointer', pl: 4, bgcolor: isActive ? '#e0f2fe' : 'transparent', '&:hover': { bgcolor: '#f1f5f9' } }}
+                        onClick={() => handleAssessmentClick(mod.id)}
+                        sx={{ cursor: 'pointer', pl: 4, bgcolor: activeAssessment === mod.id ? '#e0f2fe' : 'transparent', '&:hover': { bgcolor: '#f1f5f9' } }}
                       >
-                        <CheckCircle sx={{ fontSize: 18, mr: 1, color: isCompleted ? '#22c55e' : '#cbd5e1' }} />
-                        <ListItemText primary={<Typography variant="body2" fontWeight={isActive ? 'bold' : 'normal'}>{idx+1}.{uIdx+1} {unit.title}</Typography>} />
+                        <Assignment sx={{ fontSize: 18, mr: 1, color: moduleProgress.some(mp => mp.module_id === mod.id && mp.passed) ? '#22c55e' : '#f59e0b' }} />
+                        <ListItemText primary={<Typography variant="body2" fontWeight={activeAssessment === mod.id ? 'bold' : 'normal'}>Module Assessment</Typography>} />
                       </ListItem>
-                    );
-                  })}
-                </List>
-              </Collapse>
-            </React.Fragment>
-          ))}
+                    )}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            );
+          })}
         </List>
       </Box>
     </Box>
@@ -159,7 +198,13 @@ const CourseViewerPage: React.FC = () => {
           width: { sm: `calc(100% - ${drawerWidth}px)` }
         }}
       >
-        {activeUnit ? (
+        {activeAssessment ? (
+          <ModuleAssessment 
+            certificationId={certification.id} 
+            moduleId={activeAssessment} 
+            onPass={fetchProgress}
+          />
+        ) : activeUnit ? (
           <Box maxWidth="800px" mx="auto">
             <Typography variant="h4" fontWeight="extrabold" mb={4} color="#111A50">{activeUnit.title}</Typography>
             

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateFromDocument = exports.generateAiQuestions = void 0;
+exports.generateCertificationAssessment = exports.generateGuestQuizQuestions = exports.generateFromDocument = exports.generateAiQuestions = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 const config_1 = __importDefault(require("../config"));
 const mammoth_1 = __importDefault(require("mammoth"));
@@ -201,3 +201,78 @@ const generateFromDocument = async (req, res) => {
     }
 };
 exports.generateFromDocument = generateFromDocument;
+// Save generated question to guest_quizzes
+async function saveGuestQuestionToDb(quizId, q) {
+    let finalOptions = q.options || [];
+    if (q.type === 'FILL_BLANK') {
+        finalOptions = [{ text: q.correctAnswer || '', isCorrect: true }];
+    }
+    else if (q.type === 'ESSAY') {
+        finalOptions = [];
+    }
+    await db_1.default.query(`INSERT INTO guest_questions (quiz_id, question_text, options) VALUES ($1, $2, $3)`, [quizId, q.questionText, JSON.stringify(finalOptions)]);
+}
+const generateGuestQuizQuestions = async (req, res) => {
+    const { topic, difficulty = 'Medium', count = 5, quizId } = req.body;
+    if (!topic)
+        return res.status(400).json({ message: 'Topic is required.' });
+    const typeBreakdown = { MCQ: count };
+    const systemPrompt = buildSystemPrompt(['MCQ']);
+    const userPrompt = buildUserPrompt(topic, difficulty, typeBreakdown);
+    try {
+        const questions = await generateWithFallback(systemPrompt, userPrompt);
+        if (quizId) {
+            for (const q of questions) {
+                await saveGuestQuestionToDb(quizId, q);
+            }
+        }
+        res.status(200).json(questions);
+    }
+    catch (error) {
+        console.error('Error generating AI guest quiz questions:', error);
+        res.status(500).json({ message: 'Failed to generate guest quiz questions.', error: error?.message });
+    }
+};
+exports.generateGuestQuizQuestions = generateGuestQuizQuestions;
+// Save assessment question to certification_module_questions
+async function saveCertAssessmentQuestionToDb(moduleId, q) {
+    let finalOptions = q.options || [];
+    await db_1.default.query(`INSERT INTO certification_module_questions (module_id, question_text, options) VALUES ($1, $2, $3)`, [moduleId, q.questionText, JSON.stringify(finalOptions)]);
+}
+const generateCertificationAssessment = async (req, res) => {
+    const { moduleId } = req.body;
+    if (!moduleId)
+        return res.status(400).json({ message: 'moduleId is required.' });
+    try {
+        // Get module and its settings
+        const moduleRes = await db_1.default.query(`SELECT * FROM certification_modules WHERE id = $1`, [moduleId]);
+        if (moduleRes.rows.length === 0)
+            return res.status(404).json({ message: 'Module not found.' });
+        const module = moduleRes.rows[0];
+        const questionCount = module.assessment_question_count || 5;
+        // Get units content
+        const unitsRes = await db_1.default.query(`SELECT content FROM certification_units WHERE module_id = $1 ORDER BY order_index ASC`, [moduleId]);
+        const unitsContent = unitsRes.rows.map(u => u.content).join('\n\n');
+        const typeBreakdown = { MCQ: questionCount };
+        const systemPrompt = buildSystemPrompt(['MCQ']);
+        let userPrompt = '';
+        if (unitsContent.trim().length > 0) {
+            userPrompt = `Based on the following text about "${module.title}", generate ${questionCount} MCQ questions.\n\n--- TEXT CONTEXT ---\n${unitsContent.substring(0, 12000)}\n--- END OF TEXT CONTEXT ---`;
+        }
+        else {
+            userPrompt = buildUserPrompt(module.title, 'Medium', typeBreakdown);
+        }
+        const questions = await generateWithFallback(systemPrompt, userPrompt);
+        // Delete old assessment questions if they exist
+        await db_1.default.query(`DELETE FROM certification_module_questions WHERE module_id = $1`, [moduleId]);
+        for (const q of questions) {
+            await saveCertAssessmentQuestionToDb(moduleId, q);
+        }
+        res.status(200).json(questions);
+    }
+    catch (error) {
+        console.error('Error generating certification assessment:', error);
+        res.status(500).json({ message: 'Failed to generate assessment.', error: error?.message });
+    }
+};
+exports.generateCertificationAssessment = generateCertificationAssessment;

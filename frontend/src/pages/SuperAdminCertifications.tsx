@@ -58,6 +58,8 @@ const SuperAdminCertifications: React.FC = () => {
               <TableCell>Title</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Rating</TableCell>
+              <TableCell>Participants</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -67,6 +69,8 @@ const SuperAdminCertifications: React.FC = () => {
                 <TableCell>{cert.title}</TableCell>
                 <TableCell>${cert.price}</TableCell>
                 <TableCell>{cert.is_published ? 'Published' : 'Draft'}</TableCell>
+                <TableCell>{cert.average_rating || 'N/A'}</TableCell>
+                <TableCell>{cert.participant_count || 0}</TableCell>
                 <TableCell align="right">
                   <IconButton onClick={() => navigate(`/superadmin/certifications/${cert.id}/edit`)} color="primary">
                     <Edit />
@@ -79,7 +83,7 @@ const SuperAdminCertifications: React.FC = () => {
             ))}
             {certifications.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} align="center">No certifications found.</TableCell>
+                <TableCell colSpan={6} align="center">No certifications found.</TableCell>
               </TableRow>
             )}
           </TableBody>

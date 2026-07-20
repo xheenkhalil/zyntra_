@@ -23,6 +23,8 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [autoGenerateAi, setAutoGenerateAi] = useState(false);
+  const [questionCount, setQuestionCount] = useState(5);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -39,11 +41,22 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
     setLoading(true);
     try {
       const newQuiz = await createGuestQuiz(title, category, imageUrl);
-      setSuccess(
-        `Quiz "${newQuiz.title}" created successfully! Redirecting...`
-      );
       
-      // Navigate to the question manager for the new quiz, as per your logic
+      if (autoGenerateAi) {
+        setSuccess(`Quiz "${newQuiz.title}" created! Generating AI questions...`);
+        try {
+          await axios.post('/api/superadmin/ai/guest-quiz-questions', {
+            topic: `${category} - ${title}`,
+            count: questionCount,
+            quizId: newQuiz.id
+          }, { withCredentials: true });
+        } catch (aiErr) {
+          console.error("AI Generation failed:", aiErr);
+          alert("Quiz created, but AI generation failed.");
+        }
+      }
+
+      setSuccess(`Quiz "${newQuiz.title}" ready! Redirecting...`);
       navigate(`/superadmin/guest-quizzes/${newQuiz.id}/questions`);
 
     } catch (err: unknown) {
@@ -160,6 +173,24 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
               {uploadingImage ? 'Uploading...' : 'Upload'}
               <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
             </Button>
+          </Box>
+
+          <Box mt={3} p={2} border={1} borderColor="grey.300" borderRadius={1} bgcolor="#f8f9fa">
+            <FormControlLabel
+              control={<Switch checked={autoGenerateAi} onChange={(e) => setAutoGenerateAi(e.target.checked)} disabled={loading} />}
+              label="Auto-generate Questions via AI"
+            />
+            {autoGenerateAi && (
+              <TextField
+                label="Number of Questions"
+                type="number"
+                fullWidth
+                margin="normal"
+                value={questionCount}
+                onChange={(e) => setQuestionCount(parseInt(e.target.value, 10))}
+                disabled={loading}
+              />
+            )}
           </Box>
 
           {error && (

@@ -61,9 +61,14 @@ const CertificationCoursesSection: React.FC = () => {
               )}
               
               <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                  {cert.title}
-                </h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 line-clamp-1">
+                    {cert.title}
+                  </h3>
+                  <div className="flex items-center text-yellow-500 text-sm font-bold">
+                    ★ {cert.average_rating || '0.0'} <span className="text-gray-400 font-normal ml-1">({cert.participant_count || 0})</span>
+                  </div>
+                </div>
                 <p className="text-gray-600 text-sm mb-6 flex-grow line-clamp-3">
                   {cert.description}
                 </p>

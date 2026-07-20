@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Paper, IconButton, Switch, FormControlLabel } from '@mui/material';
-import { Add, Delete, DragIndicator } from '@mui/icons-material';
+import { Add, Delete, DragIndicator, AutoAwesome } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import type { Certification, CertificationUnit } from '../types/certification';
@@ -10,6 +10,7 @@ const SuperAdminCreateCertification: React.FC = () => {
   const navigate = useNavigate();
   const isEditing = Boolean(id);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [generatingAi, setGeneratingAi] = useState<string | null>(null);
 
   const [certification, setCertification] = useState<Partial<Certification>>({
     title: '',
@@ -51,9 +52,9 @@ const SuperAdminCreateCertification: React.FC = () => {
     });
   };
 
-  const updateModule = (index: number, title: string) => {
+  const updateModule = (index: number, field: keyof typeof certification.modules[0], value: any) => {
     const newModules = [...(certification.modules || [])];
-    newModules[index].title = title;
+    newModules[index] = { ...newModules[index], [field]: value };
     setCertification({ ...certification, modules: newModules });
   };
 
@@ -126,6 +127,23 @@ const SuperAdminCreateCertification: React.FC = () => {
     }
   };
 
+  const handleGenerateAssessment = async (moduleId: string) => {
+    if (moduleId.length < 10) {
+      alert("Please save the certification first before generating assessments.");
+      return;
+    }
+    setGeneratingAi(moduleId);
+    try {
+      await axios.post('/api/superadmin/ai/certification-assessment', { moduleId }, { withCredentials: true });
+      alert("Assessment questions generated successfully!");
+    } catch (error) {
+      console.error('Failed to generate assessment', error);
+      alert('Failed to generate assessment questions.');
+    } finally {
+      setGeneratingAi(null);
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" mb={3} fontWeight="bold">
@@ -168,11 +186,44 @@ const SuperAdminCreateCertification: React.FC = () => {
               fullWidth 
               label={`Module ${mIndex + 1} Title`} 
               value={mod.title} 
-              onChange={(e) => updateModule(mIndex, e.target.value)} 
+              onChange={(e) => updateModule(mIndex, 'title', e.target.value)} 
             />
             <IconButton onClick={() => removeModule(mIndex)} color="error" sx={{ ml: 1 }}>
               <Delete />
             </IconButton>
+          </Box>
+          <Box display="flex" gap={2} mb={3} alignItems="center" flexWrap="wrap">
+            <FormControlLabel
+              control={<Switch checked={mod.has_assessment || false} onChange={(e) => updateModule(mIndex, 'has_assessment', e.target.checked)} />}
+              label="Has Assessment"
+            />
+            {mod.has_assessment && (
+              <>
+                <TextField 
+                  label="Passing Rate (%)" 
+                  type="number" 
+                  size="small" 
+                  value={mod.passing_rate ?? 80.0} 
+                  onChange={(e) => updateModule(mIndex, 'passing_rate', parseFloat(e.target.value))} 
+                />
+                <TextField 
+                  label="# of Questions" 
+                  type="number" 
+                  size="small" 
+                  value={mod.assessment_question_count ?? 5} 
+                  onChange={(e) => updateModule(mIndex, 'assessment_question_count', parseInt(e.target.value, 10))} 
+                />
+                <Button 
+                  variant="contained" 
+                  color="secondary" 
+                  startIcon={<AutoAwesome />} 
+                  onClick={() => handleGenerateAssessment(mod.id)}
+                  disabled={generatingAi === mod.id}
+                >
+                  {generatingAi === mod.id ? 'Generating...' : 'Generate Assessment via AI'}
+                </Button>
+              </>
+            )}
           </Box>
 
           <Box pl={4}>

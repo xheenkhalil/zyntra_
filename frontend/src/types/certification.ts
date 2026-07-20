@@ -12,6 +12,9 @@ export interface CertificationModule {
   certification_id?: string;
   title: string;
   order_index: number;
+  has_assessment?: boolean;
+  passing_rate?: number;
+  assessment_question_count?: number;
   units: CertificationUnit[];
 }
 
@@ -23,6 +26,8 @@ export interface Certification {
   image_url: string;
   price: number;
   is_published: boolean;
+  average_rating?: number;
+  participant_count?: number;
   created_at?: string;
   updated_at?: string;
   modules?: CertificationModule[];

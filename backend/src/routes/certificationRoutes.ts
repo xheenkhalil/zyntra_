@@ -8,7 +8,9 @@ import {
   deleteCertification,
   enrollUser,
   getEnrollmentStatus,
-  markUnitCompleted
+  markUnitCompleted,
+  getModuleAssessment,
+  submitModuleAssessment
 } from '../controllers/certificationController';
 
 const router = Router();
@@ -21,6 +23,8 @@ router.get('/:id', getCertificationById);
 router.post('/:id/enroll', protect, enrollUser);
 router.get('/:id/enrollment', protect, getEnrollmentStatus);
 router.post('/units/:unit_id/complete', protect, markUnitCompleted);
+router.get('/modules/:moduleId/assessment', protect, getModuleAssessment);
+router.post('/:certification_id/modules/:moduleId/assessment', protect, submitModuleAssessment);
 
 // Admin Routes
 router.post('/', protect, authorize('superadmin'), createCertification);

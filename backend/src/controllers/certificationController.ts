@@ -59,8 +59,8 @@ export const createCertification = async (req: Request, res: Response) => {
       for (let i = 0; i < modules.length; i++) {
         const mod = modules[i];
         const modResult = await db.query(
-          'INSERT INTO certification_modules (certification_id, title, order_index) VALUES ($1, $2, $3) RETURNING *',
-          [certification.id, mod.title, i]
+          'INSERT INTO certification_modules (certification_id, title, order_index, has_assessment, passing_rate, assessment_question_count) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+          [certification.id, mod.title, i, mod.has_assessment || false, mod.passing_rate || 80.0, mod.assessment_question_count || 5]
         );
         const newMod = modResult.rows[0];
 
@@ -109,8 +109,8 @@ export const updateCertification = async (req: Request, res: Response) => {
       for (let i = 0; i < modules.length; i++) {
         const mod = modules[i];
         const modResult = await db.query(
-          'INSERT INTO certification_modules (certification_id, title, order_index) VALUES ($1, $2, $3) RETURNING *',
-          [id, mod.title, i]
+          'INSERT INTO certification_modules (certification_id, title, order_index, has_assessment, passing_rate, assessment_question_count) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+          [id, mod.title, i, mod.has_assessment || false, mod.passing_rate || 80.0, mod.assessment_question_count || 5]
         );
         const newMod = modResult.rows[0];
 
@@ -184,10 +184,17 @@ export const getEnrollmentStatus = async (req: Request, res: Response) => {
       WHERE cm.certification_id = $1 AND cup.user_id = $2
     `, [certification_id, user_id]);
 
+    const moduleProgressResult = await db.query(`
+      SELECT cmp.* FROM certification_module_progress cmp
+      JOIN certification_enrollments ce ON ce.id = cmp.enrollment_id
+      WHERE ce.certification_id = $1 AND ce.user_id = $2
+    `, [certification_id, user_id]);
+
     res.json({
       enrolled: true,
       enrollment: enrollResult.rows[0],
-      completed_units: progressResult.rows.filter(r => r.is_completed).map(r => r.unit_id)
+      completed_units: progressResult.rows.filter(r => r.is_completed).map(r => r.unit_id),
+      module_progress: moduleProgressResult.rows
     });
   } catch (error) {
     console.error('Error fetching enrollment:', error);
@@ -214,6 +221,95 @@ export const markUnitCompleted = async (req: Request, res: Response) => {
     res.json({ message: 'Unit progress updated' });
   } catch (error) {
     console.error('Error updating unit progress:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getModuleAssessment = async (req: Request, res: Response) => {
+  try {
+    const { moduleId } = req.params;
+    const questionsResult = await db.query('SELECT id, question_text, options FROM certification_module_questions WHERE module_id = $1', [moduleId]);
+    
+    // Strip isCorrect before sending to client
+    const sanitizedQuestions = questionsResult.rows.map(q => {
+      let safeOptions = [];
+      if (typeof q.options === 'string') {
+        try { safeOptions = JSON.parse(q.options); } catch (e) {}
+      } else if (Array.isArray(q.options)) {
+        safeOptions = q.options;
+      }
+      return {
+        ...q,
+        options: safeOptions.map((opt: any) => ({ text: opt.text }))
+      };
+    });
+
+    res.json(sanitizedQuestions);
+  } catch (error) {
+    console.error('Error fetching module assessment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const submitModuleAssessment = async (req: Request, res: Response) => {
+  try {
+    const { certification_id, moduleId } = req.params;
+    const { answers } = req.body; // { questionId: "selected text" }
+    // @ts-ignore
+    const user_id = req.user.id;
+
+    const enrollResult = await db.query('SELECT id FROM certification_enrollments WHERE user_id = $1 AND certification_id = $2', [user_id, certification_id]);
+    if (enrollResult.rows.length === 0) return res.status(403).json({ error: 'Not enrolled' });
+    const enrollment_id = enrollResult.rows[0].id;
+
+    const moduleResult = await db.query('SELECT passing_rate FROM certification_modules WHERE id = $1', [moduleId]);
+    if (moduleResult.rows.length === 0) return res.status(404).json({ error: 'Module not found' });
+    const passing_rate = parseFloat(moduleResult.rows[0].passing_rate || '80.0');
+
+    // Check attempts
+    const progressResult = await db.query('SELECT * FROM certification_module_progress WHERE enrollment_id = $1 AND module_id = $2', [enrollment_id, moduleId]);
+    let attempts = 0;
+    if (progressResult.rows.length > 0) {
+      attempts = progressResult.rows[0].attempts;
+      if (progressResult.rows[0].passed) {
+        return res.status(400).json({ error: 'Assessment already passed.' });
+      }
+      if (attempts >= 3) {
+        return res.status(403).json({ error: 'Maximum attempts reached.' });
+      }
+    }
+
+    const questionsResult = await db.query('SELECT id, options FROM certification_module_questions WHERE module_id = $1', [moduleId]);
+    const questions = questionsResult.rows;
+
+    let correctCount = 0;
+    for (const q of questions) {
+      const selectedText = answers[q.id];
+      let opts = [];
+      if (typeof q.options === 'string') {
+        try { opts = JSON.parse(q.options); } catch (e) {}
+      } else {
+        opts = q.options;
+      }
+      const correctOpt = opts.find((o: any) => o.isCorrect);
+      if (correctOpt && selectedText && correctOpt.text === selectedText) {
+        correctCount++;
+      }
+    }
+
+    const score = questions.length > 0 ? (correctCount / questions.length) * 100 : 0;
+    const passed = score >= passing_rate;
+
+    await db.query(`
+      INSERT INTO certification_module_progress (enrollment_id, module_id, passed, score, attempts, updated_at)
+      VALUES ($1, $2, $3, $4, 1, now())
+      ON CONFLICT (enrollment_id, module_id)
+      DO UPDATE SET passed = $3, score = $4, attempts = certification_module_progress.attempts + 1, updated_at = now()
+    `, [enrollment_id, moduleId, passed, score]);
+
+    res.json({ passed, score, correctCount, total: questions.length, attempts: attempts + 1 });
+  } catch (error) {
+    console.error('Error submitting assessment:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

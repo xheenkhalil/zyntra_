@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const superAdminController_1 = require("../controllers/superAdminController");
+const aiController_1 = require("../controllers/aiController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 // This middleware protects all routes in this file and ensures only a 'superadmin' can access them
@@ -45,6 +46,13 @@ router.post('/central-admins/send-invite', superAdminController_1.sendInviteEmai
 router.get('/users', superAdminController_1.getAllUsers);
 // PUT /api/superadmin/users/:id/status
 router.put('/users/:id/status', superAdminController_1.updateUserStatus);
-// PUT /api/superadmin/users/:id/role
-router.put('/users/:id/role', superAdminController_1.updateUserRole);
+// POST /api/superadmin/users/:userId/role
+router.put('/users/:userId/role', superAdminController_1.updateUserRole);
+// =====================================
+// AI GENERATION ROUTES
+// =====================================
+// POST /api/superadmin/ai/guest-quiz-questions
+router.post('/ai/guest-quiz-questions', aiController_1.generateGuestQuizQuestions);
+// POST /api/superadmin/ai/certification-assessment
+router.post('/ai/certification-assessment', aiController_1.generateCertificationAssessment);
 exports.default = router;

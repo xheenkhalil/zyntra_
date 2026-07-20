@@ -238,3 +238,90 @@ export const generateFromDocument = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+// Save generated question to guest_quizzes
+async function saveGuestQuestionToDb(quizId: string, q: any) {
+  let finalOptions = q.options || [];
+  if (q.type === 'FILL_BLANK') {
+    finalOptions = [{ text: q.correctAnswer || '', isCorrect: true }];
+  } else if (q.type === 'ESSAY') {
+    finalOptions = [];
+  }
+  await pool.query(
+    `INSERT INTO guest_questions (quiz_id, question_text, options) VALUES ($1, $2, $3)`,
+    [quizId, q.questionText, JSON.stringify(finalOptions)]
+  );
+}
+
+export const generateGuestQuizQuestions = async (req: AuthRequest, res: Response) => {
+  const { topic, difficulty = 'Medium', count = 5, quizId } = req.body;
+  if (!topic) return res.status(400).json({ message: 'Topic is required.' });
+
+  const typeBreakdown = { MCQ: count };
+  const systemPrompt = buildSystemPrompt(['MCQ']);
+  const userPrompt = buildUserPrompt(topic, difficulty, typeBreakdown);
+
+  try {
+    const questions = await generateWithFallback(systemPrompt, userPrompt);
+    if (quizId) {
+      for (const q of questions) {
+        await saveGuestQuestionToDb(quizId, q);
+      }
+    }
+    res.status(200).json(questions);
+  } catch (error: any) {
+    console.error('Error generating AI guest quiz questions:', error);
+    res.status(500).json({ message: 'Failed to generate guest quiz questions.', error: error?.message });
+  }
+};
+
+// Save assessment question to certification_module_questions
+async function saveCertAssessmentQuestionToDb(moduleId: string, q: any) {
+  let finalOptions = q.options || [];
+  await pool.query(
+    `INSERT INTO certification_module_questions (module_id, question_text, options) VALUES ($1, $2, $3)`,
+    [moduleId, q.questionText, JSON.stringify(finalOptions)]
+  );
+}
+
+export const generateCertificationAssessment = async (req: AuthRequest, res: Response) => {
+  const { moduleId } = req.body;
+  if (!moduleId) return res.status(400).json({ message: 'moduleId is required.' });
+
+  try {
+    // Get module and its settings
+    const moduleRes = await pool.query(`SELECT * FROM certification_modules WHERE id = $1`, [moduleId]);
+    if (moduleRes.rows.length === 0) return res.status(404).json({ message: 'Module not found.' });
+    const module = moduleRes.rows[0];
+
+    const questionCount = module.assessment_question_count || 5;
+
+    // Get units content
+    const unitsRes = await pool.query(`SELECT content FROM certification_units WHERE module_id = $1 ORDER BY order_index ASC`, [moduleId]);
+    const unitsContent = unitsRes.rows.map(u => u.content).join('\n\n');
+
+    const typeBreakdown = { MCQ: questionCount };
+    const systemPrompt = buildSystemPrompt(['MCQ']);
+    
+    let userPrompt = '';
+    if (unitsContent.trim().length > 0) {
+      userPrompt = `Based on the following text about "${module.title}", generate ${questionCount} MCQ questions.\n\n--- TEXT CONTEXT ---\n${unitsContent.substring(0, 12000)}\n--- END OF TEXT CONTEXT ---`;
+    } else {
+      userPrompt = buildUserPrompt(module.title, 'Medium', typeBreakdown);
+    }
+
+    const questions = await generateWithFallback(systemPrompt, userPrompt);
+
+    // Delete old assessment questions if they exist
+    await pool.query(`DELETE FROM certification_module_questions WHERE module_id = $1`, [moduleId]);
+
+    for (const q of questions) {
+      await saveCertAssessmentQuestionToDb(moduleId, q);
+    }
+
+    res.status(200).json(questions);
+  } catch (error: any) {
+    console.error('Error generating certification assessment:', error);
+    res.status(500).json({ message: 'Failed to generate assessment.', error: error?.message });
+  }
+};
