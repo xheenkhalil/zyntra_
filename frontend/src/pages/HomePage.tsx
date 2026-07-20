@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
               Join thousands of institutions and educators using Zyntra to deliver secure, intelligent, and scalable exams today.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-white text-[#111A50] font-bold rounded-xl shadow-lg hover:bg-gray-100 transition-colors duration-200">
+              <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-white text-[#111A50] font-bold rounded-xl shadow-lg hover:bg-gray-100 transition-colors duration-200">
                 Get Started for Free
               </Link>
               <Link to="/contact" className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-[#111A50] transition-colors duration-200">

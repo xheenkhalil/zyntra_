@@ -85,7 +85,7 @@ const AIProctoring: React.FC = () => {
               <span>Back to Home</span>
             </Link>
             <Link
-              to="/login"
+              to="/register"
               className="flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-100 text-[#111A50] rounded-lg font-medium shadow-lg transition-colors"
             >
               <FaRocket />
@@ -407,7 +407,7 @@ const AIProctoring: React.FC = () => {
           </Typography>
           <Box className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Link
-              to="/login"
+              to="/register"
               className="flex items-center space-x-2 px-8 py-3 bg-white hover:bg-gray-100 text-[#111A50] rounded-lg font-medium shadow-lg transition-colors"
             >
               <FaRocket />

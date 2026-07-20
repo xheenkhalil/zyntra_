@@ -99,7 +99,7 @@ const CorporateTrainingPage: React.FC = () => {
           </Typography>
           <Box className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Link
-              to="/login"
+              to="/register"
               className="px-8 py-3 bg-white text-[#111A50] rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all no-underline"
             >
               Request Enterprise Demo
@@ -562,7 +562,7 @@ const CorporateTrainingPage: React.FC = () => {
           </Typography>
           <Box className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Link
-              to="/login"
+              to="/register"
               className="flex items-center space-x-2 px-8 py-3 bg-white text-[#111A50] rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all no-underline"
             >
               <FaRocket />

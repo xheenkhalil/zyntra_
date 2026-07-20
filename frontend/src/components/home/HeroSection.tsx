@@ -82,7 +82,7 @@ const HeroSection: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 lg:space-x-6 mb-8 sm:mb-12">
           {/* Replaced <button> with <Link> and added the 'to' prop */}
-          <Link to="/login" className="flex items-center justify-center space-x-2 bg-white text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 w-[80%] max-w-[280px] sm:max-w-none mx-auto sm:w-auto sm:mx-0 no-underline border-none">
+          <Link to="/register" className="flex items-center justify-center space-x-2 bg-white text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 w-[80%] max-w-[280px] sm:max-w-none mx-auto sm:w-auto sm:mx-0 no-underline border-none">
             <FaPlay className="text-sm" />
             <span>Start Free Trial</span>
           </Link>

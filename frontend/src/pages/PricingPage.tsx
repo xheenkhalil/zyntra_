@@ -385,7 +385,7 @@ const PricingPage: React.FC = () => {
                       ? "!bg-[#111A50] !text-white hover:!bg-[#080D2B]"
                       : "!border-[#111A50] !text-[#111A50]"
                   }`}
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/register")}
                 >
                   {plan.buttonLabel}
                 </Button>
@@ -463,7 +463,7 @@ const PricingPage: React.FC = () => {
                         ? "!bg-[#111A50] !text-white hover:!bg-[#080D2B]"
                         : "!border-[#111A50] !text-[#111A50]"
                     }`}
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate("/register")}
                   >
                     Buy Credits
                   </Button>
@@ -796,7 +796,7 @@ const PricingPage: React.FC = () => {
           </Typography>
           <Box className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Link
-              to="/login"
+              to="/register"
               className="flex items-center space-x-2 px-8 py-3 bg-white text-[#111A50] rounded-lg font-semibold shadow-lg hover:bg-gray-100 transition-colors no-underline"
             >
               <FaRocket />

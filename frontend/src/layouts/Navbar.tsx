@@ -311,7 +311,7 @@ const Navbar: React.FC = () => {
             {/* This button is styled with Tailwind, so we reset MUI's default color */}
             <Button
               color="inherit" // This stops MUI from overriding Tailwind
-              onClick={() => handleNavigate("/login")}
+              onClick={() => handleNavigate("/register")}
               className="flex items-center space-x-2 px-3 md:px-4 py-2 bg-[#111A50] hover:bg-[#080D2B] text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               startIcon={<FaUserPlus className="text-sm" />}
             >
@@ -436,7 +436,7 @@ const Navbar: React.FC = () => {
             </Button>
             <Button
               color="inherit"
-              onClick={() => handleNavigate("/login")}
+              onClick={() => handleNavigate("/register")}
               className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#111A50] hover:bg-[#080D2B] text-white rounded-lg font-medium"
               startIcon={<FaUserPlus className="text-sm" />}
             >
