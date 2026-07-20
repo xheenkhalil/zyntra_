@@ -23,7 +23,7 @@ import {
   updateUserStatus,
   updateUserRole,
 } from '../controllers/superAdminController';
-import { generateGuestQuizQuestions, generateCertificationAssessment } from '../controllers/aiController';
+import { generateGuestQuizQuestions, generateCertificationAssessment, generateFullCertificationCourse } from '../controllers/aiController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -95,5 +95,8 @@ router.post('/ai/guest-quiz-questions', generateGuestQuizQuestions);
 
 // POST /api/superadmin/ai/certification-assessment
 router.post('/ai/certification-assessment', generateCertificationAssessment);
+
+// POST /api/superadmin/ai/generate-certification-course
+router.post('/ai/generate-certification-course', generateFullCertificationCourse);
 
 export default router;

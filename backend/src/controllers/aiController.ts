@@ -325,3 +325,157 @@ export const generateCertificationAssessment = async (req: AuthRequest, res: Res
     res.status(500).json({ message: 'Failed to generate assessment.', error: error?.message });
   }
 };
+
+// =============================================
+// AI Full Certification Course Generation
+// =============================================
+
+async function generateCourseWithFallback(systemPrompt: string, userPrompt: string) {
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash',
+    'gemini-2.0-flash',
+  ];
+  let lastError: any;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+      });
+
+      const response = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { responseMimeType: 'application/json' },
+      });
+      let content = response.response.text();
+      if (!content) throw new Error('AI returned an empty response.');
+
+      content = content
+        .replace(/^```json\s*/i, '')
+        .replace(/```\s*$/i, '')
+        .trim();
+
+      return JSON.parse(content);
+    } catch (error: any) {
+      console.warn(`Model ${modelName} failed for course gen:`, error?.message || String(error));
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('All fallback models failed to generate course content.');
+}
+
+export const generateFullCertificationCourse = async (req: AuthRequest, res: Response) => {
+  const { topic, moduleCount = 3, audienceLevel = 'Intermediate', description = '' } = req.body;
+
+  if (!topic) {
+    return res.status(400).json({ message: 'Topic is required.' });
+  }
+
+  const systemPrompt = `You are an expert educational course designer and curriculum developer. Your task is to generate a complete, professional certification course curriculum.
+
+You MUST respond with ONLY a valid JSON object with this exact structure:
+{
+  "title": "Course Title",
+  "description": "Brief 1-2 sentence course description",
+  "overview": "Detailed 2-3 paragraph overview of what students will learn, prerequisites, and outcomes",
+  "modules": [
+    {
+      "title": "Module Title",
+      "has_assessment": true,
+      "passing_rate": 80,
+      "assessment_question_count": 5,
+      "units": [
+        {
+          "title": "Unit Title",
+          "content": "<rich HTML content>",
+          "video_url": ""
+        }
+      ],
+      "assessment_questions": [
+        {
+          "questionText": "Question?",
+          "options": [
+            {"text": "Option A", "isCorrect": false},
+            {"text": "Option B", "isCorrect": true},
+            {"text": "Option C", "isCorrect": false},
+            {"text": "Option D", "isCorrect": false}
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+CRITICAL CONTENT RULES:
+- Each unit's "content" field must be RICH HTML with professional styling
+- Use HTML tables with inline styles for data comparisons (e.g. <table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr style="background:#111A50;color:#fff"><th style="padding:12px;text-align:left">...</th></tr></thead><tbody>...</tbody></table>)
+- Use styled section headers: <h3 style="color:#111A50;border-bottom:2px solid #111A50;padding-bottom:8px;margin-top:24px">Section Title</h3>
+- Use info boxes: <div style="background:#f0f4ff;border-left:4px solid #111A50;padding:16px;margin:16px 0;border-radius:4px"><strong>💡 Key Takeaway:</strong> Important point here</div>
+- Use warning boxes: <div style="background:#fff3e0;border-left:4px solid #ff9800;padding:16px;margin:16px 0;border-radius:4px"><strong>⚠️ Important:</strong> Warning content</div>
+- Use ordered and unordered lists with proper spacing
+- Use <code style="background:#e8eaf6;padding:2px 6px;border-radius:3px;font-family:monospace">inline code</code> for technical terms
+- Use <pre style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;overflow-x:auto"><code>code blocks</code></pre> for code examples when relevant
+- Include SVG diagrams or flowcharts where they help explain concepts (use inline SVG with viewBox)
+- Each unit content should be AT LEAST 800 words of substantive educational content
+- Make the content genuinely educational, not placeholder text
+- Include real-world examples, case studies, and practical applications
+
+Each module should have 2-3 units and 5 MCQ assessment questions.
+Do NOT include any text outside the JSON object.`;
+
+  const userPrompt = `Generate a complete ${audienceLevel}-level certification course about "${topic}" with exactly ${moduleCount} modules.${description ? `\n\nAdditional context: ${description}` : ''}
+
+Requirements:
+- Each module should have 2-3 units with rich, educational HTML content
+- Include HTML tables for comparisons and structured data
+- Include styled info boxes and key takeaways
+- Include SVG diagrams where they add value
+- Each module needs 5 MCQ assessment questions with correct answers
+- Target audience: ${audienceLevel} level learners
+- Make the content comprehensive, professional, and genuinely educational`;
+
+  try {
+    const course = await generateCourseWithFallback(systemPrompt, userPrompt);
+
+    // Validate structure
+    if (!course.title || !course.modules || !Array.isArray(course.modules)) {
+      return res.status(500).json({ message: 'AI generated an invalid course structure.' });
+    }
+
+    // Normalize the output
+    const normalizedCourse = {
+      title: course.title,
+      description: course.description || '',
+      overview: course.overview || '',
+      modules: course.modules.map((mod: any, i: number) => ({
+        id: `ai-${Date.now()}-${i}`,
+        title: mod.title || `Module ${i + 1}`,
+        order_index: i,
+        has_assessment: mod.has_assessment !== false,
+        passing_rate: mod.passing_rate || 80,
+        assessment_question_count: mod.assessment_question_count || 5,
+        units: (mod.units || []).map((unit: any, j: number) => ({
+          id: `ai-unit-${Date.now()}-${i}-${j}`,
+          title: unit.title || `Unit ${j + 1}`,
+          content: unit.content || '',
+          video_url: unit.video_url || '',
+          order_index: j,
+        })),
+        assessment_questions: mod.assessment_questions || [],
+      })),
+    };
+
+    res.status(200).json(normalizedCourse);
+  } catch (error: any) {
+    console.error('Error generating full certification course:', error);
+    res.status(500).json({
+      message: 'Failed to generate certification course.',
+      error: error?.message || String(error),
+    });
+  }
+};
+

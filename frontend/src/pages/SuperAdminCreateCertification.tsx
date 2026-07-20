@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Paper, IconButton, Switch, FormControlLabel } from '@mui/material';
+import { 
+  Box, Typography, TextField, Button, Paper, IconButton, Switch, FormControlLabel,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select, InputLabel, FormControl,
+  LinearProgress, Snackbar, Alert
+} from '@mui/material';
 import { Add, Delete, DragIndicator, AutoAwesome } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-
 
 import type { Certification, CertificationUnit, CertificationModule } from '../types/certification';
 
@@ -14,6 +17,15 @@ const SuperAdminCreateCertification: React.FC = () => {
   const isEditing = Boolean(id);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingAi, setGeneratingAi] = useState<string | null>(null);
+
+  // AI Course Generation state
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiModuleCount, setAiModuleCount] = useState(3);
+  const [aiAudienceLevel, setAiAudienceLevel] = useState('Intermediate');
+  const [aiDescription, setAiDescription] = useState('');
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'info' });
 
   const [certification, setCertification] = useState<Partial<Certification>>({
     title: '',
@@ -147,11 +159,158 @@ const SuperAdminCreateCertification: React.FC = () => {
     }
   };
 
+  // --- AI Full Course Generation ---
+  const handleAiGenerateCourse = async () => {
+    if (!aiTopic.trim()) {
+      setSnackbar({ open: true, message: 'Please enter a topic for the course.', severity: 'error' });
+      return;
+    }
+
+    setAiGenerating(true);
+    try {
+      const res = await axios.post(API_BASE_URL + '/superadmin/ai/generate-certification-course', {
+        topic: aiTopic,
+        moduleCount: aiModuleCount,
+        audienceLevel: aiAudienceLevel,
+        description: aiDescription,
+      }, { withCredentials: true });
+
+      const course = res.data;
+
+      // Populate the form with AI-generated content
+      setCertification({
+        ...certification,
+        title: course.title || certification.title,
+        description: course.description || certification.description,
+        overview: course.overview || certification.overview,
+        modules: course.modules || [],
+      });
+
+      setAiDialogOpen(false);
+      setAiTopic('');
+      setAiDescription('');
+      setSnackbar({ open: true, message: '✨ Course generated! Review the content below and save when ready.', severity: 'success' });
+    } catch (error: any) {
+      console.error('AI course generation failed:', error);
+      setSnackbar({ open: true, message: error?.response?.data?.message || 'Failed to generate course. Please try again.', severity: 'error' });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   return (
     <Box>
-      <Typography variant="h4" mb={3} fontWeight="bold">
-        {isEditing ? 'Edit Certification' : 'Create Certification'}
-      </Typography>
+      {/* --- Page Header with AI Button --- */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
+        <Typography variant="h4" fontWeight="bold">
+          {isEditing ? 'Edit Certification' : 'Create Certification'}
+        </Typography>
+        {!isEditing && (
+          <Button
+            variant="contained"
+            startIcon={<AutoAwesome />}
+            onClick={() => setAiDialogOpen(true)}
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: '#fff',
+              fontWeight: 'bold',
+              px: 3,
+              py: 1.2,
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontSize: '0.95rem',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4299 100%)',
+                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
+                transform: 'translateY(-1px)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            ✨ Generate Course with AI
+          </Button>
+        )}
+      </Box>
+
+      {/* --- AI Generation Dialog --- */}
+      <Dialog open={aiDialogOpen} onClose={() => !aiGenerating && setAiDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AutoAwesome sx={{ color: '#667eea' }} />
+          Generate Certification Course with AI
+        </DialogTitle>
+        <DialogContent>
+          {aiGenerating && (
+            <Box mb={2}>
+              <LinearProgress sx={{ borderRadius: 4, height: 6, '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #667eea, #764ba2)' } }} />
+              <Typography variant="body2" color="text.secondary" mt={1} textAlign="center">
+                ✨ AI is building your course... This may take 30-60 seconds.
+              </Typography>
+            </Box>
+          )}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Course Topic"
+            placeholder="e.g. Cybersecurity Fundamentals, Data Science with Python, Project Management"
+            value={aiTopic}
+            onChange={(e) => setAiTopic(e.target.value)}
+            margin="normal"
+            disabled={aiGenerating}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Additional Description (optional)"
+            placeholder="Any specific areas to focus on, prerequisites, or learning outcomes"
+            value={aiDescription}
+            onChange={(e) => setAiDescription(e.target.value)}
+            margin="normal"
+            multiline
+            rows={2}
+            disabled={aiGenerating}
+          />
+          <Box display="flex" gap={2} mt={1}>
+            <TextField
+              label="Number of Modules"
+              type="number"
+              value={aiModuleCount}
+              onChange={(e) => setAiModuleCount(Math.max(1, Math.min(8, parseInt(e.target.value) || 3)))}
+              disabled={aiGenerating}
+              inputProps={{ min: 1, max: 8 }}
+              sx={{ flex: 1 }}
+            />
+            <FormControl sx={{ flex: 1 }}>
+              <InputLabel>Audience Level</InputLabel>
+              <Select
+                value={aiAudienceLevel}
+                label="Audience Level"
+                onChange={(e) => setAiAudienceLevel(e.target.value)}
+                disabled={aiGenerating}
+              >
+                <MenuItem value="Beginner">Beginner</MenuItem>
+                <MenuItem value="Intermediate">Intermediate</MenuItem>
+                <MenuItem value="Advanced">Advanced</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setAiDialogOpen(false)} disabled={aiGenerating}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleAiGenerateCourse}
+            disabled={aiGenerating || !aiTopic.trim()}
+            startIcon={<AutoAwesome />}
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4299 100%)' },
+            }}
+          >
+            {aiGenerating ? 'Generating...' : 'Generate Course'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Paper sx={{ p: 3, mb: 4 }}>
         <Typography variant="h6" mb={2}>General Info</Typography>
@@ -265,6 +424,17 @@ const SuperAdminCreateCertification: React.FC = () => {
         <Button variant="contained" color="primary" onClick={handleSave} size="large">Save Certification</Button>
       </Box>
 
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
