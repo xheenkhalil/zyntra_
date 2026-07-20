@@ -3,8 +3,6 @@ import { Box, Typography, Button, Paper, Radio, RadioGroup, FormControlLabel, Fo
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 
-
-
 interface Question {
   id: string;
   question_text: string;
@@ -37,6 +35,7 @@ const ModuleAssessment: React.FC<ModuleAssessmentProps> = ({ certificationId, mo
       setResult(null);
       setAnswers({});
     } catch (err: any) {
+      console.error('Failed to load assessment:', err);
       setError('Failed to load assessment questions.');
     } finally {
       setLoading(false);
@@ -56,8 +55,8 @@ const ModuleAssessment: React.FC<ModuleAssessmentProps> = ({ certificationId, mo
     setSubmitting(true);
     try {
       const res = await axios.post(
-        `/api/certifications/${certificationId}/modules/${moduleId}/assessment`, 
-        { answers }, 
+        `${API_BASE_URL}/certifications/${certificationId}/modules/${moduleId}/assessment`,
+        { answers },
         { withCredentials: true }
       );
       setResult(res.data);

@@ -15,15 +15,18 @@ import {
 
 const router = Router();
 
-// Public / User Routes
+// Public Routes
 router.get('/', getCertifications);
+
+// Protected User Routes (Enrollment & Progress) — MUST come before /:id
+router.get('/modules/:moduleId/assessment', protect, getModuleAssessment);
+router.post('/units/:unit_id/complete', protect, markUnitCompleted);
+
+// This must come AFTER /modules/ and /units/ routes to avoid catching them
 router.get('/:id', getCertificationById);
 
-// Protected User Routes (Enrollment & Progress)
 router.post('/:id/enroll', protect, enrollUser);
 router.get('/:id/enrollment', protect, getEnrollmentStatus);
-router.post('/units/:unit_id/complete', protect, markUnitCompleted);
-router.get('/modules/:moduleId/assessment', protect, getModuleAssessment);
 router.post('/:certification_id/modules/:moduleId/assessment', protect, submitModuleAssessment);
 
 // Admin Routes
