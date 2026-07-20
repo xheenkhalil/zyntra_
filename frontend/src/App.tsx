@@ -51,6 +51,9 @@ const SuperAdminOrganizations = lazy(() => import('./pages/SuperAdminOrganizatio
 const SuperAdminAnalytics = lazy(() => import('./pages/SuperAdminAnalytics'));
 const SuperAdminSystemStatus = lazy(() => import('./pages/SuperAdminSystemStatus'));
 const EnrollmentTestPage = lazy(() => import('./pages/EnrollmentTestPage'));
+const SuperAdminCertifications = lazy(() => import('./pages/SuperAdminCertifications'));
+const SuperAdminCreateCertification = lazy(() => import('./pages/SuperAdminCreateCertification'));
+const CourseViewerPage = lazy(() => import('./pages/CourseViewerPage'));
 
 // --- Client Admin Pages ---
 const CentralAdminOverview = lazy(() => import('./pages/CentralAdminOverview'));
@@ -108,6 +111,9 @@ function App() {
                             <Route path="/solutions/guest-quizzes" element={<SEORoute path="/solutions/guest-quizzes"><GuestQuizzesPage /></SEORoute>} />
                             <Route path="/solutions/earn-badges" element={<SEORoute path="/solutions/earn-badges"><EarnBadgesPage /></SEORoute>} />
 
+                            {/* --- Certifications Routes --- */}
+                            <Route path="/certifications/:id" element={<SEORoute path="/certifications/:id"><CourseViewerPage /></SEORoute>} />
+
                             {/* --- Features Routes --- */}
                             <Route path="/features/ai-proctoring" element={<SEORoute path="/features/ai-proctoring"><AIProctoring /></SEORoute>} />
                             <Route path="/features/smart-analytics" element={<SEORoute path="/features/smart-analytics"><SmartAnalytics /></SEORoute>} />
@@ -138,6 +144,9 @@ function App() {
                                     <Route path="users" element={<SuperAdminUsers />} />
                                     <Route path="analytics" element={<SuperAdminAnalytics />} />
                                     <Route path="organizations" element={<SuperAdminOrganizations />} />
+                                    <Route path="certifications" element={<SuperAdminCertifications />} />
+                                    <Route path="certifications/new" element={<SuperAdminCreateCertification />} />
+                                    <Route path="certifications/:id/edit" element={<SuperAdminCreateCertification />} />
                                     <Route path="system-status" element={<SuperAdminSystemStatus />} />
 
                                     <Route path="exams" element={<ExamBankPage />} />

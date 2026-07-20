@@ -27,6 +27,8 @@ const superAdminGuestQuizRoutes_1 = __importDefault(require("./routes/superAdmin
 const systemRoutes_1 = __importDefault(require("./routes/systemRoutes"));
 const proctoringRoutes_1 = __importDefault(require("./routes/proctoringRoutes"));
 const aiRoutes_1 = __importDefault(require("./routes/aiRoutes"));
+const certificationRoutes_1 = __importDefault(require("./routes/certificationRoutes"));
+const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
 // Swagger Imports
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_1 = __importDefault(require("./swagger"));
@@ -101,6 +103,8 @@ app.use('/api/public', guestRoutes_1.default);
 app.use('/api/system', systemRoutes_1.default);
 app.use('/api/proctoring', proctoringRoutes_1.default);
 app.use('/api/ai', aiRoutes_1.default);
+app.use('/api/certifications', certificationRoutes_1.default);
+app.use('/api/upload', uploadRoutes_1.default);
 // =====================================================
 // HEALTH CHECK ENDPOINT
 // =====================================================

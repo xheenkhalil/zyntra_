@@ -19,6 +19,7 @@ const GuestQuizSection = lazy(() =>
     default: React.ComponentType<GuestQuizProps>;
   }>
 );
+const CertificationCoursesSection = lazy(() => import("../components/home/CertificationCoursesSection"));
 const Chatbot = lazy(() => import("../components/chatbot/Chatbot"));
 
 const HomePage: React.FC = () => {
@@ -50,6 +51,11 @@ const HomePage: React.FC = () => {
               handleQuizComplete(category, score)
             }
           />
+        </Suspense>
+
+        {/* --- NEW: Certification Courses Section --- */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <CertificationCoursesSection />
         </Suspense>
 
         {/* 4. Features Preview (Loads instantly) */}

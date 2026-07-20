@@ -14,6 +14,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaGraduationCap,
+  FaCertificate
 } from 'react-icons/fa';
 
 interface SidebarProps {
@@ -113,6 +114,13 @@ const SuperAdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, 
             to="/superadmin/guest-quizzes"
             icon={<FaPlusCircle />}
             text="Guest Quizzes"
+            isCollapsed={isCollapsed}
+            onClick={onMobileClose}
+          />
+          <NavItem
+            to="/superadmin/certifications"
+            icon={<FaCertificate />}
+            text="Certifications"
             isCollapsed={isCollapsed}
             onClick={onMobileClose}
           />

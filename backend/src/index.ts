@@ -24,6 +24,8 @@ import superAdminGuestQuizRoutes from './routes/superAdminGuestQuizRoutes';
 import systemRoutes from './routes/systemRoutes';
 import proctoringRoutes from './routes/proctoringRoutes';
 import aiRoutes from './routes/aiRoutes';
+import certificationRoutes from './routes/certificationRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 // Swagger Imports
 import swaggerUi from 'swagger-ui-express';
@@ -113,6 +115,8 @@ app.use('/api/public', guestRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/proctoring', proctoringRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/certifications', certificationRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // =====================================================
 // HEALTH CHECK ENDPOINT
