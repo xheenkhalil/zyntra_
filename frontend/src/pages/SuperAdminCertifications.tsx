@@ -16,7 +16,12 @@ const SuperAdminCertifications: React.FC = () => {
   const fetchCertifications = async () => {
     try {
       const res = await axios.get('/api/certifications', { withCredentials: true });
-      setCertifications(res.data);
+      if (Array.isArray(res.data)) {
+        setCertifications(res.data);
+      } else {
+        console.error('Expected array, got:', res.data);
+        setCertifications([]);
+      }
     } catch (error) {
       console.error('Error fetching certifications', error);
     }
