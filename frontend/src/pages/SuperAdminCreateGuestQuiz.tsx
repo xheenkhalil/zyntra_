@@ -11,6 +11,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { createGuestQuiz } from '../services/superAdminGuestQuizService';
 // --- NEW: Added icons for buttons ---
 import { FaArrowLeft, FaPlusCircle } from 'react-icons/fa';
@@ -19,10 +20,10 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
-  // The success state is fine, but we navigate away so fast it's barely seen.
-  // This is okay, as the navigation is the real success indicator.
   const [success, setSuccess] = useState('');
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -37,7 +38,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
 
     setLoading(true);
     try {
-      const newQuiz = await createGuestQuiz(title, category);
+      const newQuiz = await createGuestQuiz(title, category, imageUrl);
       setSuccess(
         `Quiz "${newQuiz.title}" created successfully! Redirecting...`
       );
@@ -63,6 +64,28 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
       console.error('Error creating guest quiz:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await axios.post('/api/upload/image', formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setImageUrl(res.data.url);
+    } catch (error) {
+      console.error('Upload failed', error);
+      setError('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -124,6 +147,20 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
             disabled={loading}
             helperText="e.g., 'Mathematics', 'Data Science', 'History'"
           />
+          <Box display="flex" gap={1} alignItems="center" mt={1}>
+            <TextField
+              label="Image URL (Optional)"
+              fullWidth
+              margin="normal"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              disabled={loading}
+            />
+            <Button variant="contained" component="label" disabled={uploadingImage || loading} sx={{ mt: 1, whiteSpace: 'nowrap' }}>
+              {uploadingImage ? 'Uploading...' : 'Upload'}
+              <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
+            </Button>
+          </Box>
 
           {error && (
             <Alert severity="error" className="mt-4">

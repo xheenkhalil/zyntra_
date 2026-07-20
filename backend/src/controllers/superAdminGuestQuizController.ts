@@ -45,7 +45,7 @@ const logAudit = async (
 
 // 1. Create a New Guest Quiz
 export const createGuestQuiz = async (req: AuthRequest, res: Response) => {
-  const { title, category } = req.body;
+  const { title, category, image_url } = req.body;
   const adminUserId = req.user?.userId; // For logging
 
   if (!title || !category) {
@@ -53,8 +53,8 @@ export const createGuestQuiz = async (req: AuthRequest, res: Response) => {
   }
   try {
     const result = await pool.query(
-      'INSERT INTO guest_quizzes (title, category, status) VALUES ($1, $2, $3) RETURNING *',
-      [title, category, 'draft'], // New quizzes start as 'draft'
+      'INSERT INTO guest_quizzes (title, category, image_url, status) VALUES ($1, $2, $3, $4) RETURNING *',
+      [title, category, image_url || null, 'draft'], // New quizzes start as 'draft'
     );
     const newQuiz = result.rows[0];
 
@@ -82,6 +82,7 @@ export const getAllGuestQuizzes = async (req: AuthRequest, res: Response) => {
                 gq.id,
                 gq.title,
                 gq.category,
+                gq.image_url,
                 gq.status,
                 gq.created_at,
                 gq.updated_at,
@@ -93,6 +94,7 @@ export const getAllGuestQuizzes = async (req: AuthRequest, res: Response) => {
                 gq.id, 
                 gq.title, 
                 gq.category, 
+                gq.image_url,
                 gq.status, 
                 gq.created_at, 
                 gq.updated_at
@@ -132,13 +134,20 @@ export const getGuestQuizById = async (req: AuthRequest, res: Response) => {
 
 // 4. Update a Guest Quiz (Title, Category, Status)
 export const updateGuestQuiz = async (req: AuthRequest, res: Response) => {
-  const { quizId } = req.params;
-  const { title, category, status } = req.body;
+  const { id } = req.params;
+  const { title, category, image_url, status } = req.body;
   const adminUserId = req.user?.userId;
+
   try {
     const result = await pool.query(
-      'UPDATE guest_quizzes SET title = $1, category = $2, status = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
-      [title, category, status, quizId],
+      `UPDATE guest_quizzes 
+       SET title = COALESCE($1, title), 
+           category = COALESCE($2, category), 
+           image_url = COALESCE($3, image_url),
+           status = COALESCE($4, status), 
+           updated_at = NOW() 
+       WHERE id = $5 RETURNING *`,
+      [title, category, image_url, status, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Guest quiz not found.' });

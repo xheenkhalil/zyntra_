@@ -12,6 +12,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 import { getGuestQuizById, updateGuestQuiz } from '../services/superAdminGuestQuizService';
 // --- NEW: Added icons ---
 import { FaArrowLeft, FaSave, FaEdit } from 'react-icons/fa';
@@ -20,6 +21,7 @@ interface GuestQuizDetails {
   id: string;
   title: string;
   category: string;
+  image_url?: string;
   status: 'draft' | 'published';
   average_rating: number | null;
   participant_count?: number; // Added this from your other file
@@ -32,10 +34,12 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
   const [quiz, setQuiz] = useState<GuestQuizDetails | null>(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -53,6 +57,7 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
         setQuiz(data);
         setTitle(data.title);
         setCategory(data.category);
+        setImageUrl(data.image_url || '');
         setStatus(data.status);
       } catch (err: unknown) {
         // (Your existing error handling is good)
@@ -84,6 +89,7 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
       const updatedQuiz = await updateGuestQuiz(quizId, {
         title,
         category,
+        image_url: imageUrl,
         status,
       });
       setSuccess(`Quiz "${updatedQuiz.title}" updated successfully!`);
@@ -94,6 +100,28 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
       console.error('Error updating guest quiz:', err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await axios.post('/api/upload/image', formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setImageUrl(res.data.url);
+    } catch (error) {
+      console.error('Upload failed', error);
+      setError('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -160,6 +188,20 @@ const SuperAdminEditGuestQuiz: React.FC = () => {
             required
             disabled={saving}
           />
+          <Box display="flex" gap={1} alignItems="center" mt={1}>
+            <TextField
+              label="Image URL (Optional)"
+              fullWidth
+              margin="normal"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              disabled={saving}
+            />
+            <Button variant="contained" component="label" disabled={uploadingImage || saving} sx={{ mt: 1, whiteSpace: 'nowrap' }}>
+              {uploadingImage ? 'Uploading...' : 'Upload'}
+              <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
+            </Button>
+          </Box>
           <TextField
             select
             label="Status"

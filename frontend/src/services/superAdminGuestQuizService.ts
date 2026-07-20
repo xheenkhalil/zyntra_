@@ -13,6 +13,7 @@ export interface GuestQuiz {
     id: string;
     title: string;
     category: string;
+    image_url?: string;
     status: 'draft' | 'published';
     participant_count: number;
     average_rating: number | null;
@@ -46,17 +47,13 @@ export const getGuestQuizById = async (quizId: string): Promise<FullGuestQuizDet
     return response.data;
 };
 
-export const createGuestQuiz = async (title: string, category: string): Promise<GuestQuiz> => {
-    const response = await apiClient.post('/superadmin/guest-quizzes', { title, category });
+export const createGuestQuiz = async (title: string, category: string, image_url?: string): Promise<GuestQuiz> => {
+    const response = await apiClient.post('/superadmin/guest-quizzes', { title, category, image_url });
     return response.data;
 };
 
-// Update quiz metadata (title, category, status)
-export const updateGuestQuiz = async (
-    quizId: string,
-    data: { title: string; category: string; status: 'draft' | 'published' }
-): Promise<GuestQuiz> => {
-    const response = await apiClient.put(`/superadmin/guest-quizzes/${quizId}`, data);
+export const updateGuestQuiz = async (id: string, updates: Partial<{ title: string; category: string; image_url: string; status: 'draft' | 'published' }>): Promise<GuestQuiz> => {
+    const response = await apiClient.put(`/superadmin/guest-quizzes/${id}`, updates);
     return response.data;
 };
 
