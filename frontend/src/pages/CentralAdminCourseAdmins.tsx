@@ -402,6 +402,18 @@ const CentralAdminCourseAdmins: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
+          {!setupLink && (
+            <Button 
+              onClick={() => {
+                setCreateOpen(false);
+                setBulkUploadOpen(true);
+              }}
+              startIcon={<GroupAddIcon />}
+              sx={{ mr: 'auto' }}
+            >
+              Bulk Add
+            </Button>
+          )}
           <Button onClick={handleCloseCreate}>{setupLink ? "Done" : "Cancel"}</Button>
           {!setupLink && <Button onClick={handleCreate} variant="contained">Generate Invite Link</Button>}
           {setupLink && (
