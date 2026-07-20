@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Button, Paper, IconButton, Switch, FormCont
 import { Add, Delete, DragIndicator, AutoAwesome } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import type { Certification, CertificationUnit } from '../types/certification';
+import type { Certification, CertificationUnit, CertificationModule } from '../types/certification';
 
 const SuperAdminCreateCertification: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +52,7 @@ const SuperAdminCreateCertification: React.FC = () => {
     });
   };
 
-  const updateModule = (index: number, field: keyof typeof certification.modules[0], value: any) => {
+  const updateModule = (index: number, field: keyof CertificationModule, value: any) => {
     const newModules = [...(certification.modules || [])];
     newModules[index] = { ...newModules[index], [field]: value };
     setCertification({ ...certification, modules: newModules });

@@ -9,6 +9,8 @@ import {
   Paper,
   Alert,
   CircularProgress,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -177,7 +179,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
 
           <Box mt={3} p={2} border={1} borderColor="grey.300" borderRadius={1} bgcolor="#f8f9fa">
             <FormControlLabel
-              control={<Switch checked={autoGenerateAi} onChange={(e) => setAutoGenerateAi(e.target.checked)} disabled={loading} />}
+              control={<Switch checked={autoGenerateAi} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAutoGenerateAi(e.target.checked)} disabled={loading} />}
               label="Auto-generate Questions via AI"
             />
             {autoGenerateAi && (

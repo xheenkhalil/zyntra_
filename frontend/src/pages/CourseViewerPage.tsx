@@ -3,7 +3,7 @@ import { Box, Typography, Paper, List, ListItem, ListItemText, Collapse, Button,
 import { ExpandLess, ExpandMore, CheckCircle, Menu as MenuIcon, Lock, Assignment } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import type { Certification, CertificationUnit, CertificationModule } from '../types/certification';
+import type { Certification, CertificationUnit } from '../types/certification';
 import ModuleAssessment from '../components/certification/ModuleAssessment';
 
 const CourseViewerPage: React.FC = () => {
