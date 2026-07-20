@@ -134,7 +134,7 @@ export const getGuestQuizById = async (req: AuthRequest, res: Response) => {
 
 // 4. Update a Guest Quiz (Title, Category, Status)
 export const updateGuestQuiz = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const { quizId } = req.params;
   const { title, category, image_url, status } = req.body;
   const adminUserId = req.user?.userId;
 
@@ -147,7 +147,7 @@ export const updateGuestQuiz = async (req: AuthRequest, res: Response) => {
            status = COALESCE($4, status), 
            updated_at = NOW() 
        WHERE id = $5 RETURNING *`,
-      [title, category, image_url, status, id]
+      [title, category, image_url, status, quizId]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Guest quiz not found.' });
