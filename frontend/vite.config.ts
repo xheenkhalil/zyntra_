@@ -20,8 +20,8 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/',
         scope: '/',
-        categories: ['education', 'productivity', 'business'],
-        icons: [
+        categories: ['education', 'productivity', 'business']
+        /* icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
@@ -38,7 +38,7 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           }
-        ]
+        ] */
       }
     })
   ],

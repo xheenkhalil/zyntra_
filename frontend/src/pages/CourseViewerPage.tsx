@@ -31,7 +31,8 @@ const getEmbedUrl = (url: string): string => {
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
 
-  return url;
+  // Unrecognized URL (e.g. bare youtube.com) — don't try to embed it
+  return '';
 };
 
 const CourseViewerPage: React.FC = () => {
@@ -234,7 +235,7 @@ const CourseViewerPage: React.FC = () => {
           <Box maxWidth="800px" mx="auto">
             <Typography variant="h4" fontWeight="extrabold" mb={4} color="#111A50">{activeUnit.title}</Typography>
             
-            {activeUnit.video_url && (
+            {activeUnit.video_url && getEmbedUrl(activeUnit.video_url) && (
               <Box sx={{ position: 'relative', pt: '56.25%', mb: 4, borderRadius: 2, overflow: 'hidden', boxShadow: 3 }}>
                 <iframe 
                   src={getEmbedUrl(activeUnit.video_url)} 
