@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
     Box, Typography, Button, TextField, Paper, Stepper, Step, StepLabel, 
     CircularProgress, Alert, InputAdornment, IconButton, Grid, Card, CardContent 
@@ -6,7 +6,6 @@ import {
 import { Visibility, VisibilityOff, CorporateFare, School } from '@mui/icons-material';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthProvider';
 import { API_BASE_URL } from '../config';
 
 const LOCAL_STORAGE_KEY = 'zyntra_reg_cache';
@@ -15,7 +14,6 @@ const STEPS = ['Account Type', 'Details', 'Verify Email'];
 
 export default function RegisterPage() {
     const navigate = useNavigate();
-    const { login } = useAuth(); // If AuthProvider has a method to update state directly, otherwise redirect will trigger refresh.
 
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -70,7 +68,7 @@ export default function RegisterPage() {
         setError(null);
         setLoading(true);
         try {
-            await axios.post(\`\${API_BASE_URL}/auth/register/send-otp\`, {
+            await axios.post(`${API_BASE_URL}/auth/register/send-otp`, {
                 email: formData.email,
                 role: formData.role
             });
@@ -86,7 +84,7 @@ export default function RegisterPage() {
         setError(null);
         setLoading(true);
         try {
-            const res = await axios.post(\`\${API_BASE_URL}/auth/register/verify-otp-and-create\`, formData, {
+            const res = await axios.post(`${API_BASE_URL}/auth/register/verify-otp-and-create`, formData, {
                 withCredentials: true
             });
             
@@ -151,7 +149,7 @@ export default function RegisterPage() {
                                 How will you be using Zyntra?
                             </Typography>
                             <Grid container spacing={3}>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Card 
                                         sx={{ 
                                             cursor: 'pointer', 
@@ -171,7 +169,7 @@ export default function RegisterPage() {
                                         </CardContent>
                                     </Card>
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Card 
                                         sx={{ 
                                             cursor: 'pointer', 
@@ -200,7 +198,7 @@ export default function RegisterPage() {
                         <Box component="form" noValidate onSubmit={(e) => { e.preventDefault(); handleSendOTP(); }}>
                             <Grid container spacing={2}>
                                 {/* COMMON FIELDS */}
-                                <Grid item xs={12}>
+                                <Grid size={12}>
                                     <TextField
                                         required
                                         fullWidth
@@ -211,7 +209,7 @@ export default function RegisterPage() {
                                         helperText={formData.role === 'centraladmin' ? 'Must be a custom organization domain (e.g. name@yourschool.edu)' : ''}
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid size={12}>
                                     <TextField
                                         required
                                         fullWidth
@@ -235,7 +233,7 @@ export default function RegisterPage() {
                                 {/* ORGANIZATION SPECIFIC */}
                                 {formData.role === 'centraladmin' && (
                                     <>
-                                        <Grid item xs={12}>
+                                        <Grid size={12}>
                                             <TextField
                                                 required
                                                 fullWidth
@@ -244,7 +242,7 @@ export default function RegisterPage() {
                                                 onChange={(e) => handleChange('organizationName', e.target.value)}
                                             />
                                         </Grid>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
                                                 required
                                                 fullWidth
@@ -254,7 +252,7 @@ export default function RegisterPage() {
                                                 placeholder="https://"
                                             />
                                         </Grid>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
                                                 fullWidth
                                                 label="Organization Size"
@@ -263,7 +261,7 @@ export default function RegisterPage() {
                                                 placeholder="e.g. 50-200"
                                             />
                                         </Grid>
-                                        <Grid item xs={12}>
+                                        <Grid size={12}>
                                             <TextField
                                                 fullWidth
                                                 label="Industry / Type"
@@ -278,7 +276,7 @@ export default function RegisterPage() {
                                 {/* TEACHER SPECIFIC */}
                                 {formData.role === 'courseadmin' && (
                                     <>
-                                        <Grid item xs={12}>
+                                        <Grid size={12}>
                                             <TextField
                                                 required
                                                 fullWidth
@@ -287,7 +285,7 @@ export default function RegisterPage() {
                                                 onChange={(e) => handleChange('fullName', e.target.value)}
                                             />
                                         </Grid>
-                                        <Grid item xs={12}>
+                                        <Grid size={12}>
                                             <TextField
                                                 required
                                                 fullWidth
@@ -297,7 +295,7 @@ export default function RegisterPage() {
                                                 helperText="If independent, enter 'Independent Educator'"
                                             />
                                         </Grid>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
                                                 fullWidth
                                                 label="Subject Taught"
@@ -305,7 +303,7 @@ export default function RegisterPage() {
                                                 onChange={(e) => handleChange('subject', e.target.value)}
                                             />
                                         </Grid>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
                                                 fullWidth
                                                 label="Location"
