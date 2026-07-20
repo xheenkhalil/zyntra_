@@ -8,6 +8,8 @@ import {
   logoutUser,
   updateMyProfile,
   changeMyPassword,
+  sendRegistrationOTP,
+  verifyOTPAndRegister,
 } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
@@ -72,6 +74,24 @@ router.post('/login', loginUser);
  *         description: Account setup successful
  */
 router.post('/setup-account', setupAccount);
+
+/**
+ * @swagger
+ * /api/auth/register/send-otp:
+ *   post:
+ *     summary: Send OTP for registration
+ *     tags: [Auth]
+ */
+router.post('/register/send-otp', sendRegistrationOTP);
+
+/**
+ * @swagger
+ * /api/auth/register/verify-otp-and-create:
+ *   post:
+ *     summary: Verify OTP and complete registration
+ *     tags: [Auth]
+ */
+router.post('/register/verify-otp-and-create', verifyOTPAndRegister);
 
 /**
  * @swagger

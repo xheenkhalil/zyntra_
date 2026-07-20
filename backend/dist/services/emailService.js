@@ -20,7 +20,7 @@ const sendEmail = async (to, subject, html) => {
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
-                'accept': 'application/json',
+                accept: 'application/json',
                 'api-key': BREVO_API_KEY,
                 'content-type': 'application/json',
             },
@@ -97,7 +97,7 @@ exports.sendStudentCredentials = sendStudentCredentials;
  * Send admin/teacher invite email with account setup link.
  */
 const sendAdminInviteEmail = async (email, fullName, inviteLink, organizationName = 'your organization') => {
-    const subject = 'You\'re Invited to ZYNTRA — Set Up Your Account';
+    const subject = "You're Invited to ZYNTRA — Set Up Your Account";
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
       <!-- Header -->
@@ -155,8 +155,8 @@ exports.sendAdminInviteEmail = sendAdminInviteEmail;
  */
 const sendWelcomeEmail = async (email, fullName, role) => {
     const loginUrl = `${FRONTEND_URL}/login`;
-    let roleTitle = 'Administrator';
-    let roleCapabilities = '';
+    let roleTitle;
+    let roleCapabilities;
     if (role === 'centraladmin') {
         roleTitle = 'Organization Administrator';
         roleCapabilities = `

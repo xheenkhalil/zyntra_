@@ -173,7 +173,14 @@ const setupAccount = async (req, res) => {
         if (updatedUser.role === 'centraladmin' || updatedUser.role === 'courseadmin') {
             try {
                 if (emailQueue_1.emailQueue) {
-                    await emailQueue_1.emailQueue.add('sendWelcomeEmail', { type: 'sendWelcomeEmail', payload: { email: updatedUser.email, fullName: updatedUser.full_name, role: updatedUser.role } }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
+                    await emailQueue_1.emailQueue.add('sendWelcomeEmail', {
+                        type: 'sendWelcomeEmail',
+                        payload: {
+                            email: updatedUser.email,
+                            fullName: updatedUser.full_name,
+                            role: updatedUser.role,
+                        },
+                    }, { attempts: 3, backoff: { type: 'exponential', delay: 1000 } });
                     console.log(`[AuthController] Queued welcome email for ${updatedUser.email}`);
                 }
                 else {

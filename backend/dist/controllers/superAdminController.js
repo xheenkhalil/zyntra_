@@ -384,7 +384,7 @@ const getAllUsers = async (req, res) => {
     const limitNum = parseInt(limit, 10);
     const offset = (pageNum - 1) * limitNum;
     const queryParams = [];
-    let whereClauses = [];
+    const whereClauses = [];
     if (role) {
         queryParams.push(role);
         whereClauses.push(`u.role = $${queryParams.length}`);

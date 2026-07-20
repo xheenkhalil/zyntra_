@@ -45,9 +45,12 @@ const getCourseAdminStats = async (req, examId) => {
             flaggedParams.push(examId);
         }
         // Use Promise.all for parallel execution
-        const [studentsResult, examsResult, submissionsResult, flaggedResult, auditLogsResult, examsListResult] = await Promise.all([
+        const [studentsResult, examsResult, submissionsResult, flaggedResult, auditLogsResult, examsListResult,] = await Promise.all([
             // 1. Total Students (Global)
-            db_1.default.query('SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2', [organizationId, 'student']),
+            db_1.default.query('SELECT COUNT(id) as count FROM users WHERE organization_id = $1 AND role = $2', [
+                organizationId,
+                'student',
+            ]),
             // 2. Active Exams (Global)
             db_1.default.query('SELECT COUNT(id) as count FROM exams WHERE organization_id = $1 AND status = $2', [organizationId, 'live']),
             // 3. Submissions Stats (Filtered)
@@ -68,9 +71,7 @@ const getCourseAdminStats = async (req, examId) => {
                 return { rows: [] }; // Return empty to prevent 500 crash
             }),
             // 6. All Exams List for Filter (changed from 'live' to all so teacher can filter by ended/draft too)
-            db_1.default.query('SELECT id, title FROM exams WHERE organization_id = $1', [
-                organizationId,
-            ]),
+            db_1.default.query('SELECT id, title FROM exams WHERE organization_id = $1', [organizationId]),
         ]);
         const total_students = parseInt(studentsResult.rows[0]?.count ?? '0', 10);
         const active_exams = parseInt(examsResult.rows[0]?.count ?? '0', 10);
@@ -104,7 +105,7 @@ const getCourseAdminStats = async (req, examId) => {
             recommendations.push(`High rate of proctoring flags detected (${Math.round(alertRate)}%). Review flagged submissions in the proctoring dashboard.`);
         }
         // Query struggling students count (<50%) and excellent students count (>=80%)
-        let strugglingQuery = `
+        const strugglingQuery = `
       WITH student_avgs AS (
           SELECT es.student_id, AVG(es.score_percentage) as avg_score
           FROM exam_submissions es
@@ -132,8 +133,8 @@ const getCourseAdminStats = async (req, examId) => {
             recommendations.push(`Great job! ${excellent_count} students have achieved excellent performance (average score >= 80%).`);
         }
         if (recommendations.length === 0) {
-            recommendations.push("All systems clear. Student performance is stable and average pass rates are healthy.");
-            recommendations.push("Proctoring integrity flags are within the normal range.");
+            recommendations.push('All systems clear. Student performance is stable and average pass rates are healthy.');
+            recommendations.push('Proctoring integrity flags are within the normal range.');
         }
         const stats = {
             totalStudents: total_students,
@@ -277,7 +278,7 @@ const getExamsDetailedList = async (req) => {
         return {
             ...row,
             passRate: `${passRate}%`,
-            completionRate: `${completionRate}%`
+            completionRate: `${completionRate}%`,
         };
     });
 };
@@ -335,7 +336,7 @@ const getStudentsDetailedList = async (req, examId) => {
         return {
             ...row,
             performanceStatus,
-            riskStatus
+            riskStatus,
         };
     });
 };
@@ -363,7 +364,7 @@ const getQuestionDetailedList = async (req, examId) => {
   `;
     const [questionsRes, submissionsRes] = await Promise.all([
         db_1.default.query(questionsQuery, [examId]),
-        db_1.default.query(submissionsQuery, [examId])
+        db_1.default.query(submissionsQuery, [examId]),
     ]);
     const questions = questionsRes.rows;
     const submissions = submissionsRes.rows;
@@ -395,7 +396,9 @@ const getQuestionDetailedList = async (req, examId) => {
                                 break;
                             }
                             case 'MSQ': {
-                                const correctOpts = decrypted.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
+                                const correctOpts = decrypted.options
+                                    ?.filter((opt) => opt.isCorrect)
+                                    .map((opt) => opt.text) || [];
                                 const studentOpts = Array.isArray(studentAns) ? studentAns : [studentAns];
                                 const isCorrect = correctOpts.length === studentOpts.length &&
                                     correctOpts.every((ans) => studentOpts.includes(ans));
@@ -405,7 +408,8 @@ const getQuestionDetailedList = async (req, examId) => {
                                 break;
                             }
                             case 'FILL_BLANK': {
-                                if (decrypted.correctAnswer && studentAns.toLowerCase().trim() === decrypted.correctAnswer.toLowerCase().trim()) {
+                                if (decrypted.correctAnswer &&
+                                    studentAns.toLowerCase().trim() === decrypted.correctAnswer.toLowerCase().trim()) {
                                     correctCount++;
                                 }
                                 break;
@@ -443,13 +447,13 @@ const getQuestionDetailedList = async (req, examId) => {
             answeredCount,
             successRate,
             difficulty,
-            options
+            options,
         };
     });
     return questionAnalytics;
 };
 exports.getQuestionDetailedList = getQuestionDetailedList;
-// ===================================================== 
+// =====================================================
 // 7. BATCH ENDPOINT - WITH REAL DATA
 // =====================================================
 const getTeacherDashboardBatch = async (req, res) => {
@@ -469,7 +473,7 @@ const getTeacherDashboardBatch = async (req, res) => {
             distribution: resultsChart,
             examsDetailedList,
             studentsDetailedList,
-            questionDetailedList
+            questionDetailedList,
         });
     }
     catch (error) {

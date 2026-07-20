@@ -16,7 +16,7 @@ async function generateWithFallback(systemPrompt, userPrompt) {
         'gemini-2.5-flash',
         'gemini-flash-latest',
         'gemini-3.5-flash',
-        'gemini-2.0-flash'
+        'gemini-2.0-flash',
     ];
     let lastError;
     for (const modelName of modelsToTry) {
@@ -32,7 +32,10 @@ async function generateWithFallback(systemPrompt, userPrompt) {
             let content = response.response.text();
             if (!content)
                 throw new Error('AI returned an empty response.');
-            content = content.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+            content = content
+                .replace(/^```json\s*/i, '')
+                .replace(/```\s*$/i, '')
+                .trim();
             const result = JSON.parse(content);
             const questions = result.questions || result;
             if (!Array.isArray(questions))
@@ -55,7 +58,10 @@ function buildSystemPrompt(requestedTypes) {
         FILL_BLANK: `For FILL_BLANK (Fill in the Blank): The object must have "type": "FILL_BLANK", "questionText": string (use a blank marker like "___" in the text where the answer goes), and "correctAnswer": string (the correct answer text). Do NOT include an "options" array.`,
         ESSAY: `For ESSAY: The object must have "type": "ESSAY" and "questionText": string. Do NOT include "options" or "correctAnswer". Essay questions are open-ended and graded manually.`,
     };
-    const schemaInstructions = requestedTypes.map(t => typeSchemas[t]).filter(Boolean).join('\n');
+    const schemaInstructions = requestedTypes
+        .map((t) => typeSchemas[t])
+        .filter(Boolean)
+        .join('\n');
     return `You are an expert quiz generation assistant. Your task is to generate a list of questions on a given topic.
 You MUST respond with ONLY a valid JSON object containing a single key "questions" which is an array of question objects.
 Do not include any introductory text, explanations, or markdown formatting.
@@ -101,7 +107,7 @@ async function saveQuestionToDb(examId, q) {
      VALUES ($1, $2, $3, $4, $5)`, [examId, q.questionText, JSON.stringify(finalOptions), type, encryptedData]);
 }
 const generateAiQuestions = async (req, res) => {
-    const { topic, difficulty = 'Medium', count, numQuestions, numOptions = 4, examId, questionTypes } = req.body;
+    const { topic, difficulty = 'Medium', count, numQuestions, numOptions = 4, examId, questionTypes, } = req.body;
     if (!topic) {
         return res.status(400).json({ message: 'Topic is required.' });
     }
@@ -128,7 +134,10 @@ const generateAiQuestions = async (req, res) => {
     }
     catch (error) {
         console.error('Error generating AI questions:', error);
-        res.status(500).json({ message: 'Failed to generate questions from AI.', error: error?.message || String(error) });
+        res.status(500).json({
+            message: 'Failed to generate questions from AI.',
+            error: error?.message || String(error),
+        });
     }
 };
 exports.generateAiQuestions = generateAiQuestions;
@@ -160,7 +169,9 @@ const generateFromDocument = async (req, res) => {
         }
         // Build type breakdown
         let typeBreakdown;
-        if (questionTypes && typeof questionTypes === 'object' && Object.keys(questionTypes).length > 0) {
+        if (questionTypes &&
+            typeof questionTypes === 'object' &&
+            Object.keys(questionTypes).length > 0) {
             typeBreakdown = questionTypes;
         }
         else {
@@ -183,7 +194,10 @@ const generateFromDocument = async (req, res) => {
     }
     catch (error) {
         console.error('Error generating from document:', error);
-        res.status(500).json({ message: 'Failed to generate questions from document.', error: error?.message || String(error) });
+        res.status(500).json({
+            message: 'Failed to generate questions from document.',
+            error: error?.message || String(error),
+        });
     }
 };
 exports.generateFromDocument = generateFromDocument;

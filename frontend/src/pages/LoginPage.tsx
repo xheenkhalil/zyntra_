@@ -251,6 +251,15 @@ const LoginPage: React.FC = () => {
                     ),
                   }}
                 />
+                {/* Links */}
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Link to="/forgot-password" style={{ color: "#666", textDecoration: 'none', fontSize: '0.875rem' }}>
+                        Forgot password?
+                    </Link>
+                    <Link to="/register" style={{ color: "#111A50", textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem' }}>
+                        Create an account
+                    </Link>
+                </Box>
               </>
             ) : (
               <TextField

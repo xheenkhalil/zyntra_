@@ -233,3 +233,40 @@ export const sendWelcomeEmail = async (email: string, fullName: string, role: st
   `;
   return sendEmail(email, subject, html);
 };
+
+/**
+ * Send an OTP for registration.
+ */
+export const sendRegistrationOTP = async (email: string, otp: string, role: string) => {
+  const subject = 'Your ZYNTRA Registration Verification Code';
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+      <!-- Header -->
+      <div style="background: #111A50; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="color: #F5B841; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px;">ZYNTRA</h1>
+        <p style="color: rgba(255,255,255,0.7); margin: 5px 0 0; font-size: 13px;">Registration Verification</p>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <h2 style="color: #111A50; margin: 0 0 15px; font-size: 20px;">Welcome!</h2>
+        <p style="color: #4b5563; line-height: 1.6; margin: 0 0 20px;">
+          You are registering as a ${role === 'centraladmin' ? 'Organization Administrator' : 'Teacher'}. 
+          Please use the following verification code to complete your registration. This code will expire in 15 minutes.
+        </p>
+
+        <!-- OTP Box -->
+        <div style="background: #f8f9fa; border: 2px dashed #111A50; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+          <p style="color: #111A50; font-size: 32px; font-weight: 800; margin: 0; letter-spacing: 5px;">${otp}</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+
+        <p style="color: #9ca3af; font-size: 12px; line-height: 1.5; margin: 0;">
+          If you did not request this code, please ignore this email.
+        </p>
+      </div>
+    </div>
+  `;
+  return sendEmail(email, subject, html);
+};

@@ -35,4 +35,4 @@ async function migrate() {
         await db_1.default.end();
     }
 }
-migrate();
+migrate().catch(console.error);

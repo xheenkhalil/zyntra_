@@ -15,6 +15,7 @@ const CentralAdminLayout = lazy(() => import('./layouts/CentralAdminLayout'));
 // Import Pages (Lazy Loaded)
 const HomePage = lazy(() => import('./pages/HomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const SetupAccountPage = lazy(() => import('./pages/SetupAccountPage'));
 const GuestQuizRunner = lazy(() => import('./pages/GuestQuizRunner'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
@@ -91,6 +92,7 @@ function App() {
                             {/* --- Public Routes --- */}
                             <Route path="/" element={<SEORoute path="/"><HomePage /></SEORoute>} />
                             <Route path="/login" element={<SEORoute path="/login"><LoginPage /></SEORoute>} />
+                            <Route path="/register" element={<SEORoute path="/register"><RegisterPage /></SEORoute>} />
                             <Route path="/setup-account" element={<SetupAccountPage />} />
                             <Route path="/quiz/:quizId" element={<GuestQuizRunner />} />
                             <Route path="/about" element={<SEORoute path="/about"><AboutPage /></SEORoute>} />

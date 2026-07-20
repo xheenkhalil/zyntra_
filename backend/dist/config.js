@@ -20,7 +20,10 @@ const config = {
     ZYNTRA_API_KEY: process.env.ZYNTRA_API_KEY || '',
 };
 // Update the check
-if (!config.DATABASE_URL || !config.JWT_SECRET || !config.GEMINI_API_KEY || !config.ZYNTRA_API_KEY) {
+if (!config.DATABASE_URL ||
+    !config.JWT_SECRET ||
+    !config.GEMINI_API_KEY ||
+    !config.ZYNTRA_API_KEY) {
     throw new Error('DATABASE_URL, JWT_SECRET, GEMINI_API_KEY, or ZYNTRA_API_KEY is not defined in the .env file');
 }
 exports.default = config;

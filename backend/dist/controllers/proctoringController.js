@@ -8,6 +8,7 @@ exports.getProctoringStatus = exports.getOrganizationProctoringOverview = export
 const db_1 = __importDefault(require("../services/db"));
 const config_1 = __importDefault(require("../config"));
 const zyntraAiService_1 = require("../services/zyntraAiService");
+const studentController_1 = require("./studentController");
 // --- Helper Functions ---
 const logAudit = async (action, details, userId, organizationId) => {
     try {
@@ -95,7 +96,7 @@ const analyzeTestImage = async (req, res) => {
         // Step 3: Perform Zyntra AI analysis (Fail-open resilience wrapper)
         const analysis = await (0, zyntraAiService_1.analyzeImageFrame)(submissionId, studentEmail, base64Image);
         // Step 4: Construct snapshot URL from Zyntra AI's hosted storage if available
-        const snapshotUrl = (analysis && analysis.snapshot_id)
+        const snapshotUrl = analysis && analysis.snapshot_id
             ? `${config_1.default.ZYNTRA_API_URL}/static/snapshots/${analysis.snapshot_id}.jpg`
             : null;
         const violationsToRegister = [];
@@ -104,28 +105,43 @@ const analyzeTestImage = async (req, res) => {
             if (analysis.face_match === false) {
                 violationsToRegister.push({
                     type: 'SUBJECT_MISMATCH',
-                    reason: `Face mismatch. Score similarity: ${(analysis.face_score * 100).toFixed(1)}%`
+                    reason: `Face mismatch. Score similarity: ${(analysis.face_score * 100).toFixed(1)}%`,
                 });
             }
             if (analysis.violations && Array.isArray(analysis.violations)) {
                 for (const violation of analysis.violations) {
                     if (violation === 'LOOKING_AWAY') {
-                        violationsToRegister.push({ type: 'LOOKING_AWAY', reason: 'Gaze deviation (looking away).' });
+                        violationsToRegister.push({
+                            type: 'LOOKING_AWAY',
+                            reason: 'Gaze deviation (looking away).',
+                        });
                     }
                     else if (violation === 'PHONE_DETECTED' || analysis.phone_detected) {
-                        violationsToRegister.push({ type: 'PHONE_DETECTED', reason: 'Mobile device detected in frame.' });
+                        violationsToRegister.push({
+                            type: 'PHONE_DETECTED',
+                            reason: 'Mobile device detected in frame.',
+                        });
                     }
                     else if (violation === 'MULTIPLE_PEOPLE' || analysis.person_count > 1) {
-                        violationsToRegister.push({ type: 'MULTIPLE_PEOPLE', reason: `Multiple people detected (${analysis.person_count} found).` });
+                        violationsToRegister.push({
+                            type: 'MULTIPLE_PEOPLE',
+                            reason: `Multiple people detected (${analysis.person_count} found).`,
+                        });
                     }
                     else if (violation === 'NO_FACE_DETECTED' || analysis.person_count === 0) {
-                        violationsToRegister.push({ type: 'NO_FACE_DETECTED', reason: 'No face detected in camera feed.' });
+                        violationsToRegister.push({
+                            type: 'NO_FACE_DETECTED',
+                            reason: 'No face detected in camera feed.',
+                        });
                     }
                     else if (violation === 'FACE_MISMATCH') {
                         // Only add if not already captured by face_match check
-                        const alreadyAdded = violationsToRegister.some(v => v.type === 'SUBJECT_MISMATCH');
+                        const alreadyAdded = violationsToRegister.some((v) => v.type === 'SUBJECT_MISMATCH');
                         if (!alreadyAdded) {
-                            violationsToRegister.push({ type: 'SUBJECT_MISMATCH', reason: 'Identity mismatch detected.' });
+                            violationsToRegister.push({
+                                type: 'SUBJECT_MISMATCH',
+                                reason: 'Identity mismatch detected.',
+                            });
                         }
                     }
                 }
@@ -155,7 +171,9 @@ const analyzeTestImage = async (req, res) => {
         await client.query('ROLLBACK');
         console.error('Image Analysis Error:', error);
         // Fail-open: allow student to proceed even if AI analysis encounters an error
-        res.status(200).json({ status: 'VERIFIED', warning: `Analysis server error: ${error.message}` });
+        res
+            .status(200)
+            .json({ status: 'VERIFIED', warning: `Analysis server error: ${error.message}` });
     }
     finally {
         client.release();
@@ -201,18 +219,35 @@ const registerViolation = async (req, res) => {
             JSON.stringify({ reason: violationType }),
         ]);
         if (newWarnings >= MAX_WARNINGS) {
-            await client.query(`
-                UPDATE exam_submissions 
-                SET status = 'submitted_auto', submitted_at = NOW(), warning_count = $1 
-                WHERE id = $2;
-            `, [newWarnings, submissionId]);
-            // Finalize the Zyntra AI session when auto-submitted due to limit
+            // Fetch the student's current answers so we can grade them
+            const answersResult = await client.query('SELECT answers FROM exam_submissions WHERE id = $1', [submissionId]);
+            const savedAnswers = answersResult.rows[0]?.answers || {};
+            // Grade the exam with whatever answers the student has so far
+            let scorePercentage = 0;
+            let finalGrade = 'F';
             try {
-                await (0, zyntraAiService_1.closeExamSession)(submissionId);
+                const gradeResult = await (0, studentController_1.gradeSubmission)(client, submission.exam_id, savedAnswers);
+                scorePercentage = gradeResult.scorePercentage;
+                finalGrade = gradeResult.finalGrade;
+            }
+            catch (gradeErr) {
+                console.error('[Proctoring] Failed to grade auto-submitted exam:', gradeErr);
+            }
+            // Finalize the Zyntra AI session
+            let proctoringReport = null;
+            try {
+                const report = await (0, zyntraAiService_1.closeExamSession)(submissionId);
+                if (report)
+                    proctoringReport = JSON.stringify(report);
             }
             catch (err) {
                 console.error('[Zyntra] Failed to close session on auto-submit:', err.message);
             }
+            // Update with grade, score, and flagged status
+            await client.query(`UPDATE exam_submissions 
+         SET status = 'submitted_auto', submitted_at = NOW(), warning_count = $1,
+             score_percentage = $3, grade = $4, proctoring_report = $5
+         WHERE id = $2`, [newWarnings, submissionId, scorePercentage.toFixed(2), finalGrade, proctoringReport]);
             await client.query('COMMIT');
             return res.status(200).json({ status: 'AUTO_SUBMITTED' });
         }
@@ -457,9 +492,7 @@ const getExamProctoringBatch = async (req, res) => {
     catch (error) {
         console.error('Error fetching proctoring dashboard data:', error);
         console.error('Stack trace:', error.stack);
-        res
-            .status(500)
-            .json({
+        res.status(500).json({
             message: 'Internal server error while loading dashboard data.',
             error: error.message,
         });

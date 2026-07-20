@@ -35,6 +35,10 @@ if (connection) {
           const { email, fullName, role } = payload;
           await emailService.sendWelcomeEmail(email, fullName, role);
           console.log(`[EmailWorker] Successfully sent welcome email to ${email}`);
+        } else if (type === 'sendRegistrationOTP') {
+          const { email, otp, role } = payload;
+          await emailService.sendRegistrationOTP(email, otp, role);
+          console.log(`[EmailWorker] Successfully sent registration OTP to ${email}`);
         } else {
           console.warn(`[EmailWorker] Unknown job type: ${type}`);
         }

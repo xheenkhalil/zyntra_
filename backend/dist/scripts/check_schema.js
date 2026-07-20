@@ -18,4 +18,4 @@ async function check() {
         await db_1.default.end();
     }
 }
-check();
+check().catch(console.error);

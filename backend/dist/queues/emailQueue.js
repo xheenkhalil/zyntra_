@@ -42,9 +42,11 @@ const ioredis_1 = __importDefault(require("ioredis"));
 const emailService = __importStar(require("../services/emailService"));
 const REDIS_URL = process.env.REDIS_URL || '';
 // Connection for BullMQ
-const connection = REDIS_URL ? new ioredis_1.default(REDIS_URL, {
-    maxRetriesPerRequest: null, // Required by BullMQ
-}) : null;
+const connection = REDIS_URL
+    ? new ioredis_1.default(REDIS_URL, {
+        maxRetriesPerRequest: null, // Required by BullMQ
+    })
+    : null;
 exports.emailQueue = connection ? new bullmq_1.Queue('email-queue', { connection }) : null;
 // Worker to process email jobs
 if (connection) {
@@ -77,7 +79,7 @@ if (connection) {
         }
     }, {
         connection,
-        concurrency: 5 // Process up to 5 emails concurrently
+        concurrency: 5, // Process up to 5 emails concurrently
     });
     worker.on('failed', (job, err) => {
         if (job) {

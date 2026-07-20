@@ -216,7 +216,7 @@ exports.addQuestionToExam = addQuestionToExam;
 // ---------------------------------------------------------
 const updateExamSettings = async (req, res) => {
     const { examId } = req.params;
-    const { status, grading_scale, duration_minutes, instructions, is_proctored, proctoring_interval } = req.body;
+    const { status, grading_scale, duration_minutes, instructions, is_proctored, proctoring_interval, } = req.body;
     const courseAdminId = req.user?.userId;
     if (!status &&
         !grading_scale &&

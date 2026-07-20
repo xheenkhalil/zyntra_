@@ -3,15 +3,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getExamInfo = exports.getAvailableExams = void 0;
+exports.gradeSubmission = exports.submitExam = exports.saveExamProgress = exports.startOrResumeExam = exports.getExamInfo = exports.getAvailableExams = void 0;
 const db_1 = __importDefault(require("../services/db"));
 const encryptionService_1 = require("../services/encryptionService");
 const zyntraAiService_1 = require("../services/zyntraAiService");
 // fetches all exams with 'live' status for the student's organization.
 const getAvailableExams = async (req, res) => {
     const studentId = req.user?.userId;
-    const organizationId = req.user?.organizationId;
+    let organizationId = req.user?.organizationId;
     try {
+        // Fallback: If organizationId is missing (e.g. old token), fetch it from DB
+        if (!organizationId && studentId) {
+            const userRes = await db_1.default.query('SELECT organization_id FROM users WHERE id = $1', [
+                studentId,
+            ]);
+            if (userRes.rows.length > 0) {
+                organizationId = userRes.rows[0].organization_id;
+            }
+        }
         const query = `
             SELECT 
                 e.id, 
@@ -34,7 +43,7 @@ const getAvailableExams = async (req, res) => {
         const exams = result.rows.map((row) => ({
             ...row,
             total_questions: parseInt(row.total_questions || '0'),
-            question_types: row.question_types || [],
+            question_types: (row.question_types || []).filter((t) => t !== null),
         }));
         res.status(200).json(exams);
     }
@@ -79,9 +88,7 @@ const startOrResumeExam = async (req, res) => {
             try {
                 const proctorCheck = await client.query('SELECT user_id FROM proctor_profiles WHERE user_id = $1', [studentId]);
                 if (proctorCheck.rows.length === 0) {
-                    return res
-                        .status(403)
-                        .json({
+                    return res.status(403).json({
                         message: 'Proctoring required: You must complete face enrollment before starting this exam.',
                     });
                 }
@@ -251,9 +258,7 @@ const submitExam = async (req, res) => {
         `;
         const submissionResult = await client.query(submissionQuery, [submissionId, studentId]);
         if (submissionResult.rows.length === 0) {
-            return res
-                .status(404)
-                .json({
+            return res.status(404).json({
                 message: 'In-progress submission not found. It may have been completed or expired.',
             });
         }
@@ -266,7 +271,7 @@ const submitExam = async (req, res) => {
         const gradingScale = examResult.rows[0].grading_scale;
         const isProctored = examResult.rows[0].is_proctored;
         let score = 0;
-        let totalQuestions = questionsResult.rows.length;
+        const totalQuestions = questionsResult.rows.length;
         // 3. Grade Each Question
         for (const q of questionsResult.rows) {
             if (!q.encrypted_data)
@@ -361,3 +366,61 @@ const submitExam = async (req, res) => {
     }
 };
 exports.submitExam = submitExam;
+// Shared grading logic used by both manual submit and auto-submit
+const gradeSubmission = async (client, examId, answers) => {
+    const [examResult, questionsResult] = await Promise.all([
+        client.query('SELECT grading_scale FROM exams WHERE id = $1', [examId]),
+        client.query('SELECT id, encrypted_data, question_type FROM questions WHERE exam_id = $1', [
+            examId,
+        ]),
+    ]);
+    const gradingScale = examResult.rows[0]?.grading_scale;
+    let score = 0;
+    const totalQuestions = questionsResult.rows.length;
+    for (const q of questionsResult.rows) {
+        if (!q.encrypted_data)
+            continue;
+        const decryptedContent = JSON.parse((0, encryptionService_1.decrypt)(q.encrypted_data));
+        const studentAnswer = answers[q.id];
+        if (!studentAnswer)
+            continue;
+        switch (decryptedContent.questionType) {
+            case 'MCQ':
+            case 'TRUE_FALSE': {
+                const correctAnswer = decryptedContent.options?.find((opt) => opt.isCorrect)?.text;
+                if (correctAnswer === studentAnswer)
+                    score++;
+                break;
+            }
+            case 'MSQ': {
+                const correctAnswers = decryptedContent.options?.filter((opt) => opt.isCorrect).map((opt) => opt.text) || [];
+                const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
+                if (correctAnswers.length === studentAnswers.length &&
+                    correctAnswers.every((ans) => studentAnswers.includes(ans)))
+                    score++;
+                break;
+            }
+            case 'FILL_BLANK': {
+                if (studentAnswer.toString().toLowerCase().trim() ===
+                    decryptedContent.correctAnswer?.toLowerCase().trim())
+                    score++;
+                break;
+            }
+            case 'ESSAY':
+                break;
+        }
+    }
+    const scorePercentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+    let finalGrade = 'F';
+    if (gradingScale) {
+        const sortedGrades = Object.entries(gradingScale).sort((a, b) => Number(b[1]) - Number(a[1]));
+        for (const [grade, minScore] of sortedGrades) {
+            if (scorePercentage >= Number(minScore)) {
+                finalGrade = grade;
+                break;
+            }
+        }
+    }
+    return { scorePercentage, finalGrade };
+};
+exports.gradeSubmission = gradeSubmission;

@@ -157,9 +157,7 @@ const deleteGuestQuiz = async (req, res) => {
         void logAudit('guest_quiz_deleted', `Deleted guest quiz: ${quizTitle} (ID: ${quizId})`, adminUserId, null);
         // -----------------
         await client.query('COMMIT');
-        res
-            .status(200)
-            .json({
+        res.status(200).json({
             message: 'Guest quiz and all associated questions/submissions deleted successfully.',
         });
     }
