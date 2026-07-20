@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Paper, Radio, RadioGroup, FormControlLabel, FormControl, Alert, CircularProgress } from '@mui/material';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
 
 interface Question {
   id: string;
@@ -31,12 +31,12 @@ const ModuleAssessment: React.FC<ModuleAssessmentProps> = ({ certificationId, mo
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/certifications/modules/${moduleId}/assessment`, { withCredentials: true });
+      const res = await axios.get(`${API_URL}/api/certifications/modules/${moduleId}/assessment`, { withCredentials: true });
       setQuestions(res.data);
       setResult(null);
       setAnswers({});
     } catch (err: any) {
-      setError(`Failed to load assessment questions.');
+      setError('Failed to load assessment questions.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ const ModuleAssessment: React.FC<ModuleAssessmentProps> = ({ certificationId, mo
     }
   };
 
-  if (loading) return <Box display=`flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+  if (loading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
   if (questions.length === 0) return <Alert severity="warning">No assessment questions available for this module.</Alert>;
 
   return (

@@ -15,7 +15,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
 import { createGuestQuiz } from '../services/superAdminGuestQuizService';
 // --- NEW: Added icons for buttons ---
 import { FaArrowLeft, FaPlusCircle } from 'react-icons/fa';
@@ -49,13 +49,13 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
       if (autoGenerateAi) {
         setSuccess(`Quiz "${newQuiz.title}" created! Generating AI questions...`);
         try {
-          await axios.post(`${API_URL}/superadmin/ai/guest-quiz-questions`, {
+          await axios.post(API_URL + '/api/superadmin/ai/guest-quiz-questions', {
             topic: `${category} - ${title}`,
             count: questionCount,
             quizId: newQuiz.id
           }, { withCredentials: true });
         } catch (aiErr) {
-          console.error(`AI Generation failed:", aiErr);
+          console.error("AI Generation failed:", aiErr);
           alert("Quiz created, but AI generation failed.");
         }
       }
@@ -93,7 +93,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
     formData.append('image', file);
 
     try {
-      const res = await axios.post(`${API_URL}/upload/image`, formData, {
+      const res = await axios.post(API_URL + '/api/upload/image', formData, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -109,7 +109,7 @@ const SuperAdminCreateGuestQuiz: React.FC = () => {
   return (
     <Box>
       {/* --- UI UPGRADE: Page Header --- */}
-      <Box className=`flex justify-between items-center mb-6">
+      <Box className="flex justify-between items-center mb-6">
         <Box>
           <Typography variant="h5" className="font-bold text-gray-900">
             Create New Guest Quiz

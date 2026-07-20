@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaGraduationCap, FaChevronRight } from 'react-icons/fa';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '') : '';
 import type { Certification } from '../../types/certification';
 
 const CertificationCoursesSection: React.FC = () => {
@@ -17,7 +17,7 @@ const CertificationCoursesSection: React.FC = () => {
   const fetchCertifications = async () => {
     try {
       // Assuming public endpoint to get published certifications
-      const res = await axios.get(`${API_URL}/certifications`);
+      const res = await axios.get(API_URL + '/api/certifications');
       // Filter for published ones only just in case
       setCertifications(res.data.filter((c: Certification) => c.is_published));
     } catch (error) {
@@ -28,7 +28,7 @@ const CertificationCoursesSection: React.FC = () => {
   if (certifications.length === 0) return null;
 
   return (
-    <div className=`w-full bg-[#f8fafc] py-16 md:py-24 border-t border-gray-200">
+    <div className="w-full bg-[#f8fafc] py-16 md:py-24 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111A50] tracking-tight mb-4">
