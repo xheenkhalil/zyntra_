@@ -95,6 +95,7 @@ const LoginPage: React.FC = () => {
     <Box
       sx={{
         minHeight: "100vh",
+        height: { md: "100vh" },
         width: "100vw",
         backgroundImage:
           "url(https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?q=80&w=1920&auto=format&fit=crop)",
@@ -102,16 +103,21 @@ const LoginPage: React.FC = () => {
         backgroundSize: "cover",
         backgroundPosition: "center",
         display: "flex",
-        flexDirection: "column",
-        overflowY: "auto",
-        py: { xs: 0, md: 8 },
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: { xs: "auto", md: "hidden" },
+        py: { xs: 2, md: 0 },
         px: { xs: 0, sm: 2 },
       }}
     >
       <Container
         component="main"
-        maxWidth="sm"
-        sx={{ m: "auto", px: { xs: 0, sm: 3 } }}
+        maxWidth="xs"
+        sx={{
+          m: "auto",
+          maxWidth: { xs: "100%", sm: 440 },
+          px: { xs: 0, sm: 2 },
+        }}
         disableGutters
       >
         <Box
@@ -119,31 +125,36 @@ const LoginPage: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.97)",
-            borderRadius: { xs: 0, sm: 4 },
-            p: { xs: 3, sm: 5 },
+            backgroundColor: "rgba(255, 255, 255, 0.80)",
+            borderRadius: { xs: 0, sm: 3 },
+            p: { xs: 2.5, sm: 3.5 },
             minHeight: { xs: "100vh", sm: "auto" },
             justifyContent: { xs: "center", sm: "flex-start" },
             boxShadow: {
               xs: "none",
-              sm: "0 8px 32px 0 rgba(17, 26, 80, 0.15)",
+              sm: "0 12px 32px 0 rgba(17, 26, 80, 0.15)",
             },
-            backdropFilter: "blur(12px)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
             border: {
               xs: "none",
-              sm: "1px solid rgba(255, 255, 255, 0.3)",
+              sm: "1px solid rgba(255, 255, 255, 0.5)",
             },
           }}
         >
           <Button
-            startIcon={<ArrowBackIcon />}
+            startIcon={<ArrowBackIcon sx={{ fontSize: "1rem" }} />}
             onClick={() => navigate("/")}
+            size="small"
             sx={{
               alignSelf: "flex-start",
-              mb: 3,
+              mb: 1,
               textTransform: "none",
               color: "text.secondary",
               fontWeight: 500,
+              fontSize: "0.825rem",
+              p: 0.5,
+              "&:hover": { color: "#111A50", bgcolor: "transparent" },
             }}
           >
             Back to Home
@@ -153,23 +164,25 @@ const LoginPage: React.FC = () => {
             sx={{
               backgroundColor: "#111A50",
               borderRadius: "50%",
-              p: 2,
-              mb: 2,
+              p: 1.25,
+              mb: 1.25,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <LockOutlinedIcon sx={{ fontSize: "2.5rem", color: "white" }} />
+            <LockOutlinedIcon sx={{ fontSize: "1.75rem", color: "white" }} />
           </Box>
 
           <Typography
             component="h1"
-            variant="h4"
+            variant="h5"
             fontWeight={700}
-            gutterBottom
-            sx={{ fontSize: { xs: "1.6rem", sm: "2rem" } }}
+            sx={{ fontSize: { xs: "1.35rem", sm: "1.55rem" }, mb: 0.25, color: "#111A50" }}
           >
             Welcome Back
           </Typography>
-          <Typography variant="body2" color="text.secondary" mb={3}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: "0.825rem" }}>
             Sign in to continue to ZYNTRA
           </Typography>
 
@@ -179,7 +192,6 @@ const LoginPage: React.FC = () => {
               borderBottom: 1,
               borderColor: "divider",
               width: "100%",
-              mt: 1,
             }}
           >
             <Tabs
@@ -187,10 +199,13 @@ const LoginPage: React.FC = () => {
               onChange={handleTabChange}
               centered
               sx={{
+                minHeight: 36,
                 "& .MuiTab-root": {
                   textTransform: "none",
                   fontWeight: 600,
-                  fontSize: "0.9rem",
+                  fontSize: "0.85rem",
+                  minHeight: 36,
+                  py: 0.5,
                 },
                 "& .Mui-selected": {
                   color: "#111A50 !important",
@@ -210,12 +225,12 @@ const LoginPage: React.FC = () => {
             component="form"
             onSubmit={handleSubmit}
             noValidate
-            sx={{ mt: 3, width: "100%" }}
+            sx={{ mt: 2, width: "100%" }}
           >
             {loginType === "admin" ? (
               <>
                 <TextField
-                  margin="normal"
+                  size="small"
                   required
                   fullWidth
                   id="email"
@@ -225,10 +240,15 @@ const LoginPage: React.FC = () => {
                   autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: 1.5,
+                    "& .MuiOutlinedInput-root": {
+                      bgcolor: "rgba(255, 255, 255, 0.7)",
+                    },
+                  }}
                 />
                 <TextField
-                  margin="normal"
+                  size="small"
                   required
                   fullWidth
                   name="password"
@@ -238,32 +258,38 @@ const LoginPage: React.FC = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      bgcolor: "rgba(255, 255, 255, 0.7)",
+                    },
+                  }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          size="small"
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                         >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
                 />
                 {/* Links */}
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Link to="/forgot-password" style={{ color: "#666", textDecoration: 'none', fontSize: '0.875rem' }}>
-                        Forgot password?
-                    </Link>
-                    <Link to="/register" style={{ color: "#111A50", textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem' }}>
-                        Create an account
-                    </Link>
+                <Box sx={{ mt: 1.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Link to="/forgot-password" style={{ color: "#666", textDecoration: "none", fontSize: "0.8rem" }}>
+                    Forgot password?
+                  </Link>
+                  <Link to="/register" style={{ color: "#111A50", textDecoration: "none", fontWeight: 600, fontSize: "0.8rem" }}>
+                    Create an account
+                  </Link>
                 </Box>
               </>
             ) : (
               <TextField
-                margin="normal"
+                size="small"
                 required
                 fullWidth
                 id="studentId"
@@ -272,12 +298,16 @@ const LoginPage: React.FC = () => {
                 autoFocus
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "rgba(255, 255, 255, 0.7)",
+                  },
+                }}
               />
             )}
 
             {error && (
-              <Alert severity="error" sx={{ mt: 2, width: "100%" }}>
+              <Alert severity="error" sx={{ mt: 1.5, py: 0.25, fontSize: "0.825rem", width: "100%" }}>
                 {error}
               </Alert>
             )}
@@ -286,15 +316,15 @@ const LoginPage: React.FC = () => {
               type="submit"
               fullWidth
               variant="contained"
-              size="large"
+              size="medium"
               sx={{
-                mt: 4,
-                mb: 2,
-                py: 1.5,
-                fontSize: "1.1rem",
+                mt: 2,
+                mb: 0.5,
+                py: 1.1,
+                fontSize: "0.95rem",
                 fontWeight: 600,
                 textTransform: "none",
-                borderRadius: 2,
+                borderRadius: 1.5,
                 backgroundColor: "#111A50",
                 "&:hover": { backgroundColor: "#080D2B" },
               }}
