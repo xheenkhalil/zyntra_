@@ -44,11 +44,11 @@ const HeroSection: React.FC = () => {
             <img
               src={src}
               alt="Students taking exams"
-              className="opacity-20"
+              className="w-full h-full object-cover"
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-[#111A50]/90"></div>
+        <div className="absolute inset-0 bg-[#111A50]/40"></div>
       </div>
 
       {/* Floating Glass Elements (No logic, just JSX) */}
